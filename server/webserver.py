@@ -44,6 +44,7 @@ SERVER = MyFlask(__name__,
                  hierarchy_constructor=ServerHierarchy)
 
 # configures server
+SERVER.config['ENV'] = 'development'
 SERVER.config['DEBUG'] = True
 CORS(SERVER)
 
