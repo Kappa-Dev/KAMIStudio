@@ -259,26 +259,26 @@ define([
                 }
 
                 // Draw fused circles for composite sites.
-                else if (ancestor == "compo") {
-                    return {
-                        draw: function (context, size) {
-                            // Angle between the top and side circles.
-                            // Only values between 30 and 90 degree make sense.
-                            // 90 = the two circles completely fused into a single cicle.
-                            // 30 = the two circles at the limit of meing unfused.
-                            let angle = 55, // Degree.
-                                scale = 0.75, // Scale down the radius compared to sites.
-                                radius = Math.sqrt(size/Math.PI) * scale,
-                                radian = angle * Math.PI / 180,
-                                x_offset = Math.cos(radian) * 2 * radius,
-                                y_offset =  Math.sin(radian) * 2 * radius;
-                            context.arc(-x_offset,  0, radius,        -radian,         radian, true);
-                            context.arc( 0,  y_offset, radius, Math.PI+radian,        -radian, false);
-                            context.arc( x_offset,  0, radius, Math.PI-radian, Math.PI+radian, true);
-                            context.arc( 0, -y_offset, radius,         radian, Math.PI-radian, false);
-                        }
-                    }
-                }
+                //else if (ancestor == "compo") {
+                //    return {
+                //        draw: function (context, size) {
+                //            // Angle between the top and side circles.
+                //            // Only values between 30 and 90 degree make sense.
+                //            // 90 = the two circles completely fused into a single cicle.
+                //            // 30 = the two circles at the limit of meing unfused.
+                //            let angle = 55, // Degree.
+                //                scale = 0.75, // Scale down the radius compared to sites.
+                //                radius = Math.sqrt(size/Math.PI) * scale,
+                //                radian = angle * Math.PI / 180,
+                //                x_offset = Math.cos(radian) * 2 * radius,
+                //                y_offset =  Math.sin(radian) * 2 * radius;
+                //            context.arc(-x_offset,  0, radius,        -radian,         radian, true);
+                //            context.arc( 0,  y_offset, radius, Math.PI+radian,        -radian, false);
+                //            context.arc( x_offset,  0, radius, Math.PI-radian, Math.PI+radian, true);
+                //            context.arc( 0, -y_offset, radius,         radian, Math.PI-radian, false);
+                //        }
+                //    }
+                //}
 
                 else if (
                     ancestor == "mod" ||
@@ -317,13 +317,7 @@ define([
                 if (ancestor == "mod" ||
                     ancestor == "syn" ||
                     ancestor == "deg" ||
-                    ancestor == "brk" ||
                     ancestor == "bnd"
-                ) { return 2000; }
-                else if (
-                    ancestor == "is_bnd" ||
-                    ancestor == "is_equal" ||
-                    ancestor == "is_free"
                 ) { return 2000; }
                 else if (
                     ancestor == "region"
@@ -332,17 +326,11 @@ define([
                     ancestor == "site"
                 ) { return 2500; }
                 else if (
-                    ancestor == "compo"
-                ) { return 2500; }
-                else if (
                     ancestor == "residue"
                 ) { return 2500; }
                 else if (
                     ancestor == "state"
                 ) { return 2200; }
-                else if (
-                    ancestor == "half-act"
-                ) { return 2000; }
                 else if (
                     ancestor == "gene"
                 ) { return 6000; }
@@ -350,49 +338,65 @@ define([
                     return 4000;
                 }
             };
+ 
             var node_to_color = function (n) {
                 let ancestor = ancestorArray[n.id];
-                return ({
-                    "mod": "#3399ff", // "#77855C",
-                    "is_equal": "#77855C",
-                    "syn": "#55A485",
-                    "deg": "#8C501E", // "#A47066",
-                    "brk": "#E63234", // "#B83319",
-                    "bnd": "#82A532", // "#648226",
-                    "is_bnd": "#82A532", //"#648226",
-                    "is_free": "#E63234", // "#B83319",
-                    "state": "#FFD33D", // "#77855C",
-                    "region": "#DA8C8A", // "#AB8472",
-                    "site": "EC928F",
-                    "compo": "EC928F",
-                    "gene": "#AB7372",
-                    "half-act": "#828282", // "#718CC4",
-                    "residue": "#FF9E9B" // "#94716A"
-                }[ancestor]);
-
+                if (ancestor == "state") {
+                    stateTest = n.attrs.test.strSet.pos_list;
+                    if (stateTest == "false") { 
+                        return "gray"; // gray
+                    } else {
+                        return "#FFD33D"; // yellow
+                    }
+                } else if (ancestor == "bnd") {
+                    bndTest = n.attrs.test.strSet.pos_list;
+                    if (bndTest == "false") { 
+                        return "#E63234"; // red
+                    } else {
+                        return "#82A532"; // green
+                    }
+                 } else if (ancestor == "mod") {
+                    modVals = n.attrs.value.strSet.pos_list;
+                    if (modVals == "false") { 
+                        return "gray"; // gray
+                    } else {
+                        return "#3399ff"; // blue
+                    }              
+                } else {                
+                    return ({
+                        "gene":    "#AB7372",
+                        "region":  "#DA8C8A", // "#AB8472",
+                        "site":    "#EC928F",
+                        "residue": "#FF9E9B", // "#94716A",
+                        "syn":     "#55A485",
+                        "deg":     "#8C501E" // "#A47066",
+                    }[ancestor]);
+                }
             };
 
             var link_to_dotStyle = function (l) {
                 var ancestorSource = ancestorArray[l.source.id];
                 var ancestorTarget = ancestorArray[l.target.id];
-                var components = ["residue", "region", "gene", "site", "compo"];
-		var components2 = ["half-act", "state"];
-		var components3 = ["bnd", "brk", "is_bnd", "is_free"];
-                if (components.indexOf(ancestorSource) > -1 &&
-                    components.indexOf(ancestorTarget) > -1) {
-                        return ("notDotted");
-                } else if (ancestorSource == "half-act" &&
-		    components3.indexOf(ancestorTarget) > -1) {
-                        return ("notDotted");
-                } else if (ancestorSource == "state" &&
-                    components.indexOf(ancestorTarget) > -1) {
-                        return ("notDotted");
-                } else if (components.indexOf(ancestorSource) > -1 &&
-                    ancestorTarget == "half-act") {
-                        return ("notDotted");
-                } else {
+                if (ancestorSource == "mod" || ancestorTarget == "mod") {
                     return ("Dotted");
+                } else {
+                    return ("notDotted");
                 }
+                //if (components.indexOf(ancestorSource) > -1 &&
+                //    components.indexOf(ancestorTarget) > -1) {
+                //        return ("notDotted");
+                //} else if (ancestorSource == "half-act" &&
+		//    components3.indexOf(ancestorTarget) > -1) {
+                //        return ("notDotted");
+                //} else if (ancestorSource == "state" &&
+                //    components.indexOf(ancestorTarget) > -1) {
+                //        return ("notDotted");
+                //} else if (components.indexOf(ancestorSource) > -1 &&
+                //    ancestorTarget == "half-act") {
+                //        return ("notDotted");
+                //} else {
+                //    return ("Dotted");
+                //}
             };
 
             var link_to_color = function (l) {
