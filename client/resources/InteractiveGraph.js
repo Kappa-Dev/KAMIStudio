@@ -221,8 +221,7 @@ define([
                 if (
                     ancestor == "gene" ||
                     ancestor == "residue" ||
-                    ancestor == "region" ||
-                    ancestor == "half-act"
+                    ancestor == "region"
                 ) {
                     return d3.symbolCircle;
                 }
@@ -283,31 +282,35 @@ define([
                 else if (
                     ancestor == "mod" ||
                     ancestor == "syn" ||
-                    ancestor == "deg" ||
-                    ancestor == "bnd" ||
-                    ancestor == "brk") {
+                    ancestor == "deg") {
                     return d3.symbolSquare;
                 }
-                else if (
-                    ancestor == "is_bnd" ||
-                    ancestor == "is_equal" ||
-                    ancestor == "is_free") {
-                    //return d3.symbolDiamond;
-		    // Draw a square diamond for tests.
-                    return {
-                        draw: function (context, size) {
-                            let side = Math.sqrt(size),
-				// Good old Pythagoras.
-				diagonal =  Math.sqrt(2*side*side),
-                                p = diagonal/2
-                            context.moveTo( 0,  p);
-                            context.lineTo( p,  0);
-			    context.lineTo( 0, -p);
-                            context.lineTo(-p,  0);
-			    context.closePath();
-                        }
-                    };
+
+                else if (ancestor == "bnd") {
+                    bndType = n.attrs.type.strSet.pos_list;
+                    if (bndType == "be") {
+                        //return d3.symbolDiamond;
+                        // Draw a long diamond for tests.
+                        return {
+                            draw: function (context, size) {
+                                let side = Math.sqrt(size),
+                                    ratio = 1.15;
+                                // Good old Pythagoras.
+                                diagonal =  Math.sqrt(2*side*side),
+                                    x = diagonal/2*ratio
+                                    y = diagonal/2/ratio
+                                context.moveTo( 0,  y);
+                                context.lineTo( x,  0);
+		                context.lineTo( 0, -y);
+                                context.lineTo(-x,  0);
+		                context.closePath();
+                            }
+                        };
+                    } else {
+                        return d3.symbolSquare;
+                    }
                 }
+
                 else {
                     return d3.symbolCircle;
                 }
