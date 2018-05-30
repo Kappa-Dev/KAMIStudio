@@ -4,7 +4,7 @@
  * This module is part of regraphGui project
  * this project is under AGPL Licence
 */
-define(["ressources/d3/d3.js"], function (d3) {
+define(["resources/d3/d3.js"], function (d3) {
     return function RequestFactory(url) {
         var self = this;
         var srv = url;

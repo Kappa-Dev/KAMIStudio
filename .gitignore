@@ -1,7 +1,7 @@
 dist/*
 build/*
 .vscode/*
-client/ressources/d3/*
+client/resources/d3/*
 server/__pycache__/*
 server/base/__pycache__/*
 server/mu_calculus/__pycache__/*

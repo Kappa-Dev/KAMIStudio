@@ -1,7 +1,7 @@
 define([
-    "ressources/d3/d3.js",
-    "ressources/InterractiveGraph.js",
-    "ressources/requestRulesFactory.js"
+    "resources/d3/d3.js",
+    "resources/InterractiveGraph.js",
+    "resources/requestRulesFactory.js"
 ],
     function (d3, InterractiveGraph, ruleFactory) {
         //Regraph Gui Core

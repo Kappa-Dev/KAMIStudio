@@ -1,7 +1,6 @@
 
 define([
-	"ressources/d3/d3.js"
-
+	"resources/d3/d3.js"
 ], function (d3) {
 	/* Create a new interractive graph structure
 	 * @input : container_id : the container to bind this hierarchy
@@ -26,6 +25,35 @@ define([
                 };
                 request.newGraphFromNodes(g_id, val, node_ids, callback);
             }
+        }
+
+        this.newGraph2 = function(svg_content, g_id){
+            return function (_elm, _d, _i) {
+                var selected = svg_content.selectAll("g.selected")
+                let new_name = prompt("New name:", "");
+                if (!new_name) { return 0 }
+                let node_ids = selected.data().map(d => d.id);
+                request.promNewGraphFromNodes(g_id, new_name, node_ids)
+                    .then(() => disp.call("hieUpdate", this))
+            }
+        }
+           
+        this.promGraphFromSelectedNodes = function(svg_content, g_id){
+            return new Promise(function(resolve, reject){
+                var selected = svg_content.selectAll("g.selected")
+                let new_name = prompt("New name:", "");
+                if (!new_name) { reject()}
+                let node_ids = selected.data().map(d => d.id);
+                request.promNewGraphFromNodes(g_id, new_name, node_ids)
+                       .then(resolve())
+                       .catch(reject())
+            })
+        }
+        this.newGraph3 = function(svg_content, g_id){
+            return function (_elm, _d, _i) {
+                self.promGraphFromSelectedNodes(svg_content, g_id)
+                    .then(() => disp.call("hieUpdate", this))
+                }
         }
 
         this.newChildRule = function newChildRule(svg_content, g_id) {

@@ -5,7 +5,7 @@
  * this project is under AGPL Licence
 */
 define([
-	"ressources/d3/d3.js"
+	"resources/d3/d3.js"
 ],function(d3){
 	/* Add a popup menu asking for new values.
 	 * @input : label : The name of the menu

@@ -5,11 +5,11 @@
  * this project is under AGPL Licence
  */
 define([
-    "ressources/d3/d3.js",
-    "ressources/d3/d3-context-menu.js",
-    "ressources/requestFactory.js",
-    "ressources/inputMenu.js",
-    "ressources/newNodeSelect.js"
+    "resources/d3/d3.js",
+    "resources/d3/d3-context-menu.js",
+    "resources/requestFactory.js",
+    "resources/inputMenu.js",
+    "resources/newNodeSelect.js"
 
 ], function (d3, d3ContextMenu, RqFactory, inputMenu, newNode) {
     /* Create a new interractive graph structure
@@ -466,7 +466,7 @@ define([
                 .attr("height", 400)
                 .attr("x", function () { return width / 2 - 450; })
                 .attr("y", function () { return height / 2 - 200; })
-                .attr("xlink:href", "ressources/toucan.png");
+                .attr("xlink:href", "resources/toucan.png");
         };
         // this.initSvg = initSvg;
         /* this fonction  is triggered by tick events
@@ -579,7 +579,7 @@ define([
                     .attr("height", 400)
                     .attr("x", function () { return width / 2 - 450 })
                     .attr("y", function () { return height / 2 - 200 })
-                    .attr("xlink:href", "ressources/toucan.png");
+                    .attr("xlink:href", "resources/toucan.png");
             }
         };
 

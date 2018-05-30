@@ -6,11 +6,11 @@
  * this project is under AGPL Licence
 */
 define([
-    "ressources/d3/d3.js",
-    "ressources/simpleTree.js",
-    "ressources/requestFactory.js",
-    "ressources/kamiRequestFactory.js",
-    "ressources/d3/d3-context-menu.js"
+    "resources/d3/d3.js",
+    "resources/simpleTree.js",
+    "resources/requestFactory.js",
+    "resources/kamiRequestFactory.js",
+    "resources/d3/d3-context-menu.js"
 ],
     function (d3, Tree, RFactory, KamiRFactory, d3ContextMenu) {
         /* Create a new hierarchy module

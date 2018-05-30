@@ -7,10 +7,10 @@
  * this project is under AGPL Licence
 */
 define([
-	"ressources/d3/d3.js",
-	"ressources/converter.js",
-	"ressources/requestFactory.js",
-	"ressources/kamiRequestFactory.js"
+	"resources/d3/d3.js",
+	"resources/converter.js",
+	"resources/requestFactory.js",
+	"resources/kamiRequestFactory.js"
 ],
 	function (d3, converter, rqFactory, kamiRqFactory) {
 		/* Create a new inputFile module

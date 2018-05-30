@@ -1,7 +1,7 @@
 define([
-    "ressources/kamiRequestFactory.js",
-    "ressources/requestFactory.js",
-    "ressources/IGraphUtils.js"
+    "resources/kamiRequestFactory.js",
+    "resources/requestFactory.js",
+    "resources/IGraphUtils.js"
 
 ], function (kamiFactory, requestFactory, iGraphUtils) {
     return function Kami(dispatch, url) {

@@ -1,6 +1,6 @@
 define([
-    "ressources/d3/d3.js",
-    "ressources/requestFactory.js"
+    "resources/d3/d3.js",
+    "resources/requestFactory.js"
 ],
     function (d3, factory) {
 

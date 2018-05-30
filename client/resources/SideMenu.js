@@ -6,9 +6,9 @@
  * this project is under AGPL Licence
 */
 define([
-	"ressources/d3/d3.js",
-	"ressources/requestFactory.js",
-	"ressources/PatternMatching.js"
+	"resources/d3/d3.js",
+	"resources/requestFactory.js",
+	"resources/PatternMatching.js"
 ],function(d3,RqFactory,ParternMatch){
 	/* Create a new side menu structure
 	 * @input : container_id : the container to bind this hierarchy

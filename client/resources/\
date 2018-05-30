@@ -4,7 +4,7 @@
  * This module is part of regraphGui project
  * this project is under AGPL Licence
 */
-define(["ressources/d3/d3.js"],function(d3){ return {
+define(["resources/d3/d3.js"],function(d3){ return {
 /* converte a snip file into a regraph file
  * @input : json_file : a snip Json File
  * @input : dispatch : the dispatch event object
