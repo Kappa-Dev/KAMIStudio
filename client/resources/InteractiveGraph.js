@@ -16,9 +16,9 @@ define([
      * @input : container_id : the container to bind this hierarchy
      * @input : dispatch : the dispatch event object
      * @input : server_url : the regraph server url
-     * @return : a new InterractiveGraph object
+     * @return : a new InteractiveGraph object
      */
-    return function InterractiveGraph(container_id, new_svg_name, svg_width, svg_height, dispatch, request, readOnly, localDispatch) {
+    return function InteractiveGraph(container_id, new_svg_name, svg_width, svg_height, dispatch, request, readOnly, localDispatch) {
         var disp = dispatch;
         let nodeClipboard = {
             path: null,

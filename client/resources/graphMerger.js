@@ -1,9 +1,9 @@
 define([
     "resources/d3/d3.js",
-    "resources/InterractiveGraph.js",
+    "resources/InteractiveGraph.js",
     "resources/requestFactory.js"
 ],
-    function (d3, InterractiveGraph, factory) {
+    function (d3, InteractiveGraph, factory) {
 
         //Interface allowing to define relations between nodes of different graphs
 
@@ -28,8 +28,8 @@ define([
 
             //let request = new factory(server_url, function (rule) { return rule["L"] })
             let request = new factory(server_url)
-            let leftGraph = new InterractiveGraph(topSvgId, "leftGraph", size.width / 2, size.height, dispatch, request, true, localDispatch);
-            let rightGraph = new InterractiveGraph(topSvgId, "rightGraph", size.width / 2, size.height, dispatch, request, true, localDispatch);
+            let leftGraph = new InteractiveGraph(topSvgId, "leftGraph", size.width / 2, size.height, dispatch, request, true, localDispatch);
+            let rightGraph = new InteractiveGraph(topSvgId, "rightGraph", size.width / 2, size.height, dispatch, request, true, localDispatch);
             let beginMouseX, beginMouseY, startOfLinkNode
 
             main_svg.append(leftGraph.svg_result)

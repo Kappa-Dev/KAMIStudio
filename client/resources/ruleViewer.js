@@ -1,9 +1,9 @@
 define([
     "resources/d3/d3.js",
-    "resources/InterractiveGraph.js",
+    "resources/InteractiveGraph.js",
     "resources/requestRulesFactory.js"
 ],
-    function (d3, InterractiveGraph, ruleFactory) {
+    function (d3, InteractiveGraph, ruleFactory) {
         //Regraph Gui Core
         return function RuleViewer(topSvgId, fatherElem, dispatch, server_url) {
 
@@ -23,9 +23,9 @@ define([
             let phs_factory = new ruleFactory(server_url, function (rule) { return rule["P"] })
             let rhs_factory = new ruleFactory(server_url, function (rule) { return rule["R"] })
 
-            var lhs = new InterractiveGraph(topSvgId, "lhs", size.width / 2, size.height / 3, dispatch, lhs_factory, true, localDispatch);
-            var phs = new InterractiveGraph(topSvgId, "phs", size.width / 2, size.height / 3, dispatch, phs_factory, true, localDispatch);
-            var rhs = new InterractiveGraph(topSvgId, "rhs", size.width, size.height * 2 / 3, dispatch, rhs_factory, false, localDispatch);
+            var lhs = new InteractiveGraph(topSvgId, "lhs", size.width / 2, size.height / 3, dispatch, lhs_factory, true, localDispatch);
+            var phs = new InteractiveGraph(topSvgId, "phs", size.width / 2, size.height / 3, dispatch, phs_factory, true, localDispatch);
+            var rhs = new InteractiveGraph(topSvgId, "rhs", size.width, size.height * 2 / 3, dispatch, rhs_factory, false, localDispatch);
 
             main_svg.append(lhs.svg_result)
                 .attr("x", 0)

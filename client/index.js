@@ -12,7 +12,7 @@ define([
     'resources/converter.js',
     'resources/InputFileReader.js',
     'resources/requestFactory.js',
-    'resources/InterractiveGraph.js',
+    'resources/InteractiveGraph.js',
     'resources/SideMenu.js',
     'resources/ruleViewer.js',
     'resources/kami.js',
@@ -24,7 +24,7 @@ define([
     'resources/newGraphModal.js'
 ],
     function (d3, Q, Tree, Hierarchy, converter, InputFileReader,
-        RFactory, InterractiveGraph, SideMenu, RuleViewer,
+        RFactory, InteractiveGraph, SideMenu, RuleViewer,
         Kami, graphMerger, formulaEditor, formulaResult,
         kappaExporter, typeEditor, newGraphModal) {
         // Regraph Gui Core
@@ -112,8 +112,8 @@ define([
 
             var size = d3.select("#graph_frame").node().getBoundingClientRect();
             var rule_pan = new RuleViewer("svg_rule", tab_frame, dispatch, server_url);
-            var graph_pan = new InterractiveGraph("tab_frame", "sub_svg_graph", size.width, size.height, dispatch, factory);
-            var preview_pan = new InterractiveGraph("tab_frame", "preview_graph", size.width * 0.333, size.height * 0.333, dispatch, factory, true);
+            var graph_pan = new InteractiveGraph("tab_frame", "sub_svg_graph", size.width, size.height, dispatch, factory);
+            var preview_pan = new InteractiveGraph("tab_frame", "preview_graph", size.width * 0.333, size.height * 0.333, dispatch, factory, true);
             var merger_pan = new graphMerger("svg_merge", tab_frame, dispatch, server_url);
             tab_frame.selectAll("#svg_rule").remove();
             tab_frame.append(graph_pan.svg_result);
