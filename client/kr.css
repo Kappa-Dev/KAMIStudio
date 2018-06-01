@@ -22,9 +22,85 @@
 @media all and (min-width: 1900px) {  body  { font-size:1em;  } }
 @media all and (min-width: 2000px) {  body  { font-size:1.03em;  } }*/
 
+#top_menu{
+    position:absolute;
+    top:0;
+    height:42px;
+    width:80%;
+    background-color: rgba(180,180,180,1);
+}
 
+#do_chkbx{
+    position:absolute;
+    left:31px;
+    top:0px;
+    height:16px;
+    width:16px;
+}
 
-#top_chart {
+#do_chkbx_lbl{
+    position:absolute;
+    left:7px;
+    top:2px;
+}
+
+#is_chkbx{
+    position:absolute;
+    left:31px;
+    top:18px;
+    height:16px;
+    width:16px;
+}
+
+#is_chkbx_lbl{
+    position:absolute;
+    left:14px;
+    top:20px;
+}
+
+#true_chkbx{
+    position:absolute;
+    left:94px;
+    top:0px;
+    height:16px;
+    width:16px;
+}
+
+#true_chkbx_lbl{
+    position:absolute;
+    left:60px;
+    top:2px;
+}
+
+#false_chkbx{
+    position:absolute;
+    left:94px;
+    top:18px;
+    height:16px;
+    width:16px;
+}
+
+#false_chkbx_lbl{
+    position:absolute;
+    left:54px;
+    top:20px;
+}
+
+#detail_chkbx{
+    position:absolute;
+    right:30px;
+    top:18px;
+    height:16px;
+    width:16px;
+}
+
+#detail_chkbx_lbl{
+    position:absolute;
+    right:50px;
+    top:20px;
+}
+
+#left_panel{
   --folder-bg-color: var(--top-chart-bg-color);
 }
 
@@ -42,7 +118,7 @@ body{
     flex-direction: row-reverse;
     /*flex-direction: row;*/
 }
-#top_chart{
+#left_panel{
     /*height:4.5rem;*/
     height:100%;
     /*max-height:40px;*/
@@ -543,6 +619,46 @@ svg{
     /*width: 150px;*/
     overflow : hidden;
 }
+#do_tooltip{
+    background-color:rgba(230, 230, 230, 1);
+    position:absolute;
+    top:42px;
+    left:45px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+#is_tooltip{
+    background-color:rgba(230, 230, 230, 1);
+    position:absolute;
+    top:42px;
+    left:45px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+#true_tooltip{
+    background-color:rgba(230, 230, 230, 1);
+    position:absolute;
+    top:42px;
+    left:108px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+#false_tooltip{
+    background-color:rgba(230, 230, 230, 1);
+    position:absolute;
+    top:42px;
+    left:108px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+#detail_tooltip{
+    background-color:rgba(230, 230, 230, 1);
+    position:absolute;
+    top:42px;
+    right:45px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
 #selectionRect{
     opacity: 0.2;
     /*fill: #333333;*/
@@ -619,7 +735,8 @@ opacity: 0.1;
 
 #preview_graph{
     position: absolute;
-    right: 53.4%; /*48vw;*/
+    /*right: 53.4%; 48vw;*/
+    left: 20%;
     bottom: 0%; /*0vh;*/
     border: solid 2px var(--separation-line-color);
     background:rgba(230, 250, 255, 0.9);

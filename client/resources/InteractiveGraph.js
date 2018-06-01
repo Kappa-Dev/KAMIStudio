@@ -1807,6 +1807,60 @@ define([
                     d3.select("body").on("keydown", newNodeSelect.input);
                     svg.on("click", newNodeClickHandler);
                 }
+                // Keyboard shortcuts to select node type and test.
+                // 'd' to toggle Do type (keyCode 68)
+                // 'i' to toggle Is type (keyCode 73)
+                // 't' to toggle True test (keyCode 84)
+                // 'f' to toggle False test (keyCode 70)
+                // 's' to toggle Details (keyCode 83)
+                // Transfered here from TopMenu.js because, somehow, it stops
+                // working after clicking on the left panel when the code is
+                // left in TopMenu.js.
+                else if (d3.event.keyCode === 68) {
+                    chk_state = d3.select("#do_chkbx").property("checked");
+                    if (chk_state == false) {
+                        d3.select("#do_chkbx").property("checked", true);
+                        d3.select("#is_chkbx").property("checked", false);
+                    } 
+                    if (chk_state == true) {
+                        d3.select("#do_chkbx").property("checked", false);
+                    }
+                }
+                else if (d3.event.keyCode === 73) {
+                    chk_state = d3.select("#is_chkbx").property("checked");
+                    if (chk_state == false) {
+                        d3.select("#is_chkbx").property("checked", true);
+                        d3.select("#do_chkbx").property("checked", false);
+                    } if (chk_state == true) {
+                        d3.select("#is_chkbx").property("checked", false);
+                    }
+                }
+                else if (d3.event.keyCode === 84) {
+                    chk_state = d3.select("#true_chkbx").property("checked");
+                    if (chk_state == false) {
+                        d3.select("#true_chkbx").property("checked", true);
+                        d3.select("#false_chkbx").property("checked", false);
+                    } if (chk_state == true) {
+                        d3.select("#true_chkbx").property("checked", false);
+                    }
+                }
+                else if (d3.event.keyCode === 70) {
+                    chk_state = d3.select("#false_chkbx").property("checked");
+                    if (chk_state == false) {
+                        d3.select("#false_chkbx").property("checked", true);
+                        d3.select("#true_chkbx").property("checked", false);
+                    } if (chk_state == true) {
+                        d3.select("#false_chkbx").property("checked", false);
+                    }
+                }
+                else if (d3.event.keyCode === 83) {
+                    chk_state = d3.select("#detail_chkbx").property("checked");
+                    if (chk_state == false) {
+                        d3.select("#detail_chkbx").property("checked", true);
+                    } if (chk_state == true) {
+                        d3.select("#detail_chkbx").property("checked", false);
+                    }
+                } 
             }
         }
         this.svgKeydownHandler = svgKeydownHandler;

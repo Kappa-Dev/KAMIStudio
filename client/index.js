@@ -21,12 +21,13 @@ define([
     'resources/formulaResult.js',
     'resources/kappaExporter.js',
     'resources/typeEditor.js',
-    'resources/newGraphModal.js'
+    'resources/newGraphModal.js',
+    'resources/TopMenu.js'
 ],
     function (d3, Q, Tree, Hierarchy, converter, InputFileReader,
         RFactory, InteractiveGraph, SideMenu, RuleViewer,
         Kami, graphMerger, formulaEditor, formulaResult,
-        kappaExporter, typeEditor, newGraphModal) {
+        kappaExporter, typeEditor, newGraphModal, TopMenu) {
         // Regraph Gui Core
         (function pageLoad() {
             // this section must be changed to feet the server/user requirement.
@@ -81,7 +82,7 @@ define([
             var newGraph = new newGraphModal(main_container, "newGraphForm", dispatch, factory);
             // $('#formulaEditor').modal({ show: false});
             main_container.append("div")//top menu
-                .attr("id", "top_chart");
+                .attr("id", "left_panel");
             // var side = container.append("div")//main div of side menu
             // 	.attr("id","side_menu");
 
@@ -99,10 +100,12 @@ define([
 
 
             //regraph hierarchy
-            var hierarchy = new Hierarchy("top_chart", dispatch, server_url);
+            var hierarchy = new Hierarchy("left_panel", dispatch, server_url);
             hierarchy.update(root);
             //modification menu : add, export and new graph + file input + type selector
-            new InputFileReader("top_chart", dispatch, server_url);
+            new InputFileReader("left_panel", dispatch, server_url);
+            // Top menu
+            var top_menu_bar = new TopMenu("graph_frame", dispatch, server_url);
 
             //configuration menu : change serveur url, node color, size and shape.
             // var config = new ConfigTab("top_chart",dispatch,server_url);
@@ -191,7 +194,7 @@ define([
                                 tab_frame.append(graph_pan.svg_result)
                                     .attr("x", 0)
                                     .attr("y", 0);
-                                d3.select("#top_chart").insert(graph_pan.buttons, ":first-child");
+                                d3.select("#left_panel").insert(graph_pan.buttons, ":first-child");
                             }
                         });
                 }
@@ -276,7 +279,7 @@ define([
                             tab_frame.append(merger_pan.svg_result)
                                 .attr("x", 0)
                                 .attr("y", 0);
-                            d3.select("#top_chart").insert(merger_pan.buttons, ":first-child");
+                            d3.select("#left_panel").insert(merger_pan.buttons, ":first-child");
                         })
                 }
                 else {
@@ -292,7 +295,7 @@ define([
                                 .attr("x", 0)
                                 .attr("y", 0);
                             //d3.select("#top_chart").append(merger_pan.buttons);"
-                            d3.select("#top_chart").insert(merger_pan.buttons, ":first-child");
+                            d3.select("#left_panel").insert(merger_pan.buttons, ":first-child");
                         })
                 }
             }
