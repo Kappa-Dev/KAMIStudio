@@ -1671,9 +1671,14 @@ define([
                 return (d3.select(this).classed("highlighted")) && to_highlight(d.id)
             });
             svg.selectAll(".node").classed("lowlighted", function (d) {
-                return (d3.select(this).classed("lowlighted")) && !to_highlight(d.id)
+                return (d3.select(this).classed("lowlighted")) || !to_highlight(d.id)
             });
-            svg.selectAll(".link").classed("lowlighted", true);
+            svg.selectAll(".link").classed("highlighted", function (d) {
+                return (d3.select(this).classed("highlighted")) && to_highlight(d.source.id) && to_highlight(d.target.id)
+            });
+            svg.selectAll(".link").classed("lowlighted", function (d) {
+                return (d3.select(this).classed("lowlighted")) || !to_highlight(d.source.id) || !to_highlight(d.target.id)
+            });
         }
 
         function newChild() {
