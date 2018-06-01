@@ -360,52 +360,49 @@ body{
     /*justify-content: center;*/
 }
 .tab_menu_el.selected .icon{
-  display: block;
-  width: 2vw;
-  height: 2vh;
-  /*background: url(ico_graph.svg);
-  background-size: 2vw  2vh;   
-  background-repeat: no-repeat ;*/
-  -webkit-mask-image: url(ico_graph_selected.svg);
-  mask: url(ico_graph_selected.svg);
-  -webkit-mask-size: 2vw  2vh;   
-  mask-size: 2vw  2vh;   
-  background:rgb(251, 249, 200);
-
+    display: block;
+    width: 2vw;
+    height: 2vh;
+    /*background: url(ico_graph.svg);
+    background-size: 2vw  2vh;   
+    background-repeat: no-repeat ;*/
+    -webkit-mask-image: url(ico_graph_selected.svg);
+    mask: url(ico_graph_selected.svg);
+    -webkit-mask-size: 2vw  2vh;   
+    mask-size: 2vw  2vh;   
+    background:rgb(251, 249, 200);
 }
 .tab_menu_el .icon{
-  display: block;
-  width: 1.5em;
-  height: 1.4em;
-  /*background: url(ico_graph.svg);
-  background-size: 2vw  2vh;   
-  background-repeat: no-repeat ;*/
-  -webkit-mask-image: url(ico_graph.svg);
-  /*-webkit-mask-size: 2vw  2vh;   */
-  -webkit-mask-size: 1.5em  1.4em;   
-  background: rgb(251, 249, 200);
-
+    display: block;
+    width: 1.5em;
+    height: 1.4em;
+    /*background: url(ico_graph.svg);
+    background-size: 2vw  2vh;   
+    background-repeat: no-repeat ;*/
+    -webkit-mask-image: url(ico_graph.svg);
+    /*-webkit-mask-size: 2vw  2vh;   */
+    -webkit-mask-size: 1.5em  1.4em;   
+    background: rgb(251, 249, 200);
 }
 
 .tab_menu_el.selected .icon_rule{
-  display: block;
-  width: 3vw;
-  height: 2vh;
-  -webkit-mask-image: url(rule.svg);
-  -webkit-mask-size: 3vw  2vh;   
-  -webkit-mask-repeat: no-repeat ;
-  background:rgb(251, 249, 200);
-
+    display: block;
+    width: 3vw;
+    height: 2vh;
+    -webkit-mask-image: url(rule.svg);
+    -webkit-mask-size: 3vw  2vh;   
+    -webkit-mask-repeat: no-repeat ;
+    background:rgb(251, 249, 200);
 }
 .tab_menu_el .icon_rule{
-  display: block;
-  width: 3vw;
-  height: 2vh;
-  -webkit-mask-image: url(rule.svg);
-  -webkit-mask-size: 3vw  2vh;   
-  -webkit-mask-repeat: no-repeat ;
-  background-repeat: no-repeat ;
-  background: rgb(251, 249, 200);
+    display: block;
+    width: 3vw;
+    height: 2vh;
+    -webkit-mask-image: url(rule.svg);
+    -webkit-mask-size: 3vw  2vh;   
+    -webkit-mask-repeat: no-repeat ;
+    background-repeat: no-repeat ;
+    background: rgb(251, 249, 200);
 }
 
 .tab_menu_el.current{
@@ -413,12 +410,12 @@ body{
     color: #222222;
 }
 .tab_menu_el.current .icon{
-  display: block;
-  background: #222222;
+    display: block;
+    background: #222222;
 }
 .tab_menu_el.current .icon_rule{
-  display: block;
-  background: #222222;
+    display: block;
+    background: #222222;
 }
 
 .mod_menu{
@@ -586,21 +583,21 @@ svg{
     stroke-width: 5px;
 }
 .nodeLabel{
-  fill: var(--node-label-color);
-  font-family: sans-serif;
-  stroke: var(--node-label-color);
+    fill: var(--node-label-color);
+    font-family: sans-serif;
+    stroke: var(--node-label-color);
 }
 .link {
-  stroke: var(--link-color);
-  fill:none;
-  stroke-width: 3px;
-  /*stroke-dasharray : 3 0;*/
+    stroke: var(--link-color);
+    fill:none;
+    stroke-width: 3px;
+    /*stroke-dasharray : 3 0;*/
 }
 .ruleMapping {
-  stroke: var(--link-color);
-  fill:none;
-  stroke-width: 3px;
-  stroke-dasharray : 6 24;
+    stroke: var(--link-color);
+    fill:none;
+    stroke-width: 3px;
+    stroke-dasharray : 6 24;
 }
 #n_tooltip{
     background-color:#fffeec;
@@ -670,9 +667,9 @@ svg{
     stroke-width: 10px;
 }
 #nugFilter{
-margin-top: 1vh;
-margin-bottom: 1vh;
-width: 90%;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+    width: 90%;
 }
 
 .separation_line{
@@ -692,11 +689,11 @@ width: 90%;
 }
 
 .highlighted{
-	stroke-width: 5px;
+    stroke-width: 5px;
 }
 
 .matched{
-opacity: 0.1;
+    opacity: 0.1;
 }
 
 .cond{
@@ -719,18 +716,18 @@ opacity: 0.1;
 }
 
 #top_h_select .icon{
-  margin-left: 10px;
-  display: block;
-  width: 15%;
-  height: 20px;
-  -webkit-mask-image: url(arrow.svg);
-  mask: url(arrow.svg);
-  -webkit-mask-size: 2vw  2vh;   
-  mask-size: 2vw  2vh;   
-  /*-webkit-mask-size: 15%  20px;   
-  mask-size: 15%  20px;   */
-  background:rgb(251, 249, 200);
-  -webkit-mask-repeat: no-repeat ;
+    margin-left: 10px;
+    display: block;
+    width: 15%;
+    height: 20px;
+    -webkit-mask-image: url(arrow.svg);
+    mask: url(arrow.svg);
+    -webkit-mask-size: 2vw  2vh;   
+    mask-size: 2vw  2vh;   
+    /*-webkit-mask-size: 15%  20px;   
+    mask-size: 15%  20px;   */
+    background:rgb(251, 249, 200);
+    -webkit-mask-repeat: no-repeat ;
 }
 
 #preview_graph{
@@ -744,14 +741,14 @@ opacity: 0.1;
 }
 
 .menu-icon {
-  display: block;
-  width: 3vw;
-  height: 3vh;
-  -webkit-mask-image: url(menu.svg);
-  mask: url(menu.svg);
-  -webkit-mask-size: 3vw  3vh;   
-  mask-size: 3vw  3vh;   
-  background:rgb(251, 249, 200);
+    display: block;
+    width: 3vw;
+    height: 3vh;
+    -webkit-mask-image: url(menu.svg);
+    mask: url(menu.svg);
+    -webkit-mask-size: 3vw  3vh;   
+    mask-size: 3vw  3vh;   
+    background:rgb(251, 249, 200);
 }
 
 .navbar-header.custom-header{
@@ -792,52 +789,52 @@ opacity: 0.1;
 }
 
 /*.dropdown-menu {
-  width: 100%; 
+    width: 100%; 
 }*/
 
 
 #newGraphBtn:hover > .newGraph-icon{
-  background:#000000;
+    background:#000000;
 }
 
 #newGraphBtn:focus:not(:hover) > .newGraph-icon{
-  background:#cccccc;
+    background:#cccccc;
 }
 
 
 .newGraph-icon {
-  display: block;
-  width: 2vw;
-  height: 2vh;
-  -webkit-mask-image: url(ico_new_graph.svg);
-  mask: url(ico_new_graph.svg);
-  -webkit-mask-size: 2vw  2vh;   
-  mask-size: 2vw  2vh;   
-  background:#cccccc;
+    display: block;
+    width: 2vw;
+    height: 2vh;
+    -webkit-mask-image: url(ico_new_graph.svg);
+    mask: url(ico_new_graph.svg);
+    -webkit-mask-size: 2vw  2vh;   
+    mask-size: 2vw  2vh;   
+    background:#cccccc;
 }
 
 .anatomizer-icon {
-  display: block;
-  width: 2vw;
-  height: 2vh;
-  -webkit-mask-image: url(ico_new_graph.svg);
-  mask: url(ico_new_graph.svg);
-  -webkit-mask-size: 2vw  2vh;   
-  mask-size: 2vw  2vh;   
-  background:#cccccc;
+    display: block;
+    width: 2vw;
+    height: 2vh;
+    -webkit-mask-image: url(ico_new_graph.svg);
+    mask: url(ico_new_graph.svg);
+    -webkit-mask-size: 2vw  2vh;   
+    mask-size: 2vw  2vh;   
+    background:#cccccc;
 }
 .menubtn{
-  width: 2vw;
-  height: 2vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    width: 2vw;
+    height: 2vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 
 .navbar-toggle :hover{
-  background-color: #dddddd;
+    background-color: #dddddd;
 }
 .navbar-toggle:focus:not(:hover){
     /*background-color: var(--top-chart-bg-color) ;*/

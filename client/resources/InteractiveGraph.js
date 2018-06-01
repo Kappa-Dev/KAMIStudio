@@ -287,28 +287,29 @@ define([
                 }
 
                 else if (ancestor == "bnd") {
-                    bndType = n.attrs.type.strSet.pos_list;
-                    if (bndType == "be") {
-                        //return d3.symbolDiamond;
-                        // Draw a long diamond for tests.
-                        return {
-                            draw: function (context, size) {
-                                let side = Math.sqrt(size),
-                                    ratio = 1.15;
-                                // Good old Pythagoras.
-                                diagonal =  Math.sqrt(2*side*side),
-                                    x = diagonal/2*ratio
-                                    y = diagonal/2/ratio
-                                context.moveTo( 0,  y);
-                                context.lineTo( x,  0);
-		                context.lineTo( 0, -y);
-                                context.lineTo(-x,  0);
-		                context.closePath();
-                            }
-                        };
-                    } else {
-                        return d3.symbolSquare;
-                    }
+                    bndTypeChk = n.attrs.type
+                    if (bndTypeChk != null) {
+                        bndType = n.attrs.type.strSet.pos_list;
+                        if (bndType == "be") {
+                            //return d3.symbolDiamond;
+                            // Draw a long diamond for tests.
+                            return {
+                                draw: function (context, size) {
+                                    let side = Math.sqrt(size),
+                                        ratio = 1.15;
+                                    // Good old Pythagoras.
+                                    diagonal =  Math.sqrt(2*side*side),
+                                        x = diagonal/2*ratio
+                                        y = diagonal/2/ratio
+                                    context.moveTo( 0,  y);
+                                    context.lineTo( x,  0);
+		                    context.lineTo( 0, -y);
+                                    context.lineTo(-x,  0);
+		                    context.closePath();
+                                }
+                            };
+                        } else { return d3.symbolSquare; }
+                    } else { return d3.symbolSquare; }
                 }
 
                 else {
@@ -345,25 +346,40 @@ define([
             var node_to_color = function (n) {
                 let ancestor = ancestorArray[n.id];
                 if (ancestor == "state") {
-                    stateTest = n.attrs.test.strSet.pos_list;
-                    if (stateTest == "false") { 
-                        return "gray"; // gray
+                    stateTestChk = n.attrs.test
+                    if (stateTestChk != null) {
+                        stateTest = n.attrs.test.strSet.pos_list;
+                        if (stateTest == "false") { 
+                            return "gray"; // gray
+                        } else {
+                            return "#FFD33D"; // yellow
+                        }
                     } else {
                         return "#FFD33D"; // yellow
                     }
                 } else if (ancestor == "bnd") {
-                    bndTest = n.attrs.test.strSet.pos_list;
-                    if (bndTest == "false") { 
-                        return "#E63234"; // red
-                    } else {
+                    bndTestChk = n.attrs.test
+                    if (bndTestChk != null) {
+                        bndTest = n.attrs.test.strSet.pos_list;
+                        if (bndTest == "false") { 
+                            return "#E63234"; // red
+                        } else { 
+                            return "#82A532"; // green 
+                        }
+                    } else { 
                         return "#82A532"; // green
                     }
                  } else if (ancestor == "mod") {
-                    modVals = n.attrs.value.strSet.pos_list;
-                    if (modVals == "false") { 
-                        return "gray"; // gray
+                    modValsChk = n.attrs.value
+                    if (modValsChk != null) {
+                        modVals = n.attrs.value.strSet.pos_list;
+                        if (modVals == "false") { 
+                            return "gray"; // gray
+                        } else {
+                            return "#3399ff"; // blue
+                        }
                     } else {
-                        return "#3399ff"; // blue
+                        return "#3399ff"; // blu
                     }              
                 } else {                
                     return ({
@@ -1627,40 +1643,39 @@ define([
 
 
         function dehilightNodes() {
-            svg.selectAll(".nodeSymbol")
-                .classed("highlighted", false);
-			svg.selectAll(".node")
-                .classed("lowlighted", false);
-			svg.selectAll(".link")
-				.classed("highlighted", false);
-            svg.selectAll(".link")
-                .classed("lowlighted", false);
-
+            svg.selectAll(".nodeSymbol").classed("highlighted", false);
+	    svg.selectAll(".node").classed("lowlighted", false);
+	    svg.selectAll(".link").classed("highlighted", false);
+            svg.selectAll(".link").classed("lowlighted", false);
         }
 
         function highlightNodes(to_highlight) {
-            svg.selectAll(".nodeSymbol")
-                .classed("highlighted", function (d) { return to_highlight(d.id) });
-			svg.selectAll(".node")
-			    .classed("lowlighted", function (d) { return !to_highlight(d.id) });
-
-			svg.selectAll(".link")
-				.classed("highlighted", function (d) { return to_highlight(d.source.id) && to_highlight(d.target.id) });
-            svg.selectAll(".link")
-                .classed("lowlighted", function (d) { return !to_highlight(d.source.id) || !to_highlight(d.target.id) });
+            svg.selectAll(".nodeSymbol").classed("highlighted", function (d) {
+                return to_highlight(d.id)
+            });
+            svg.selectAll(".node").classed("lowlighted", function (d) {
+                return !to_highlight(d.id)
+            });
+            svg.selectAll(".link").classed("highlighted", function (d) {
+                return to_highlight(d.source.id) && to_highlight(d.target.id)
+            });
+            svg.selectAll(".link").classed("lowlighted", function (d) {
+                return !to_highlight(d.source.id) || !to_highlight(d.target.id)
+            });
         }
 
-        //only highlights node among the already highlighted
-		//That function is bugged at the moment. Don't use it for now.
+        // Only highlights node among the already highlighted.
+	// That function is bugged at the moment. Don't use it for now.
         function highlightSubNodes(to_highlight) {
-            svg.selectAll(".nodeSymbol")
-				.classed("highlighted", function (d) { return (d3.select(this).classed("highlighted")) && to_highlight(d.id) });
-			svg.selectAll(".node")
-                .classed("lowlighted", function (d) { return (d3.select(this).classed("lowlighted")) && !to_highlight(d.id) });
-
-            svg.selectAll(".link")
-                .classed("lowlighted", true);
+            svg.selectAll(".nodeSymbol").classed("highlighted", function (d) {
+                return (d3.select(this).classed("highlighted")) && to_highlight(d.id)
+            });
+            svg.selectAll(".node").classed("lowlighted", function (d) {
+                return (d3.select(this).classed("lowlighted")) && !to_highlight(d.id)
+            });
+            svg.selectAll(".link").classed("lowlighted", true);
         }
+
         function newChild() {
             var selected = svg_content.selectAll("g.selected")
             let node_ids = selected.data().map(d => d.id);
