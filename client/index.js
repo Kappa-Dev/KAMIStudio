@@ -169,10 +169,80 @@ define([
                     var f = function (acc, subG) {
                         return acc.concat(subG["top_graph"]["nodes"].map((d) => d["type"]))
                     };
-                    var images = hie["children"]
+                    var images_tmp = hie["children"]
                         .filter((graph) =>
-                            graph["top_graph"]["nodes"].some((d) => d["type"] == n_id))
-                        .reduce(f, []);
+                            graph["top_graph"]["nodes"].some((d) =>
+                                d["type"] == n_id));
+                    // Access user selection options.
+                    // Type Do or Is
+                    var desired_type = "none";
+                    if (d3.select("#do_chkbx").property("checked")) {
+                        desired_type = "do"
+                    }
+                    if (d3.select("#is_chkbx").property("checked")) {
+                        desired_type = "be"
+                    }
+                    // Test True or False
+                    var desired_test = "none";
+                    if (d3.select("#true_chkbx").property("checked")) {
+                        desired_test = "true";
+                    }
+                    if (d3.select("#false_chkbx").property("checked")) {
+                        desired_test = "false";
+                    }
+                    // Nugget selection based on the type
+                    // (do, is) of the clicked node.
+                    if (desired_type != "none") {
+                        // Nuggets where the clicked node has no
+                        // type should be included by default.
+                        var images_typeless = images_tmp
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs
+                                    .type == undefined);
+                        // Nuggets with the desired type.
+                        var images_with_type = images_tmp
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs
+                                    .type != undefined);
+                        var images_right_type = images_with_type
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs.type
+                                    .strSet.pos_list == desired_type);
+                        var images_type_sel = images_right_type
+                            .concat(images_typeless);
+                    } else {
+                        var images_type_sel = images_tmp;
+                    }
+                    // Nugget selection based on the test
+                    // (true, false) of the clicked node.
+                    if (desired_test != "none") {
+                        // Nuggets where the clicked node has no
+                        // test should be included by default.
+                        var images_testless = images_type_sel
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs
+                                    .test == undefined);
+                        // Nuggets with the desired test.
+                         var images_with_test = images_type_sel
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs
+                                    .test != undefined);
+                        var images_right_test = images_with_test
+                            .filter((graph) =>
+                                graph.top_graph.nodes.find((d) =>
+                                    d["type"] == n_id).attrs.test
+                                    .strSet.pos_list == desired_test);
+                        var images_test_sel = images_right_test
+                            .concat(images_testless);
+                    } else {
+                        var images_test_sel = images_type_sel;
+                    }
+                    var images = images_test_sel.reduce(f, []);
                     return (n2_id) => images.indexOf(n2_id) > -1;
                 };
                 return (n_id) => sameSubgraphAux(hie, n_id);

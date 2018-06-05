@@ -20,6 +20,8 @@ define([
      */
     return function InteractiveGraph(container_id, new_svg_name, svg_width, svg_height, dispatch, request, readOnly, localDispatch) {
         var disp = dispatch;
+        var server_url = "http://0.0.0.0:5000";
+        var factory = new RqFactory(server_url);
         let nodeClipboard = {
             path: null,
             nodes: []
@@ -220,10 +222,20 @@ define([
                 var ancestor = ancestorArray[n.id];
                 if (
                     ancestor == "gene" ||
-                    ancestor == "residue" ||
-                    ancestor == "region"
+                    ancestor == "residue"
                 ) {
                     return d3.symbolCircle;
+                }
+
+                else if (ancestor == "region") {
+                    return d3.symbolCircle;
+                    //return {
+                    //    draw: function (context, size) {
+                    //        let radius =  Math.sqrt(size)/2,
+                    //            ratio = 1.3;
+                    //        context.ellipse(0, 0, radius*ratio, radius);
+                    //    }
+                    //}
                 }
 
                 // Draw a star for states.
@@ -279,8 +291,22 @@ define([
                 //    }
                 //}
 
+                // Draw a half-square half-circle for mods.
+                else if (ancestor == "mod") {
+                    return {
+                        draw: function (context, size) {
+                            let radius = Math.sqrt(size)/2,
+                                side = Math.sqrt(size);
+                            context.moveTo(      0, -side/2);
+                            context.lineTo(-side/2, -side/2);
+                            context.lineTo(-side/2,  side/2);
+                            context.lineTo(      0,  side/2);
+                            context.arc(0, 0, radius, Math.PI/2, 3*Math.PI/2, true);
+                        }
+                    }
+                }
+
                 else if (
-                    ancestor == "mod" ||
                     ancestor == "syn" ||
                     ancestor == "deg") {
                     return d3.symbolSquare;
@@ -689,7 +715,6 @@ define([
             if (!shapeClassifier.edgeColor) { shapeClassifier.edgeColor = function (_) { return "black" } };
 
 
-
             //transform links for search optimisation
             var links = response.edges.map(function (d) {
                 userColor = "unspecified";
@@ -708,14 +733,13 @@ define([
             edgesList = links;
 
 
-
-
             //add all links as line in the svg
             var link = svg_content.selectAll(".link")
                 .data(links, function (d) { return d.source.id + "-" + d.target.id; });
             link.enter()//.insert("line","g")
                 .append("path")
                 .classed("link", true)
+                // I think this is where I have to add arrows (Seb)
                 //.attr("marker-mid", "url(#arrow_end)")
                 .on("contextmenu", d3ContextMenu(edgeCtMenu));
             link.exit().remove();
@@ -726,6 +750,21 @@ define([
                 simulation.force("link").links(links);
             }
             catch (err) { return 0; }
+
+
+            //// Add links of the simplified contact map to the action graph.
+            //var contact = svg_content.selectAll(".contact")
+            //    .data(links, function (d) {
+            //        // Find edges whose target is a bnd or mod node.
+            //        target_type = d.target.type
+            //        console.log("HYFF");
+            //        console.log(d);
+            //        return d.source.id + "-" + d.target.id;
+            //    });
+            //contact.enter()
+            //    .append("path")
+            //    .classed("contact", true);
+            //contact.exit().remove(); // What is that?
 
 
             //add all node as circle in the svg
@@ -1573,7 +1612,94 @@ define([
                 }
                 const jsonRep = JSON.parse(rep.response);
                 const children = jsonRep["children"];
-                disp.call("addNugetsToInput", this, children, d.id, keepOldConds);
+                // Access user selection options.
+                // Type Do or Is
+                var desired_type = "none";
+                if (d3.select("#do_chkbx").property("checked")) {
+                    desired_type = "do"
+                }
+                if (d3.select("#is_chkbx").property("checked")) {
+                    desired_type = "be"
+                }
+                // Test True or False
+                var desired_test = "none";
+                if (d3.select("#true_chkbx").property("checked")) {
+                    desired_test = "true";
+                }
+                if (d3.select("#false_chkbx").property("checked")) {
+                    desired_test = "false";
+                }
+                // This is the only way I (Seb) found to access the hierarchy
+                // from inside that function. Damn you Javascript.
+                factory.getGraphAndDirectChildren(
+                    "/kami_base/kami/action_graph",
+                    function (err, ret) {
+                        if (!err) {
+                            let hie = ret
+                            // Get the list of nuggets involved with the
+                            // clicked node from variable children.
+                            var nuggets_tmp = hie["children"]
+                                .filter((graph) =>
+                                    children.includes(graph["name"]))
+                            // Nugget selection based on the type
+                            // (do, is) of the clicked node.
+                            if (desired_type != "none") {
+                                // Nuggets where the clicked node has no
+                                // type should be included by default.
+                                var nuggets_typeless = nuggets_tmp
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs
+                                            .type == undefined);
+                                // Nuggets with the desired type.
+                                var nuggets_with_type = nuggets_tmp
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs
+                                            .type != undefined);
+                                var nuggets_right_type = nuggets_with_type
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs.type
+                                            .strSet.pos_list == desired_type);
+                                var nuggets_type_sel = nuggets_right_type
+                                    .concat(nuggets_typeless);
+                            } else {
+                                var nuggets_type_sel = nuggets_tmp;
+                            }
+                            // Nugget selection based on the test
+                            // (true, false) of the clicked node.
+                            if (desired_test != "none") {
+                                // Nuggets where the clicked node has no
+                                // test should be included by default.
+                                var nuggets_testless = nuggets_type_sel
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs
+                                            .test == undefined);
+                                // Nuggets with the desired test.
+                                 var nuggets_with_test = nuggets_type_sel
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs
+                                            .test != undefined);
+                                var nuggets_right_test = nuggets_with_test
+                                    .filter((graph) =>
+                                        graph.top_graph.nodes.find((n) =>
+                                            n["type"] == d.id).attrs.test
+                                            .strSet.pos_list == desired_test);
+                                var nuggets_test_sel = nuggets_right_test
+                                    .concat(nuggets_testless);
+                            } else {
+                                var nuggets_test_sel = nuggets_type_sel;
+                            }
+                            var children_sel = nuggets_test_sel.map((n) =>
+                                n["name"]);
+                            disp.call("addNugetsToInput", this, children_sel,
+                                d.id, keepOldConds);
+                        }
+                    });
+                //disp.call("addNugetsToInput", this, children, d.id, keepOldConds);
             }
             request.getChildren(g_id, d.id, callback)
         };
