@@ -530,7 +530,7 @@ define([
                 nodes.attr("transform", function (d) {
                     return "translate(" + d.x + "," + d.y + ")";
                 });
-                svg_content.selectAll(".link")
+                svg_content.selectAll(".link, .contact")
                     .attr("d", function (d) {
                         var x1 = d.source.x,
                             y1 = d.source.y,
@@ -745,31 +745,85 @@ define([
             link.exit().remove();
             // svg_content.selectAll(".link")
             // 	.attr("stroke-dasharray", shapeClassifier.dotStyle)
-
             try {
                 simulation.force("link").links(links);
             }
             catch (err) { return 0; }
 
 
-            //// Add links of the simplified contact map to the action graph.
-            //var contact = svg_content.selectAll(".contact")
-            //    .data(links, function (d) {
-            //        // Find edges whose target is a bnd or mod node.
-            //        target_type = d.target.type
-            //        console.log("HYFF");
-            //        console.log(d);
-            //        return d.source.id + "-" + d.target.id;
-            //    });
-            //contact.enter()
-            //    .append("path")
-            //    .classed("contact", true);
-            //contact.exit().remove(); // What is that?
-
-
             //add all node as circle in the svg
             var node = svg_content.selectAll("g.node")
                 .data(response.nodes, function (d) { return d.id; });
+
+
+            // Compute links of the simplified contact map to the action graph.
+            // Find the edges that target a bnd node.
+            var bnd_edges = links.filter((edg) => edg.target.type === "bnd");
+            // Find the gene(s) that connect to each bnd_edge.
+            contact_edges = [];
+            links_len = links.length;
+            for (var i = 0; i < bnd_edges.length; i++) {
+                bnd_edge = bnd_edges[i]
+                if (bnd_edge.source.type == "gene") {
+                    var gene_nodes = [bnd_edge.source];
+                } else {
+                    var actors = [bnd_edge.source];
+                    var seen_nodes = [actors[0]];
+                    var seen_ids = [actors[0].id];
+                    while (actors.length > 0) {
+                        // Find the outgoing edges from each actor.
+                        var act_ids = actors.map((nod) => nod.id)
+                        var belong_edges = links
+                            .filter((edg) => act_ids.includes(edg.source.id))
+                        // The target of each edge become the actor for
+                        // the next loop round.
+                        var actors = belong_edges
+                            .filter((edg) => edg.target.type != "bnd")
+                            .filter((edg) => edg.target.type != "mod")
+                            .map((edg) => edg.target)
+                        // Add actors that were not still seen to the list.
+                        for (var j = 0; j < actors.length; j++) {
+                            if (seen_ids.includes(actors[j].id) === false) {
+                                seen_nodes.push(actors[j]);
+                                seen_ids.push(actors[j].id);
+                            }
+                        }
+                        //seen_nodes = seen_nodes.concat(actors);
+                    }
+                    // Find which of the seen nodes are genes.
+                    gene_nodes = seen_nodes.filter((edg) => edg.type == "gene")
+                }
+                // Add one contact edge from each source gene to the bnd node.
+                for (var k = 0; k < gene_nodes.length; k++) {
+                    var contact = {};
+                    contact["source"] = gene_nodes[k];
+                    contact["target"] = bnd_edge.target;
+                    contact["color"] = "unspecified";
+                    contact["index"] = links_len + contact_edges.length
+                    contact_edges.push(contact);
+                }
+            }
+
+            // Add the contact edges.
+            var contact = svg_content.selectAll(".contact")
+                .data(contact_edges, function (d) {
+                    return d.source.id + "-" + d.target.id;
+                });
+            contact.enter()//.insert("line","g")
+                .append("path")
+                .classed("contact", true)
+                .on("contextmenu", d3ContextMenu(edgeCtMenu));
+            contact.exit().remove();
+
+
+            //// Basis to hide details.
+            //d3.selectAll(".region").style("visibility", "hidden")
+            //d3.selectAll(".site").style("visibility", "hidden")
+            //d3.selectAll(".residue").style("visibility", "hidden")
+            //d3.selectAll(".state").style("visibility", "hidden")
+            //d3.selectAll(".mod").style("visibility", "hidden")
+            //d3.selectAll(".link").style("visibility", "hidden")
+
 
             var node_g = node.enter().insert("g")
                 .classed("node", true)
@@ -1764,9 +1818,29 @@ define([
                 .classed("selectedSymbol", false);
             hideButtons();
             dehilightNodes();
+            showDetails();
         }
         this.svg_result = function () { return (svg.node()); };
 
+        function showDetails() {
+            if (d3.select("#detail_chkbx").property("checked") == true) {
+                d3.selectAll(".contact").style("visibility", "hidden")
+                d3.selectAll(".region").style("visibility", "visible")
+                d3.selectAll(".site").style("visibility", "visible")
+                d3.selectAll(".residue").style("visibility", "visible")
+                d3.selectAll(".state").style("visibility", "visible")
+                d3.selectAll(".mod").style("visibility", "visible")
+                d3.selectAll(".link").style("visibility", "visible")
+            } else {
+                d3.selectAll(".contact").style("visibility", "visible")
+                d3.selectAll(".region").style("visibility", "hidden")
+                d3.selectAll(".site").style("visibility", "hidden")
+                d3.selectAll(".residue").style("visibility", "hidden")
+                d3.selectAll(".state").style("visibility", "hidden")
+                d3.selectAll(".mod").style("visibility", "hidden")
+                d3.selectAll(".link").style("visibility", "hidden")
+            }
+        }
 
         function dehilightNodes() {
             svg.selectAll(".nodeSymbol").classed("highlighted", false);

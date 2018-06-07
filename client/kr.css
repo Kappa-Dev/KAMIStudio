@@ -593,6 +593,12 @@ svg{
     stroke-width: 3px;
     /*stroke-dasharray : 3 0;*/
 }
+.contact {
+    stroke: var(--link-color);
+    fill:none;
+    stroke-width: 5px;
+    /*stroke-dasharray : 3 0;*/
+}
 .ruleMapping {
     stroke: var(--link-color);
     fill:none;
