@@ -384,7 +384,9 @@ define([
                 clean();
                 dispatch.on("graphUpdate", update_graph);
                 update_graph(abs_path, false);
-                d3.select("body").on("keydown", graph_pan.svgKeydownHandler);
+                d3.select("body").on("keydown", function() {
+                    graph_pan.svgKeydownHandler(abs_path);
+                });
             });
 
             dispatch.on("loadPreview", function (abs_path) {

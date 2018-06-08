@@ -596,7 +596,7 @@ svg{
 .contact {
     stroke: var(--link-color);
     fill:none;
-    stroke-width: 5px;
+    stroke-width: 3px;
     /*stroke-dasharray : 3 0;*/
 }
 .ruleMapping {
@@ -658,7 +658,7 @@ svg{
     background-color:rgba(230, 230, 230, 1);
     position:absolute;
     top:42px;
-    right:45px;
+    right:15px;
     padding-left: 5px;
     padding-right: 5px;
 }

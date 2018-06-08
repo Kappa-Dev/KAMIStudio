@@ -48,7 +48,7 @@ define([
                     currentType = null;
                 }
                 prefixDiv.text(prefix);
-                console.log("current_type", currentType);
+                //console.log("current_type", currentType);
             }
 
             function activate(d, i) {
@@ -115,4 +115,4 @@ define([
 
         }
     });
-    
+

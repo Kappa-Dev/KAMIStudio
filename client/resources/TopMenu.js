@@ -242,7 +242,7 @@ define([
                                 d3.select("#top_menu").append("div")
                                     .attr("id", "detail_tooltip")
                                     .style("visibility", "hidden")
-                                    .text("shortcut: s");
+                                    .text("shortcut: s (action graph only)");
                                 d3.select("#detail_chkbx")
                                     .on("mouseover", function() {
                                         d3.select("#detail_tooltip").transition()
@@ -253,9 +253,31 @@ define([
                                         d3.select("#detail_tooltip")
                                             .interrupt().transition()
                                             .style("visibility", "hidden");
-                                    });
+                                    })
+                                    .on("click", clickDetails);
 
 
 			}());
 		}
+                function clickDetails() {
+                    if (d3.select("#detail_chkbx").property("checked") == true) {
+                        d3.selectAll(".contact").style("visibility", "hidden")
+                        d3.selectAll(".region").style("visibility", "visible")
+                        d3.selectAll(".site").style("visibility", "visible")
+                        d3.selectAll(".residue").style("visibility", "visible")
+                        d3.selectAll(".state").style("visibility", "visible")
+                        d3.selectAll(".mod").style("visibility", "visible")
+                        d3.selectAll(".bnd").style("visibility", "visible")
+                        d3.selectAll(".link").style("visibility", "visible")
+                    } else {
+                        d3.selectAll(".contact").style("visibility", "visible")
+                        d3.selectAll(".region").style("visibility", "hidden")
+                        d3.selectAll(".site").style("visibility", "hidden")
+                        d3.selectAll(".residue").style("visibility", "hidden")
+                        d3.selectAll(".state").style("visibility", "hidden")
+                        d3.selectAll(".mod").style("visibility", "hidden")
+                        d3.selectAll(".bnd").style("visibility", "hidden")
+                        d3.selectAll(".link").style("visibility", "hidden")
+                    }
+                }
 	});

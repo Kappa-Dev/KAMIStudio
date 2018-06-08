@@ -206,7 +206,10 @@ define([
                             if (ltype !== "rule") {
                                 return (d => {
                                     d3.event.stopPropagation();
-                                    disp.call("loadPreview", this, d.path);
+                                    // Display preview only for nuggets.
+                                    if (d.path.search("/kami_base/kami/action_graph/") == 0) {
+                                        disp.call("loadPreview", this, d.path);
+                                    }
                                 })
                             }
                         }())

@@ -107,7 +107,7 @@ define([
             simulation.alphaDecay(0.06);
             simulation.stop();
             if (path) {
-                loadType(path, graph, config, function (rep) { loadGraph(rep, null, config); });
+                loadType(path, graph, config, function (rep) { loadGraph(path, rep, null, config); });
             }
         }
 
@@ -474,7 +474,7 @@ define([
                     "nodeColor": node_to_color,
                     "edgeColor": link_to_color
                 };
-            loadType(path, graph, config, function (rep) { loadGraph(rep, shapeClassifier, config); });
+            loadType(path, graph, config, function (rep) { loadGraph(path, rep, shapeClassifier, config); });
         }
         /* init the svg object
          * add arrows on edges
@@ -510,12 +510,12 @@ define([
                 .attr("id", "n_tooltip")
                 .classed("n_tooltip", true)
                 .style("visibility", "hidden");
-            svg_content.append("svg:image")
-                .attr("width", 900)
-                .attr("height", 400)
-                .attr("x", function () { return width / 2 - 450; })
-                .attr("y", function () { return height / 2 - 200; })
-                .attr("xlink:href", "resources/toucan.png");
+            //svg_content.append("svg:image")
+            //    .attr("width", 900)
+            //    .attr("height", 400)
+            //    .attr("x", function () { return width / 2 - 450; })
+            //    .attr("y", function () { return height / 2 - 200; });
+            //    .attr("xlink:href", "resources/toucan.png");
         };
         // this.initSvg = initSvg;
         /* this fonction  is triggered by tick events
@@ -622,14 +622,14 @@ define([
                     initForce(path, graph, config);
                 }
             }
-            else {
-                svg_content.append("svg:image")
-                    .attr("width", 900)
-                    .attr("height", 400)
-                    .attr("x", function () { return width / 2 - 450 })
-                    .attr("y", function () { return height / 2 - 200 })
-                    .attr("xlink:href", "resources/toucan.png");
-            }
+            //else {
+            //    svg_content.append("svg:image")
+            //        .attr("width", 900)
+            //        .attr("height", 400)
+            //        .attr("x", function () { return width / 2 - 450 })
+            //        .attr("y", function () { return height / 2 - 200 })
+            //        .attr("xlink:href", "resources/toucan.png");
+            //}
         };
 
         /* precondition : /kami_base/kami/ is the start of the path */
@@ -700,7 +700,7 @@ define([
          * nodes can be renamed by double clicking it
          * @input : response : a json structure of the graph
          */
-        function loadGraph(response, shapeClassifier, config) {
+        function loadGraph(path, response, shapeClassifier, config) {
             //define default shapes functions if not defined
             if (!shapeClassifier) { var shapeClassifier = {} };
             if (!shapeClassifier.shape) { shapeClassifier.shape = function (_) { return d3.symbolCircle } };
@@ -816,15 +816,6 @@ define([
             contact.exit().remove();
 
 
-            //// Basis to hide details.
-            //d3.selectAll(".region").style("visibility", "hidden")
-            //d3.selectAll(".site").style("visibility", "hidden")
-            //d3.selectAll(".residue").style("visibility", "hidden")
-            //d3.selectAll(".state").style("visibility", "hidden")
-            //d3.selectAll(".mod").style("visibility", "hidden")
-            //d3.selectAll(".link").style("visibility", "hidden")
-
-
             var node_g = node.enter().insert("g")
                 .classed("node", true)
                 .call(d3.drag().on("drag", dragged)
@@ -840,6 +831,9 @@ define([
                 .on("contextmenu", nodeContextMenuHandler);
 
             svg_content.selectAll("g.node").each(function (d) { if (d.type) d3.select(this).classed(d.type, true) });
+            if (path == "/kami_base/kami/action_graph") {
+                showDetails();
+            }
             if (config.repDispatch) { config.repDispatch.call("loadingEnded") }
 
             //add selection rectangle
@@ -1818,7 +1812,6 @@ define([
                 .classed("selectedSymbol", false);
             hideButtons();
             dehilightNodes();
-            showDetails();
         }
         this.svg_result = function () { return (svg.node()); };
 
@@ -1830,6 +1823,7 @@ define([
                 d3.selectAll(".residue").style("visibility", "visible")
                 d3.selectAll(".state").style("visibility", "visible")
                 d3.selectAll(".mod").style("visibility", "visible")
+                d3.selectAll(".bnd").style("visibility", "visible")
                 d3.selectAll(".link").style("visibility", "visible")
             } else {
                 d3.selectAll(".contact").style("visibility", "visible")
@@ -1838,6 +1832,7 @@ define([
                 d3.selectAll(".residue").style("visibility", "hidden")
                 d3.selectAll(".state").style("visibility", "hidden")
                 d3.selectAll(".mod").style("visibility", "hidden")
+                d3.selectAll(".bnd").style("visibility", "hidden")
                 d3.selectAll(".link").style("visibility", "hidden")
             }
         }
@@ -2001,9 +1996,8 @@ define([
             request.pasteNodes(g_id, nodeClipboard["path"], nodeClipboard["nodes"], svgmousepos, callback);
         }
 
-        function svgKeydownHandler() {
+        function svgKeydownHandler(path) {
             if (d3.event.target === d3.select("body").node()) {
-                console.log("parent");
                 if (d3.event.keyCode === 80 || (d3.event.keyCode === 86 && d3.event.ctrlKey)) {
                     if (nodeClipboard["path"] !== null && nodeClipboard["nodes"] !== []) {
                         let transf = d3.zoomTransform(svg.node());
@@ -2074,11 +2068,17 @@ define([
                     }
                 }
                 else if (d3.event.keyCode === 83) {
-                    chk_state = d3.select("#detail_chkbx").property("checked");
-                    if (chk_state == false) {
-                        d3.select("#detail_chkbx").property("checked", true);
-                    } if (chk_state == true) {
-                        d3.select("#detail_chkbx").property("checked", false);
+                    // Show/Hide details is supposed to work only
+                    // in the action graph.
+                    if (path == "/kami_base/kami/action_graph") {
+                        chk_state = d3.select("#detail_chkbx").property("checked");
+                        if (chk_state == false) {
+                            d3.select("#detail_chkbx").property("checked", true);
+                        } if (chk_state == true) {
+                            d3.select("#detail_chkbx").property("checked", false);
+                        }
+                        console.log(path)
+                        showDetails();
                     }
                 } 
             }
