@@ -44,8 +44,10 @@ SERVER = MyFlask(__name__,
                  hierarchy_constructor=ServerHierarchy)
 
 # configures server
-SERVER.config['ENV'] = 'development'
-SERVER.config['DEBUG'] = True
+#SERVER.config['ENV'] = 'development'
+#SERVER.config['DEBUG'] = True
+SERVER.config['ENV'] = 'production'
+SERVER.config['DEBUG'] = False
 CORS(SERVER)
 
 # give a pointer to the hierarchy to the blueprints

@@ -96,15 +96,15 @@ define([
         function initForce(path, graph, config) {
             simulation.stop();
             simulation.force("link", null);
-            simulation.force("chargeAgent", null);
-            simulation.force("chargeBnd", null);
-            simulation.force("chargeBrk", null);
-            simulation.force("link", d3.forceLink().id(function (d) { return d.id; }))
-                .force("charge", new d3.forceManyBody().distanceMax(radius * 10))
-                .force("center", d3.forceCenter(width / 2, height / 2))
-                .force("collision", d3.forceCollide(radius + radius / 4));
-            // simulation.on("tick", move);
-            simulation.alphaDecay(0.06);
+            //simulation.force("chargeAgent", null);
+            //simulation.force("chargeBnd", null);
+            //simulation.force("chargeBrk", null);
+            simulation.force("link", d3.forceLink().id(function (d) { return d.id; }));
+            //    .force("charge", new d3.forceManyBody().distanceMax(radius * 10))
+            //    .force("center", d3.forceCenter(width / 2, height / 2))
+            //    .force("collision", d3.forceCollide(radius + radius / 4));
+            // // simulation.on("tick", move);
+            //simulation.alphaDecay(0.06);
             simulation.stop();
             if (path) {
                 loadType(path, graph, config, function (rep) { loadGraph(path, rep, null, config); });
@@ -116,42 +116,86 @@ define([
             //simulation = d3.forceSimulation();
             simulation.stop();
             simulation.force("link", null);
-            simulation.force("charge", null);
-            simulation.force("center", null);
+            simulation.force("charge", d3.forceManyBody());
+            simulation.force("charge").strength(-100);
+            simulation.force("charge").distanceMax(radius * 10);
+            simulation.force("charge").distanceMin(radius / 10);
+            //simulation.force("center", null);
             //simulation.force("center", d3.forceCenter(width / 2, height / 2));
-            simulation.force("chargeAgent", null);
-            simulation.force("chargeBnd", null);
-            simulation.force("chargeBrk", null);
-            simulation.force("collision", d3.forceCollide(radius + radius / 4));
-            simulation.force("collision").strength(0.3);
+            //simulation.force("chargeAgent", null);
+            //simulation.force("chargeBnd", null);
+            //simulation.force("chargeBrk", null);
+            //simulation.force("collision", d3.forceCollide(radius + radius / 4));
+            //simulation.force("collision").strength(0.3);
+            simulation.alphaDecay(0.06);
             let ancestorArray = config.ancestor_mapping;
+            // For every node, count the number of edges that go to a
+            // bnd or mod node. Also count the number of edges that come
+            // from a mod node. Used in calculation of edge strengths.
+            var inter_edge_count = {};
+            for (i = 0; i < graph.edges.length; i++) {
+                from_id = graph.edges[i].from;
+                to_id = graph.edges[i].to;
+                if (ancestorArray[to_id] == "bnd" || ancestorArray[to_id] == "mod") {
+                    if (from_id in inter_edge_count) {
+                        inter_edge_count[from_id] = inter_edge_count[from_id] + 1;
+                    }
+                    else {
+                        inter_edge_count[from_id] = 1;
+                    };
+                };
+                if (ancestorArray[from_id] == "mod") {
+                    if (to_id in inter_edge_count) {
+                        inter_edge_count[to_id] = inter_edge_count[to_id] + 1;
+                    }
+                    else {
+                        inter_edge_count[to_id] = 1;
+                    };
+                };
+            };
             var distanceOfLink = function (l) {
                 let edge_length =
                     {
-                        "mod": { "state": 150 },
-                        "is_equal": { "state": 150 },
-                        "state": { "region": 50, "gene": 50, "residue": 50 },
-                        "residue": { "gene": 30, "region": 30 },
-                        "site": { "gene": 30, "region": 30 },
-                        "compo": { "site": 50, "region": 50 },
-                        "syn": { "gene": 150 },
-                        "gene": { "mod": 150 },
-                        "deg": { "gene": 150 },
-                        "region": { "gene": 30 },
-                        "half-act": { "gene": 150, "region": 150, "is_bnd": 50, "is_free": 50, "bnd": 50, "brk": 50 }
+                        "state": { "residue": 70, "site": 70, "region": 70, "gene": 70 },
+                        "residue": { "site": 70, "region": 70, "gene": 70 },
+                        "site": { "region": 70, "gene": 70 },
+                        "region": { "gene": 70 },
+                        //"site": { "region": 10, "gene": 10, "bnd": 200 },
+                        //"region": { "gene": 50, "bnd": 200, "mod": 200 },
+                        //"gene": { "bnd": 200, "mod": 200 },
+                        //"mod": { "state": 200 },
+                        //"syn": { "gene": 200 },
+                        //"deg": { "gene": 200 },
                     };
                 let source_type = ancestorArray[l.source["id"]];
                 let target_type = ancestorArray[l.target["id"]];
-                let len_value = 50; // Default edge length.
+                var len_value = 100; // Default edge length.
                 if (edge_length.hasOwnProperty(source_type)) {
                     if (edge_length[source_type].hasOwnProperty(target_type)) {
-                        let len_value = edge_length[source_type][target_type] * width / 2000;
+                        var len_value = edge_length[source_type][target_type];
                     }
                 }
                 return len_value;
             };
+            var strengthOfLink = function (l) {
+                let source_type = ancestorArray[l.source["id"]];
+                let target_type = ancestorArray[l.target["id"]];
+                var strength_value = 0.5  ; // Default edge strength.
+                // Links from components to bnd must be weakened if many links
+                // go out of the same component. Same for links from components
+                // to mod or from mod to state.
+                if (target_type == "bnd" || target_type == "mod") {
+                    var strength_value = 0.1 / inter_edge_count[l.source["id"]];
+                }
+                if (source_type == "mod") {
+                    var strength_value = 0.1 / inter_edge_count[l.target["id"]];
+                }
+                return strength_value;
+            };
             simulation.force("link", d3.forceLink().id(function (d) { return d.id; }));
             simulation.force("link").distance(distanceOfLink);
+            simulation.force("link").strength(strengthOfLink);
+
             //simulation.force("link").iterations(2);
 
             // var chargeAgent = d3.forceManyBody();
@@ -448,7 +492,7 @@ define([
                 var userColor = l.color
                 var ancestorSource = ancestorArray[l.source.id];
                 var ancestorTarget = ancestorArray[l.target.id];
-                var components = ["residue", "region", "gene", "site", "compo"];
+                var components = ["residue", "region", "gene", "site", "state"];
                 var components2 = ["bnd", "brk", "is_bnd", "is_free"];
                 if (userColor == "unspecified") {
                     // Default colors depending on the source and target.
@@ -501,7 +545,7 @@ define([
                 .append("svg:path")
                 .attr("d", "M0,0 L0,6 L9,3 z");
             svg.on("contextmenu", d3ContextMenu(function () { return svgMenu(); }));//add context menu
-            svg.call(zoom);
+            svg.call(zoom).on("dblclick.zoom", null);
             svg.call(d3.drag().on("drag", selectionHandler).on("end", selectionHandlerEnd).on("start", selectionHandlerStart));
             svg.on("click", svgClickHandler);
             // d3.select("body").on("keydown", svgKeydownHandler);
@@ -734,21 +778,23 @@ define([
 
 
             //add all links as line in the svg
-            var link = svg_content.selectAll(".link")
-                .data(links, function (d) { return d.source.id + "-" + d.target.id; });
-            link.enter()//.insert("line","g")
-                .append("path")
-                .classed("link", true)
-                // I think this is where I have to add arrows (Seb)
-                //.attr("marker-mid", "url(#arrow_end)")
-                .on("contextmenu", d3ContextMenu(edgeCtMenu));
-            link.exit().remove();
-            // svg_content.selectAll(".link")
-            // 	.attr("stroke-dasharray", shapeClassifier.dotStyle)
-            try {
-                simulation.force("link").links(links);
-            }
-            catch (err) { return 0; }
+            //if (path != "/kami_base/kami/action_graph") {
+                var link = svg_content.selectAll(".link")
+                    .data(links, function (d) { return d.source.id + "-" + d.target.id; });
+                link.enter()//.insert("line","g")
+                    .append("path")
+                    .classed("link", true)
+                    // I think this is where I have to add arrows (Seb)
+                    //.attr("marker-mid", "url(#arrow_end)")
+                    .on("contextmenu", d3ContextMenu(edgeCtMenu));
+                link.exit().remove();
+                // svg_content.selectAll(".link")
+                // 	.attr("stroke-dasharray", shapeClassifier.dotStyle)
+                try {
+                    simulation.force("link").links(links);
+                }
+                catch (err) { return 0; }
+            //}
 
 
             //add all node as circle in the svg
@@ -807,6 +853,7 @@ define([
             // Add the contact edges.
             var contact = svg_content.selectAll(".contact")
                 .data(contact_edges, function (d) {
+                //.data(contact_simple, function (d) {
                     return d.source.id + "-" + d.target.id;
                 });
             contact.enter()//.insert("line","g")
@@ -886,6 +933,25 @@ define([
                     .type(shapeClassifier.shape)
                     .size(shapeClassifier.size))
                 .style("fill", shapeClassifier.nodeColor)
+                .on("dblclick", function (clicked_node) { //clicked_node => {
+                    // Find if that node was already clicked for details. If it wasn't,
+                    // mark it as clicked. If it was, mark is as not clicked.
+                    svg.selectAll(".nodeSymbol").filter((nod) => nod.id === clicked_node.id)
+                        .classed("detailclicked", function (d) {
+                            return !(d3.select(this).classed("detailclicked"));
+                        });
+                    // Find the subgraphs of all the detailclicked nodes.
+                    to_show = [];
+                    svg.selectAll(".detailclicked").each(function (nod) {
+                        tmp_nodes = config.highlightRel(nod.id);
+                        for (i = 0; i < tmp_nodes.length; i++) {
+                            if (!to_show.includes(tmp_nodes[i])) {
+                                to_show.push(tmp_nodes[i])
+                            }
+                        }
+                    });
+                    addDetails((n2_id) => to_show.indexOf(n2_id) > -1);
+                });
             // .style("fill", function (d) {
             // 	if (d.type && d.type != "") return "#" + setColor(type_list.indexOf(d.type), type_list.length);
             // 	else return "#EEEEEE";
@@ -915,7 +981,7 @@ define([
                 // 	if (d.type && d.type != "") return "#" + setColor(type_list.indexOf(d.type), type_list.length, true);
                 // 	else return "black";
                 // })
-                .on("dblclick", clickText);
+                //.on("dblclick", clickText);
 
             node_g.filter(d => d.attrs && "val" in d.attrs)
                 .insert("text")
@@ -1567,13 +1633,14 @@ define([
                             else if (d2.id == d.id && d3.event.sourceEvent.button == 1) {
                                 if (config.highlightRel) {
                                     if (d3.event.sourceEvent.shiftKey) {
-                                        highlightSubNodes(config.highlightRel(d.id));
+                                        let high_nodes = config.highlightRel(d.id);
+                                        highlightSubNodes((n2_id) => high_nodes.indexOf(n2_id) > -1);
                                         getChildren(d, true);
                                     }
                                     else {
-                                        highlightNodes(config.highlightRel(d.id));
+                                        let high_nodes = config.highlightRel(d.id);
+                                        highlightNodes((n2_id) => high_nodes.indexOf(n2_id) > -1);
                                         getChildren(d, false);
-
                                     }
                                 }
                             }
@@ -1876,6 +1943,35 @@ define([
             });
         }
 
+        function addDetails(to_show) {
+            // Show the details around all the nodes
+            svg.selectAll(".node").style("visibility", function (d) {
+                if (to_show(d.id) == true) {return "visible"};
+                if (to_show(d.id) == false && d.type != "gene") {return "hidden"};
+            });
+            svg.selectAll(".link").style("visibility", function (d) {
+                if (to_show(d.source.id) == true && to_show(d.target.id) == true) {return "visible"}
+                else {return "hidden"};
+            });
+            // Hide all the contacts that involve the clicked gene.
+            svg.selectAll(".contact").style("visibility", function (d) {
+                if (to_show(d.source.id) == true && to_show(d.target.id) == true) {return "hidden"}
+                else {return "visible"};
+            });
+            //svg.selectAll(".node").style("visibility", function (d) {
+            //    return to_show(d.id)
+            //});
+            //var link = svg_content.selectAll(".link")
+            //        .data(links, function (d) { return d.source.id + "-" + d.target.id; });
+            //    link.enter()//.insert("line","g")
+            //        .append("path")
+            //        .classed("link", true)
+            //        // I think this is where I have to add arrows (Seb)
+            //        //.attr("marker-mid", "url(#arrow_end)")
+            //        .on("contextmenu", d3ContextMenu(edgeCtMenu));
+            //    link.exit().remove();
+        }
+
         function newChild() {
             var selected = svg_content.selectAll("g.selected")
             let node_ids = selected.data().map(d => d.id);
@@ -2077,7 +2173,6 @@ define([
                         } if (chk_state == true) {
                             d3.select("#detail_chkbx").property("checked", false);
                         }
-                        console.log(path)
                         showDetails();
                     }
                 } 

@@ -698,6 +698,11 @@ svg{
     stroke-width: 5px;
 }
 
+.detailclicked{
+    stroke-width: 3px;
+    stroke: cyan;
+}
+
 .matched{
     opacity: 0.1;
 }

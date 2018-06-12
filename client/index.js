@@ -243,7 +243,8 @@ define([
                         var images_test_sel = images_type_sel;
                     }
                     var images = images_test_sel.reduce(f, []);
-                    return (n2_id) => images.indexOf(n2_id) > -1;
+                    return images;
+                    //return (n2_id) => images.indexOf(n2_id) > -1;
                 };
                 return (n_id) => sameSubgraphAux(hie, n_id);
             }
