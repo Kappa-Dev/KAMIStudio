@@ -760,20 +760,41 @@ define([
 
 
             //transform links for search optimisation
-            var links = response.edges.map(function (d) {
-                userColor = "unspecified";
-                edgeColor = d.attrs.color
+            var tmp_links = response.edges.map(function (d) {
+                var userColor = "unspecified";
+                var edgeColor = d.attrs.color;
                 if (edgeColor != null) {
-                    colorVals = d.attrs.color.strSet.pos_list;
+                    var colorVals = d.attrs.color.strSet.pos_list;
                     if (colorVals != null) {
-                        userColor = colorVals[0];
+                        var userColor = colorVals[0];
                     }
                 }
-                return { source: findNode(d.from, response.nodes),
-                         target: findNode(d.to, response.nodes),
-                         color: userColor
+                var edgeTransType = d.attrs.type;
+                var edgeTransitive = false;
+                if (edgeTransType != null) {
+                    edgeTransitive = d.attrs.type.strSet.pos_list;   
+                }
+                edge_obj = { source: findNode(d.from, response.nodes),
+                             target: findNode(d.to, response.nodes),
+                             color: userColor }
+                if (path == "/kami_base/kami/action_graph") {
+                    return edge_obj;
+                    //if (edgeTransitive == false) {
+                    //    return edge_obj;
+                    //}
+                }
+                else {
+                    return edge_obj;
                 }
             });
+            // Remove undefined elements from link list.
+            links = [];
+            for (var i = 0; i < tmp_links.length; i++) {
+                if (tmp_links[i]) {
+                    links.push(tmp_links[i]);
+                }
+            }
+            console.log(links)
             edgesList = links;
 
 
@@ -803,57 +824,165 @@ define([
 
 
             // Compute links of the simplified contact map to the action graph.
-            // Find the edges that target a bnd node.
-            var bnd_edges = links.filter((edg) => edg.target.type === "bnd");
-            // Find the gene(s) that connect to each bnd_edge.
-            contact_edges = [];
-            links_len = links.length;
-            for (var i = 0; i < bnd_edges.length; i++) {
-                bnd_edge = bnd_edges[i]
-                if (bnd_edge.source.type == "gene") {
-                    var gene_nodes = [bnd_edge.source];
-                } else {
-                    var actors = [bnd_edge.source];
-                    var seen_nodes = [actors[0]];
-                    var seen_ids = [actors[0].id];
-                    while (actors.length > 0) {
-                        // Find the outgoing edges from each actor.
-                        var act_ids = actors.map((nod) => nod.id)
-                        var belong_edges = links
-                            .filter((edg) => act_ids.includes(edg.source.id))
-                        // The target of each edge become the actor for
-                        // the next loop round.
-                        var actors = belong_edges
-                            .filter((edg) => edg.target.type != "bnd")
-                            .filter((edg) => edg.target.type != "mod")
-                            .map((edg) => edg.target)
-                        // Add actors that were not still seen to the list.
-                        for (var j = 0; j < actors.length; j++) {
-                            if (seen_ids.includes(actors[j].id) === false) {
-                                seen_nodes.push(actors[j]);
-                                seen_ids.push(actors[j].id);
+            // Function that takes a list of edges to or from action nodes
+            // and for each edge returns the gene from or to that action node.
+            // (There can actually be more than one output edge for each input 
+            // if there is a site formed from several proteins).
+            function findGeneNode(input_edges, index_strt) {
+                var contact_edges = [];
+                for (var i = 0; i < input_edges.length; i++) {
+                    var input_edge = input_edges[i];
+                    // Find whether the edge is going to an action or coming from
+                    // an action.
+                    var source_type = input_edge.source.type;
+                    var target_type = input_edge.target.type;
+                    if (source_type == "bnd" || source_type == "mod") {
+                        var direction = "target";
+                        var inverse = "source";
+                    }
+                    else if (target_type == "bnd" || target_type == "mod") {
+                        var direction = "source";
+                        var inverse = "target";
+                    };
+                    if (input_edge[direction].type == "gene") {
+                        var gene_nodes = [input_edge[direction]];
+                    } else {
+                        var actors = [input_edge[direction]];
+                        var seen_nodes = [actors[0]];
+                        var seen_ids = [actors[0].id];
+                        while (actors.length > 0) {
+                            // Find the outgoing edges from each actor.
+                            var act_ids = actors.map((nod) => nod.id)
+                            var belong_edges = links
+                                .filter((edg) => act_ids.includes(edg.source.id))
+                            // The target of each edge become the actor for
+                            // the next loop round.
+                            var actors = belong_edges
+                                .filter((edg) => edg.target.type != "bnd")
+                                .filter((edg) => edg.target.type != "mod")
+                                .map((edg) => edg.target)
+                            // Add actors that were not still seen to the list.
+                            for (var j = 0; j < actors.length; j++) {
+                                if (seen_ids.includes(actors[j].id) === false) {
+                                    seen_nodes.push(actors[j]);
+                                    seen_ids.push(actors[j].id);
+                                }
                             }
                         }
-                        //seen_nodes = seen_nodes.concat(actors);
+                        // Find which of the seen nodes are genes.
+                        var gene_nodes = seen_nodes.filter((edg) => edg.type == "gene")
                     }
-                    // Find which of the seen nodes are genes.
-                    gene_nodes = seen_nodes.filter((edg) => edg.type == "gene")
+                    // Add one contact edge from each source gene to the bnd node.
+                    for (var k = 0; k < gene_nodes.length; k++) {
+                        var contact = {};
+                        //contact[direction] = gene_nodes[k];
+                        //contact[inverse] = input_edge[inverse];
+                        // This reverses the direction of mod --> state edges
+                        // but for the purpose of the simplified contact map 
+                        // only.
+                        contact["source"] = gene_nodes[k];
+                        contact["target"] = input_edge[inverse];
+                        contact["color"] = "unspecified";
+                        contact["index"] = index_strt + contact_edges.length
+                        contact_edges.push(contact);
+                    }
                 }
-                // Add one contact edge from each source gene to the bnd node.
-                for (var k = 0; k < gene_nodes.length; k++) {
-                    var contact = {};
-                    contact["source"] = gene_nodes[k];
-                    contact["target"] = bnd_edge.target;
-                    contact["color"] = "unspecified";
-                    contact["index"] = links_len + contact_edges.length
-                    contact_edges.push(contact);
+                return contact_edges;
+            };
+            // Find edges that target a bnd node.
+            var num_links_bnd = links.length;
+            var bnd_edges = links.filter((edg) => edg.target.type === "bnd");
+            var bnd_contact_edges = findGeneNode(bnd_edges, num_links_bnd);
+            // Find the edges that target a mod node.
+            var num_links_mod_in = links.length + bnd_contact_edges.length;
+            var mod_edges_in = links.filter((edg) => edg.target.type === "mod");
+            var mod_contact_in = findGeneNode(mod_edges_in, num_links_mod_in);
+            // Find the edges that come from a mod node.
+            var num_links_mod_out = links.length + bnd_contact_edges.length + mod_contact_in.length;
+            var mod_edges_out = links.filter((edg) => edg.source.type === "mod");
+            var mod_contact_out = findGeneNode(mod_edges_out, num_links_mod_out);
+            var mod_contact_edges = mod_contact_in.concat(mod_contact_out);
+
+            var all_contact_edges = bnd_contact_edges.concat(mod_contact_edges);
+
+            // Conflate every action node that have the same source genes into
+            // one contact node.
+            // Create the list of genes connected to every action node.
+            var gene_cnct_list = {};
+            var seen_act_id = [];
+            for (var i = 0; i < all_contact_edges.length; i++) {
+                var act_source = all_contact_edges[i].source.id;
+                var act_target = all_contact_edges[i].target.id;
+                if (seen_act_id.includes(act_target)) {
+                    gene_cnct_list[act_target].push(act_source);
+                }
+                else {
+                    gene_cnct_list[act_target] = [act_source]
+                    seen_act_id.push(act_target)
+                };
+            }
+            // Sort the contact gene lists.
+            var gene_cnct_sort = {};
+            for (var act_key in gene_cnct_list) {
+                unsorted_genes = gene_cnct_list[act_key];
+                gene_cnct_sort[act_key] = unsorted_genes.sort();
+            }
+            // Find which bnd nodes have the same source genes.
+            var seen_act_id = [];
+            var cnct_nodes = [];
+            var cnct_counter = 1;
+            for (var key in gene_cnct_sort) {
+                if (seen_act_id.includes(key) == false) {
+                    genes = gene_cnct_sort[key];
+                    cnct_nodes["cct "+cnct_counter] = genes;
+                    cnct_counter++;
+                    seen_act_id.push(key);
+                    for (var key2 in gene_cnct_sort) {
+                        if (seen_act_id.includes(key2) == false) {
+                            genes2 = gene_cnct_sort[key2];
+                            same_genes = true;
+                            if (genes.length !== genes2.length) {
+                                same_genes = false;
+                            }
+                            else {
+                                for (var i = 0; i < genes.length; i++) {
+                                    if (genes[i] !== genes2[i]) {
+                                        same_genes = false;
+                                        break;
+                                    }
+                                }
+                            };
+                            if (same_genes) {
+                                seen_act_id.push(key2);
+                            };
+                        }
+                    }
                 }
             }
+            // Recreate links from the contact nodes (cnct_nodes).
+            // The following code works only for contact nodes that
+            // have exactly two source genes.
+            var simple_contact_edges = [];
+            for (var key in cnct_nodes) {
+                var gene_list = cnct_nodes[key];
+                // Select example edges coming from the desired gene.
+                var cnct_source = all_contact_edges.filter((edg) =>
+                    edg.source.id === gene_list[0])[0].source;
+                // Select example edges going to the desired gene.
+                var cnct_target = all_contact_edges.filter((edg) =>
+                    edg.source.id === gene_list[1])[0].source;
+                var simple_contact = {};
+                simple_contact["source"] = cnct_source;
+                simple_contact["target"] = cnct_target;
+                simple_contact["color"] = "unspecified";
+                simple_contact["index"] = links.length + simple_contact_edges.length
+                simple_contact_edges.push(simple_contact);
+            }
+
 
             // Add the contact edges.
             var contact = svg_content.selectAll(".contact")
-                .data(contact_edges, function (d) {
-                //.data(contact_simple, function (d) {
+                .data(simple_contact_edges, function (d) {
                     return d.source.id + "-" + d.target.id;
                 });
             contact.enter()//.insert("line","g")
