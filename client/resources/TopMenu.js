@@ -47,7 +47,7 @@ define([
                                     .attr("for", "is_chkbx")
                                     .attr("id", "is_chkbx_lbl");
                                 document.getElementById("is_chkbx_lbl")
-                                    .innerHTML = "Is:";
+                                    .innerHTML = "Be:";
                                 // Checkboxes to select test "true" or "false".
                                 top_menu.append("input")
                                     .attr("type", "checkbox")

@@ -778,10 +778,10 @@ define([
                              target: findNode(d.to, response.nodes),
                              color: userColor }
                 if (path == "/kami_base/kami/action_graph") {
-                    return edge_obj;
-                    //if (edgeTransitive == false) {
-                    //    return edge_obj;
-                    //}
+                    //return edge_obj;
+                    if (edgeTransitive == false) {
+                        return edge_obj;
+                    }
                 }
                 else {
                     return edge_obj;
@@ -965,31 +965,35 @@ define([
             var simple_contact_edges = [];
             for (var key in cnct_nodes) {
                 var gene_list = cnct_nodes[key];
-                // Select example edges coming from the desired gene.
-                var cnct_source = all_contact_edges.filter((edg) =>
-                    edg.source.id === gene_list[0])[0].source;
-                // Select example edges going to the desired gene.
-                var cnct_target = all_contact_edges.filter((edg) =>
-                    edg.source.id === gene_list[1])[0].source;
-                var simple_contact = {};
-                simple_contact["source"] = cnct_source;
-                simple_contact["target"] = cnct_target;
-                simple_contact["color"] = "unspecified";
-                simple_contact["index"] = links.length + simple_contact_edges.length
-                simple_contact_edges.push(simple_contact);
+                if (gene_list.length == 2) {
+                    // Select example edges coming from the desired gene.
+                    var cnct_source = all_contact_edges.filter((edg) =>
+                        edg.source.id === gene_list[0])[0].source;
+                    // Select example edges going to the desired gene.
+                    var cnct_target = all_contact_edges.filter((edg) =>
+                        edg.source.id === gene_list[1])[0].source;
+                    var simple_contact = {};
+                    simple_contact["source"] = cnct_source;
+                    simple_contact["target"] = cnct_target;
+                    simple_contact["color"] = "unspecified";
+                    simple_contact["index"] = links.length + simple_contact_edges.length
+                    simple_contact_edges.push(simple_contact);
+                }
             }
 
 
             // Add the contact edges.
-            var contact = svg_content.selectAll(".contact")
-                .data(simple_contact_edges, function (d) {
-                    return d.source.id + "-" + d.target.id;
-                });
-            contact.enter()//.insert("line","g")
-                .append("path")
-                .classed("contact", true)
-                .on("contextmenu", d3ContextMenu(edgeCtMenu));
-            contact.exit().remove();
+            if (path == "/kami_base/kami/action_graph") {
+                var contact = svg_content.selectAll(".contact")
+                    .data(simple_contact_edges, function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    });
+                contact.enter()//.insert("line","g")
+                    .append("path")
+                    .classed("contact", true)
+                    .on("contextmenu", d3ContextMenu(edgeCtMenu));
+                contact.exit().remove();
+            }
 
 
             var node_g = node.enter().insert("g")
