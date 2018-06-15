@@ -23,8 +23,8 @@ define([
 	 * or with {line:string list,radio:string list,check:string list} if validated (ok or enter key)
 	 */
 	return function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d,svg_content){
-		var fo=svg_content.append("foreignObject").attr("width", 200);
-		var form=fo.append("xhtml:form").attr("width",200).attr("id","_inputform");
+		var fo=svg_content.append("foreignObject").attr("width", 180);
+		var form=fo.append("xhtml:form").attr("width",400).attr("id","_inputform");
 		form.classed("inputMenu",true);
 		if(label!=null && label!="")//if a label is defined : add it
 			form.append("label").text(label);
@@ -114,7 +114,7 @@ define([
 		var foHeight = document.getElementById("_inputform").getBoundingClientRect().height;
 		fo.attr('height',foHeight)
 			.attr('x', function(){if(pos=="left") return d.x-d.r-100; else if(pos=="right") return d.x+d.r; else return d.x-50})
-			.attr('y', function(){if(pos=='top') return d.y-foHeight-d.r; else if(pos=="bot") return d.y+d.r;else return d.y-foHeight/2});
+			.attr('y', function(){if(pos=='top') return d.y-foHeight-d.r; else if(pos=="bot") return d.y+50;else return d.y-foHeight/2});
 /*d3.select(svg).insert('polygon', '.inputMenu').attr({
 'points': "0,0 0," + foHeight + " 100," + foHeight + " 100,0 0,0 0,0 0,0",
               'height': foHeight,
@@ -124,4 +124,4 @@ define([
               'transform': 'translate(' + (d.x) + ',' + (d.y) + ')'
                         });*/
 	}
-});	
+});

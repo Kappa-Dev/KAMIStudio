@@ -586,6 +586,7 @@ svg{
     fill: var(--node-label-color);
     font-family: sans-serif;
     stroke: var(--node-label-color);
+    user-select:none;
 }
 .link {
     stroke: var(--link-color);

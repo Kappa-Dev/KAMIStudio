@@ -794,7 +794,6 @@ define([
                     links.push(tmp_links[i]);
                 }
             }
-            console.log(links)
             edgesList = links;
 
 
@@ -1066,25 +1065,28 @@ define([
                     .type(shapeClassifier.shape)
                     .size(shapeClassifier.size))
                 .style("fill", shapeClassifier.nodeColor)
-                .on("dblclick", function (clicked_node) { //clicked_node => {
-                    // Find if that node was already clicked for details. If it wasn't,
-                    // mark it as clicked. If it was, mark is as not clicked.
-                    svg.selectAll(".nodeSymbol").filter((nod) => nod.id === clicked_node.id)
-                        .classed("detailclicked", function (d) {
-                            return !(d3.select(this).classed("detailclicked"));
-                        });
-                    // Find the subgraphs of all the detailclicked nodes.
-                    to_show = [];
-                    svg.selectAll(".detailclicked").each(function (nod) {
-                        tmp_nodes = config.highlightRel(nod.id);
-                        for (i = 0; i < tmp_nodes.length; i++) {
-                            if (!to_show.includes(tmp_nodes[i])) {
-                                to_show.push(tmp_nodes[i])
-                            }
-                        }
+                .on("dblclick", callDetails);
+
+            function callDetails(clicked_node) {
+                // Find if that node was already clicked for details. If it wasn't,
+                // mark it as clicked. If it was, mark is as not clicked.
+                svg.selectAll(".nodeSymbol").filter((nod) => nod.id === clicked_node.id)
+                    .classed("detailclicked", function (d) {
+                        return !(d3.select(this).classed("detailclicked"));
                     });
-                    addDetails((n2_id) => to_show.indexOf(n2_id) > -1);
+                // Find the subgraphs of all the detailclicked nodes.
+                to_show = [];
+                svg.selectAll(".detailclicked").each(function (nod) {
+                    tmp_nodes = config.highlightRel(nod.id);
+                    for (i = 0; i < tmp_nodes.length; i++) {
+                        if (!to_show.includes(tmp_nodes[i])) {
+                            to_show.push(tmp_nodes[i])
+                        }
+                    }
                 });
+                addDetails((n2_id) => to_show.indexOf(n2_id) > -1);
+            }
+
             // .style("fill", function (d) {
             // 	if (d.type && d.type != "") return "#" + setColor(type_list.indexOf(d.type), type_list.length);
             // 	else return "#EEEEEE";
@@ -1102,9 +1104,8 @@ define([
                 .attr("text-anchor", "middle")
                 .text(function (d) {
                     let name = d.id.split(" ")[0]
-                    return name.length > 7 ? name.substring(0, 5).concat("..") : name;
+                    return name.length > 6 ? name.substring(0, 6).concat(".") : name;
                 })
-                //.text(function(d){return d.id})
                 .attr("font-size", function () { return (radius / 2) + "px" })
                 // .style("fill", function (d) {
                 // 	if (d.type && d.type != "") return "#" + setColor(type_list.indexOf(d.type), type_list.length, true);
@@ -1114,7 +1115,7 @@ define([
                 // 	if (d.type && d.type != "") return "#" + setColor(type_list.indexOf(d.type), type_list.length, true);
                 // 	else return "black";
                 // })
-                //.on("dblclick", clickText);
+                .on("dblclick", callDetails);
 
             node_g.filter(d => d.attrs && "val" in d.attrs)
                 .insert("text")
@@ -1362,8 +1363,31 @@ define([
          */
 
         function nodeCtMenu(nodeType, from_config) {
-            var menu = [{
-                title: "Remove",
+            var menu = [
+            {
+               title: "Change label",
+               action: function (elm, d, i) {
+                   var lab = [d.id];
+                   //locked = true;
+                   inputMenu("", lab, null, null, true, true, 'bot', function (cb) {
+                       if (cb.line && cb.line != d.id) {
+                           request.renameNode(g_id, d.id, cb.line, function (err, ret) {
+                               let req = {};
+                               req[cb.line] = { "x": d.x, "y": d.y }
+                               //locked = false;
+                               request.addAttr(g_id, JSON.stringify({ positions: req }),
+                                   function () {
+                                       disp.call("graphUpdate", this, g_id, true);
+                                   });
+                           });
+                       }
+                       //else { locked = false; }
+                   }, d, svg_content);
+                },
+            },
+
+            {
+                title: "Delete",
                 action: function (elm, d, i) {
                     if (confirm("Are you sure you want to delete this Node ?")) {
                         request.rmNode(g_id, d.id, true, function (e, r) {
@@ -1375,7 +1399,9 @@ define([
                         });
                     }
                 }
-            }, {
+            },
+
+            {
                 title: "Clone",
                 action: function (elm, d, i) {
 
@@ -1404,8 +1430,37 @@ define([
             //  action: getChildren},
 
             {
-                title: "Add value",
+                title: "Add Value",
                 action: addVal
+                //function (elm, d, i) {
+                //   //var lab = [d.id];
+                //   //locked = true;
+                //   inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
+                //       const attribute = String(cb.line[0])
+                //       const value = cb.line[1]
+                //       var callback = function (err, resp) {
+                //           if (err) {
+                //               alert(err.currentTarget.response);
+                //               return false;
+                //           }
+                //           disp.call("graphUpdate", this, g_id, true);
+                //       }
+                //       console.log(attribute)
+                //       inattr = "val"
+                //       request.addNodeAtt(g_id, d.id, JSON.stringify({ "val": [value] }), callback);
+                //       //if (cb.line && cb.line != d.id) {
+                //       //    request.renameNode(g_id, d.id, cb.line, function (err, ret) {
+                //       //        let req = {};
+                //       //        req[cb.line] = { "x": d.x, "y": d.y }
+                //       //        //locked = false;
+                //       //        request.addAttr(g_id, JSON.stringify({ positions: req }),
+                //       //            function () {
+                //       //                disp.call("graphUpdate", this, g_id, true);
+                //       //            });
+                //       //    });
+                //       //}
+                //   }, d, svg_content);
+                //},
             },
 
             {
@@ -1622,42 +1677,42 @@ define([
          * @input : d : the node datas
          * @call : graphUpdate
          */
-        function clickText(d) {
-            let svgmousepos = d3.mouse(svg_content.node());
-            var el = d3.select(this);
-            var lab = [d.id];
-            locked = true;
-            inputMenu("name", lab, null, null, true, true, 'center', function (cb) {
-                if (cb.line && cb.line != d.id) {
-                    request.renameNode(g_id, d.id, cb.line, function (err, ret) {
-                        let req = {};
-                        req[cb.line] = { "x": svgmousepos[0] + 10, "y": svgmousepos[1] }
-                        locked = false;
-                        request.addAttr(g_id, JSON.stringify({ positions: req }),
-                            function () {
-                                disp.call("graphUpdate", this, g_id, true);
-                            });
-                    });
-                }
-                else { locked = false; }
-            }, d, svg_content);
+        //function clickText(d) {
+        //    let svgmousepos = d3.mouse(svg_content.node());
+        //    var el = d3.select(this);
+        //    var lab = [d.id];
+        //    locked = true;
+        //    inputMenu("name", lab, null, null, true, true, 'center', function (cb) {
+        //        if (cb.line && cb.line != d.id) {
+        //            request.renameNode(g_id, d.id, cb.line, function (err, ret) {
+        //                let req = {};
+        //                req[cb.line] = { "x": svgmousepos[0] + 10, "y": svgmousepos[1] }
+        //                locked = false;
+        //                request.addAttr(g_id, JSON.stringify({ positions: req }),
+        //                    function () {
+        //                        disp.call("graphUpdate", this, g_id, true);
+        //                    });
+        //            });
+        //        }
+        //        else { locked = false; }
+        //    }, d, svg_content);
 
-            // request.cloneNode(g_id, d.id, cb.line, function (err, ret) {
-            // 	if (!err) {
-            // 		request.rmNode(g_id, d.id, false, function (e, r) {
-            // 			if (e) console.error(e);
-            // 			else {
-            // 				let req = {};
-            // 				req[cb.line] = { "x": svgmousepos[0]+10, "y": svgmousepos[1] }
-            // 				request.addAttr(g_id, JSON.stringify({ positions: req }),
-            // 					function () { disp.call("graphUpdate", this, g_id, true); });
-            // 			}
-            // 		})
-            // 	}
-            // 	else console.error(err);
-            // });
+        //    // request.cloneNode(g_id, d.id, cb.line, function (err, ret) {
+        //    // 	if (!err) {
+        //    // 		request.rmNode(g_id, d.id, false, function (e, r) {
+        //    // 			if (e) console.error(e);
+        //    // 			else {
+        //    // 				let req = {};
+        //    // 				req[cb.line] = { "x": svgmousepos[0]+10, "y": svgmousepos[1] }
+        //    // 				request.addAttr(g_id, JSON.stringify({ positions: req }),
+        //    // 					function () { disp.call("graphUpdate", this, g_id, true); });
+        //    // 			}
+        //    // 		})
+        //    // 	}
+        //    // 	else console.error(err);
+        //    // });
 
-        };
+        //};
         /* handling dragging event on nodes
          * @input : d : the node datas
          */
