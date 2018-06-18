@@ -14,7 +14,7 @@ define([
         callback updates the graph if operation is successful
         */
         this.shiftLeftDragEndHandler = function (g_id, d1, d2) {
-            let components = new Set(["agent", "region"])
+            let components = new Set(["gene", "region", "site"])
             if (components.has(d1.type) && components.has(d2.type)) {
                 let callback = function (err, _ret) {
                     if (!err) {

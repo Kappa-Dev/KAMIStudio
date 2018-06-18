@@ -477,28 +477,31 @@ def link_components(hie, g_id, comp1, comp2, kami_id):
     """ link two componenst together with brk, bnd"""
     typing = hie.edge[g_id][kami_id].mapping
     graph = hie.node[g_id].graph
+    print(graph)
 
-    bnd_name = unique_node_id(graph, "bnd")
+    bnd_name = unique_node_id(graph, "bnd %s-%s" % (comp1, comp2) )
     typing[bnd_name] = "bnd"
     add_node(graph, bnd_name)
 
-    brk_name = unique_node_id(graph, "brk")
-    add_node(graph, brk_name)
-    typing[brk_name] = "brk"
+    #brk_name = unique_node_id(graph, "brk")
+    #add_node(graph, brk_name)
+    #typing[brk_name] = "brk"
 
-    loc1 = unique_node_id(graph, "loc")
-    add_node(graph, loc1)
-    typing[loc1] = "locus"
-    loc2 = unique_node_id(graph, "loc")
-    add_node(graph, loc2)
-    typing[loc2] = "locus"
+    #loc1 = unique_node_id(graph, "loc")
+    #add_node(graph, loc1)
+    #typing[loc1] = "locus"
+    #loc2 = unique_node_id(graph, "loc")
+    #add_node(graph, loc2)
+    #typing[loc2] = "locus"
 
-    add_edge(graph, loc1, comp1)
-    add_edge(graph, loc1, bnd_name)
-    add_edge(graph, loc1, brk_name)
-    add_edge(graph, loc2, comp2)
-    add_edge(graph, loc2, bnd_name)
-    add_edge(graph, loc2, brk_name)
+    add_edge(graph, comp1, bnd_name)
+    add_edge(graph, comp2, bnd_name)
+    #add_edge(graph, loc1, comp1)
+    #add_edge(graph, loc1, bnd_name)
+    #add_edge(graph, loc1, brk_name)
+    #add_edge(graph, loc2, comp2)
+    #add_edge(graph, loc2, bnd_name)
+    #add_edge(graph, loc2, brk_name)
 
     if "positions" in hie.node[g_id].attrs:
         positions = hie.node[g_id].attrs["positions"]
@@ -517,18 +520,18 @@ def link_components(hie, g_id, comp1, comp2, kami_id):
         if (difx, dify) != (0, 0):
             distance = sqrt(difx*difx + dify*dify)
             vect = (difx/distance, dify/distance)
-            positions[loc1] = {"x": xpos1+vect[0]*distance/3,
-                               "y": ypos1+vect[1]*distance/3}
-            positions[loc2] = {"x": xpos1+vect[0]*distance/3*2,
-                               "y": ypos1+vect[1]*distance/3*2}
-            positions[bnd_name] = {"x": (xpos1+vect[0]*distance/2 +
-                                         vect[1]*60),
-                                   "y": (ypos1+vect[1]*distance/2 -
-                                         vect[0]*60)}
-            positions[brk_name] = {"x": (xpos1+vect[0]*distance/2 -
-                                         vect[1]*60),
-                                   "y": (ypos1+vect[1]*distance/2 +
-                                         vect[0]*60)}
+            #positions[loc1] = {"x": xpos1+vect[0]*distance/3,
+            #                   "y": ypos1+vect[1]*distance/3}
+            #positions[loc2] = {"x": xpos1+vect[0]*distance/3*2,
+            #                   "y": ypos1+vect[1]*distance/3*2}
+            positions[bnd_name] = {"x": (xpos1+vect[0]*distance/2),# +
+                                         #vect[1]*60),
+                                   "y": (ypos1+vect[1]*distance/2)}# -
+                                         #vect[0]*60)}
+            #positions[brk_name] = {"x": (xpos1+vect[0]*distance/2 -
+            #                             vect[1]*60),
+            #                       "y": (ypos1+vect[1]*distance/2 +
+            #                             vect[0]*60)}
 
 
 # Hypothesis : only one agent per region

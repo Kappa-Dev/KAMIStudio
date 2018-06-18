@@ -1303,7 +1303,8 @@ define([
                         var mousepos = d3.mouse(elm);
                         var svgmousepos = d3.mouse(svg_content.node());
                         locked = true;
-                        inputMenu("New Name", [""], type_list.concat(["notype"]), null, true, true, 'center',
+                        //inputMenu("New Name", [""], type_list.concat(["notype"]), null, true, true, 'center',
+                        inputMenu("New Name", [""], type_list, null, true, true, 'center',
                             function (cb) {
                                 locked = false;
                                 if (cb.line) {
@@ -1387,21 +1388,6 @@ define([
             },
 
             {
-                title: "Delete",
-                action: function (elm, d, i) {
-                    if (confirm("Are you sure you want to delete this Node ?")) {
-                        request.rmNode(g_id, d.id, true, function (e, r) {
-                            if (e) console.error(e);
-                            else {
-                                disp.call("graphUpdate", this, g_id, true);
-                                console.log(r);
-                            }
-                        });
-                    }
-                }
-            },
-
-            {
                 title: "Clone",
                 action: function (elm, d, i) {
 
@@ -1426,47 +1412,60 @@ define([
                 }
             },
 
+            {
+                title: "Delete",
+                action: function (elm, d, i) {
+                    if (confirm("Are you sure you want to delete this Node ?")) {
+                        request.rmNode(g_id, d.id, true, function (e, r) {
+                            if (e) console.error(e);
+                            else {
+                                disp.call("graphUpdate", this, g_id, true);
+                                console.log(r);
+                            }
+                        });
+                    }
+                }
+            },
+
             // {title: "children",
             //  action: getChildren},
 
             {
-                title: "Add Value",
-                action: addVal
-                //function (elm, d, i) {
-                //   //var lab = [d.id];
-                //   //locked = true;
-                //   inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
-                //       const attribute = String(cb.line[0])
-                //       const value = cb.line[1]
-                //       var callback = function (err, resp) {
-                //           if (err) {
-                //               alert(err.currentTarget.response);
-                //               return false;
-                //           }
-                //           disp.call("graphUpdate", this, g_id, true);
-                //       }
-                //       console.log(attribute)
-                //       inattr = "val"
-                //       request.addNodeAtt(g_id, d.id, JSON.stringify({ "val": [value] }), callback);
-                //       //if (cb.line && cb.line != d.id) {
-                //       //    request.renameNode(g_id, d.id, cb.line, function (err, ret) {
-                //       //        let req = {};
-                //       //        req[cb.line] = { "x": d.x, "y": d.y }
-                //       //        //locked = false;
-                //       //        request.addAttr(g_id, JSON.stringify({ positions: req }),
-                //       //            function () {
-                //       //                disp.call("graphUpdate", this, g_id, true);
-                //       //            });
-                //       //    });
-                //       //}
-                //   }, d, svg_content);
-                //},
+                title: "Add Attribute",
+                action: function (elm, d, i) {
+                    inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
+                        const attribute = cb.line[0]
+                        const value = cb.line[1]
+                        var callback = function (err, resp) {
+                            if (err) {
+                                alert(err.currentTarget.response);
+                                return false;
+                            }
+                            disp.call("graphUpdate", this, g_id, true);
+                        };
+                        request.addNodeAtt(g_id, d.id, JSON.stringify({ [attribute]: [value] }), callback);
+                    }, d, svg_content);
+                },
             },
 
             {
-                title: "Remove Value",
-                action: rmVal
+                title: "Remove Attribute",
+                action: function (elm, d, i) {
+                    inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
+                        const attribute = cb.line[0]
+                        const value = cb.line[1]
+                        var callback = function (err, resp) {
+                            if (err) {
+                                alert(err.currentTarget.response);
+                                return false;
+                            }
+                            disp.call("graphUpdate", this, g_id, true);
+                        };
+                        request.rmNodeAtt(g_id, d.id, JSON.stringify({ [attribute]: [value] }), callback);
+                    }, d, svg_content);
+                },
             },
+
             {
                 title: "Types",
                 action: nodeTypesEditor
@@ -1809,7 +1808,6 @@ define([
                                 }
                                 else {
                                     if (config.shiftLeftDragEndHandler) {
-                                        console.log(g_id);
                                         config.shiftLeftDragEndHandler(g_id, d, d2);
                                     }
                                 }
@@ -1869,39 +1867,39 @@ define([
 
         };
 
-        function addVal(elm, d, _i) {
-            var val = prompt("Enter a value", "");
-            if (!val) { return 0 }
-            var callback = function (err, resp) {
-                if (err) {
-                    alert(err.currentTarget.response);
-                    return false;
-                }
-                // if (!d.attrs) { d.attrs = {} };
-                // if (!d.attrs["val"]) { d.attrs["val"] = [] };
-                // const index = d.attrs["val"].indexOf(val);
-                // if (index === -1) { d.attrs["val"].push(val) };
-                disp.call("graphUpdate", this, g_id, true);
-            }
-            request.addNodeAtt(g_id, d.id, JSON.stringify({ "val": [val] }), callback);
-        };
+        //function addVal(elm, d, _i) {
+        //    var val = prompt("Enter a value", "");
+        //    if (!val) { return 0 }
+        //    var callback = function (err, resp) {
+        //        if (err) {
+        //            alert(err.currentTarget.response);
+        //            return false;
+        //        }
+        //        // if (!d.attrs) { d.attrs = {} };
+        //        // if (!d.attrs["val"]) { d.attrs["val"] = [] };
+        //        // const index = d.attrs["val"].indexOf(val);
+        //        // if (index === -1) { d.attrs["val"].push(val) };
+        //        disp.call("graphUpdate", this, g_id, true);
+        //    }
+        //    request.addNodeAtt(g_id, d.id, JSON.stringify({ "val": [val] }), callback);
+        //};
 
-        function rmVal(elm, d, i) {
-            var val = prompt("Enter a value", "");
-            if (!val) { return 0 };
-            var callback = function (err, resp) {
-                if (err) {
-                    alert(err.currentTarget.response);
-                    return false;
-                }
-                if (!d.attrs) { return 0 };
-                if (!d.attrs["val"]) { return 0 };
-                // let index = d.attrs["val"].indexOf(val);
-                // if (index != -1) { d.attrs["val"].splice(index, 1) };
-                disp.call("graphUpdate", this, g_id, true);
-            }
-            request.rmNodeAtt(g_id, d.id, JSON.stringify({ "val": [val] }), callback);
-        };
+        //function rmVal(elm, d, i) {
+        //    var val = prompt("Enter a value", "");
+        //    if (!val) { return 0 };
+        //    var callback = function (err, resp) {
+        //        if (err) {
+        //            alert(err.currentTarget.response);
+        //            return false;
+        //        }
+        //        if (!d.attrs) { return 0 };
+        //        if (!d.attrs["val"]) { return 0 };
+        //        // let index = d.attrs["val"].indexOf(val);
+        //        // if (index != -1) { d.attrs["val"].splice(index, 1) };
+        //        disp.call("graphUpdate", this, g_id, true);
+        //    }
+        //    request.rmNodeAtt(g_id, d.id, JSON.stringify({ "val": [val] }), callback);
+        //};
 
         function nodeTypesEditor(_elm, d, _i) {
             disp.call("loadTypeEditor", this, g_id, d.id)

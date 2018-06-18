@@ -161,10 +161,10 @@ define([
             function drawRelation() {
                 console.log(relation)
                 main_svg.select("#rightGraph")
-                    .selectAll("g.node")
+                    .selectAll(".node")
                     .classed("matched", d => relation.some(r => r.target.id === d.id));
                 main_svg.select("#leftGraph")
-                    .selectAll("g.node")
+                    .selectAll(".nodeSymbol")
                     .classed("matched", d => relation.some(r => r.source.id === d.id));
 
                 main_svg.select("#rightGraph")
@@ -183,7 +183,7 @@ define([
                     .classed("matched", true);
 
                 links.exit().remove();
-                moveMappingEdges();
+                //moveMappingEdges();
             }
 
             // g1, g2 : graphs
@@ -296,6 +296,7 @@ define([
                     "left": r.source.id,
                     "right": r.target.id
                 }));
+                d3.select("#addnug_btn").style("display", "none");
                 request.promRetypeGraph(parentPath + "/" + leftGraphName,
                     parentPath + "/" + rightGraphName,
                     rel)
@@ -303,8 +304,6 @@ define([
                         dispatch.call("loadGraph", this, parentPath + "/" + rightGraphName + "/");
                         dispatch.call("hieUpdate", this);
                     })
-
-
             }
 
             function createButtons() {
@@ -314,8 +313,9 @@ define([
                 if (configMerger && configMerger["type"]) {
                     console.log("type", configMerger);
                     buttons.append("button")
-                        .text("Retype")
+                        .text("Add to action graph")
                         .attr("type", "button")
+                        .attr("id", "addnug_btn")
                         .classed("top_chart_elem", true)
                         .classed("btn", true)
                         .classed("btn-success", true)
@@ -340,4 +340,4 @@ define([
 
         }
     });
-    
+

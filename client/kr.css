@@ -705,7 +705,8 @@ svg{
 }
 
 .matched{
-    opacity: 0.1;
+    /*opacity: 0.1;*/
+    stroke-width: 5px;
 }
 
 .cond{
