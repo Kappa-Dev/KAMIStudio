@@ -998,7 +998,7 @@ define([
             var node_g = node.enter().insert("g")
                 .classed("node", true)
                 .call(d3.drag().on("drag", dragged)
-                    .on("end", dragNodeEndHighlightRel(config))
+                    .on("end", dragNodeEndHighlightRel(config, path))
                     .on("start", dragNodeStart)
                     // .filter(function () { return (d3.event.button == 0) || !readOnly }))//disable right click drag if readOnly
                     .filter(function () { return true }))//disable right click drag if readOnly
@@ -1104,7 +1104,8 @@ define([
                 .attr("text-anchor", "middle")
                 .text(function (d) {
                     let name = d.id.split(" ")[0]
-                    return name.length > 6 ? name.substring(0, 6).concat(".") : name;
+                    //return name.length > 6 ? name.substring(0, 6).concat(".") : name;
+                    return name.length > 7 ? name.substring(0, 7) : name;
                 })
                 .attr("font-size", function () { return (radius / 2) + "px" })
                 // .style("fill", function (d) {
@@ -1311,11 +1312,35 @@ define([
                                     request.addNode(g_id, cb.line, cb.radio, function (e, r) {
                                         if (e) console.error(e);
                                         else {
-                                            console.log("node added")
+                                            //console.log("node added")
                                             let req = {};
                                             req[cb.line] = { "x": svgmousepos[0], "y": svgmousepos[1] }
                                             request.addAttr(g_id, JSON.stringify({ positions: req }),
-                                                function () { disp.call("graphUpdate", this, g_id, true); });
+                                                function () {
+                                                    if (cb.radio == "state") {
+                                                        let label_line = cb.line[0];
+                                                        let space_index = label_line.indexOf(" ");
+                                                        if (space_index == -1) {
+                                                            var state_label = label_line;
+                                                        }
+                                                        else {
+                                                            var state_label = label_line.substring(0, space_index);
+                                                        }
+                                                        if (state_label == "phos") {
+                                                            var state_name = "phosphorylation";
+                                                        }
+                                                        else {
+                                                            var state_name = state_label;
+                                                        }
+                                                        request.addNodeAtt(g_id, cb.line, JSON.stringify({
+                                                            "name": [state_name], "test": ['true']}), function () {
+                                                                disp.call("graphUpdate", this, g_id, true);
+                                                            });
+                                                    }
+                                                    else {
+                                                        disp.call("graphUpdate", this, g_id, true);
+                                                    }
+                                                });
 
                                         }
                                     });
@@ -1431,7 +1456,7 @@ define([
             //  action: getChildren},
 
             {
-                title: "Add Attribute",
+                title: "Add attribute",
                 action: function (elm, d, i) {
                     inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
                         const attribute = cb.line[0]
@@ -1449,7 +1474,7 @@ define([
             },
 
             {
-                title: "Remove Attribute",
+                title: "Remove attribute",
                 action: function (elm, d, i) {
                     inputMenu("attribute : value", [null, null], null, null, true, true, 'bot', function (cb) {
                         const attribute = cb.line[0]
@@ -1605,13 +1630,13 @@ define([
 
         function mouseOver(d) {
             var div_ct = "<p><h3><b><center>" + d.id + "</center></b>";
-            div_ct += "<h5><b><center>class: " + d.type + "</center></b></h5>";
+            div_ct += "<h5><b><center>class : " + d.type + "</center></b></h5>";
             if (d.attrs) {
                 div_ct += "<ul>";
                 for (let el of Object.keys(d.attrs)) {
                     let setString = setToString(d.attrs[el])
                     if (setString) {
-                        div_ct += "<li><b><center>" + el + ":" + setString + "</center></b></li>";
+                        div_ct += "<li><b><center>" + el + " : " + setString + "</center></b></li>";
                     }
                 }
                 div_ct += "</ul>";
@@ -1752,13 +1777,13 @@ define([
         /* handling dragend event on nodes
          * @input : d : the node datas
          */
-        function dragNodeEndHighlightRel(config) {
+        function dragNodeEndHighlightRel(config, path) {
             return function (d, _elm, _i) {
                 var nodecontext = this;
                 var currentEvent = d3.event;
                 var xpos = d3.event.x;
                 var ypos = d3.event.y;
-                console.log(d3.event.sourceEvent.button);
+                //console.log(d3.event.sourceEvent.button);
                 if (!d3.event.sourceEvent.button) {
                     var id = d["id"];
                     var req = {};
@@ -1788,11 +1813,31 @@ define([
                         targetElement.each(function (d2) {
                             if (d2.id !== d.id && d3.event.sourceEvent.button == 2 && !readOnly) {
                                 if (!d3.event.sourceEvent.shiftKey) {
-                                    console.log("edges", edgesList);
+                                    //console.log("edges", edgesList);
                                     if (!existsEdge(d.id, d2.id)) {
                                         request.addEdge(g_id, d.id, d2.id, function (e, r) {
                                             if (!e) {
-                                                disp.call("graphUpdate", this, g_id, true)
+                                                // Temporary fix to indicate which gene nodes belong too
+                                                // when a user build a new interaction graphically.
+                                                // This should be removed once KAMIStudio properly makes
+                                                // use of KAMI.
+                                                let in_kami = path.search("/kami_base/kami/");
+                                                let in_ag = path.search("action_graph");
+                                                let is_action = (d2.type == "bnd" || d2.type == "mod")
+                                                if (in_kami == 0 && in_ag == -1 && is_action == false) {
+                                                    let new_name = d.id+" "+d2.id
+                                                    request.renameNode(g_id, d.id, new_name, function (err, ret) {
+                                                        let req = {};
+                                                        req[new_name] = { "x": d.x, "y": d.y }
+                                                        request.addAttr(g_id, JSON.stringify({ positions: req }),
+                                                            function () {
+                                                                disp.call("graphUpdate", this, g_id, true);
+                                                            });
+                                                    });
+                                                }
+                                                else {
+                                                    disp.call("graphUpdate", this, g_id, true)
+                                                }
                                             }
                                             else { console.error(e) }
                                         });
@@ -1800,7 +1845,28 @@ define([
                                     else {
                                         request.rmEdge(g_id, d.id, d2.id, true, function (e, r) {
                                             if (!e) {
-                                                disp.call("graphUpdate", this, g_id, true)
+                                                // Counterpart of the temporary fix above.
+                                                // Remove from the node label the gene that the node
+                                                // belongs to when removing the edge
+                                                let in_kami = path.search("/kami_base/kami/");
+                                                let in_ag = path.search("action_graph");
+                                                let is_action = (d2.type == "bnd" || d2.type == "mod")
+                                                let space_index = d.id.indexOf(" ")
+                                                if (in_kami == 0 && in_ag == -1 && space_index != -1 && is_action == false) {
+                                                    // For the new name, simple cut before the first space.
+                                                    var new_name = d.id.substring(0, space_index)
+                                                    request.renameNode(g_id, d.id, new_name, function (err, ret) {
+                                                        let req = {};
+                                                        req[new_name] = { "x": d.x, "y": d.y }
+                                                        request.addAttr(g_id, JSON.stringify({ positions: req }),
+                                                            function () {
+                                                                disp.call("graphUpdate", this, g_id, true);
+                                                            });
+                                                    });
+                                                }
+                                                else {
+                                                    disp.call("graphUpdate", this, g_id, true)
+                                                }
                                             }
                                             else { console.error(e) }
                                         });
@@ -2220,7 +2286,7 @@ define([
                     // .text("New child graph")
                     // .on("click", newGraph);
                     .append("button")
-                    .text("New child")
+                    .text("New nugget")
                     .on("click", newChild);
 
                 // buttons .append("button")

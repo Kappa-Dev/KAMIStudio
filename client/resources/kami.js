@@ -4,10 +4,11 @@ define([
     "resources/IGraphUtils.js"
 
 ], function (kamiFactory, requestFactory, iGraphUtils) {
-    return function Kami(dispatch, url) {
+    return function Kami(dispatch, url, request) {
         var kamiRequest = new kamiFactory(url);
         var factory = new requestFactory(url)
         var graphUtils = new iGraphUtils(dispatch, factory);
+        var request = new requestFactory(url);
 
         /*
         creates loci, bnd and brk nodes if shift is pressed when linking two components
@@ -21,7 +22,13 @@ define([
                         dispatch.call("graphUpdate", this, g_id, true)
                     }
                 };
-                kamiRequest.linkComponents(g_id, d1.id, d2.id, callback);
+                kamiRequest.linkComponents(g_id, d1.id, d2.id, function() {
+                    // Add type and test attributes to the bnd node.
+                    let bnd_node = "bnd "+d1.id+"-"+d2.id
+                    request.addNodeAtt(g_id, bnd_node, JSON.stringify({
+                        "type": { "strSet": { "pos_list": ["do"] } },
+                        "test": { "strSet": { "pos_list": ["true"] } } }), callback);
+                });
             }
         };
 
