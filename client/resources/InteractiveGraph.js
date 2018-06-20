@@ -1886,12 +1886,12 @@ define([
                                 if (config.highlightRel) {
                                     if (d3.event.sourceEvent.shiftKey) {
                                         let high_nodes = config.highlightRel(d.id);
-                                        highlightSubNodes((n2_id) => high_nodes.indexOf(n2_id) > -1);
+                                        highlightSubNodes(((n2_id) => high_nodes.indexOf(n2_id) > -1), d.id);
                                         getChildren(d, true);
                                     }
                                     else {
                                         let high_nodes = config.highlightRel(d.id);
-                                        highlightNodes((n2_id) => high_nodes.indexOf(n2_id) > -1);
+                                        highlightNodes(((n2_id) => high_nodes.indexOf(n2_id) > -1), d.id);
                                         getChildren(d, false);
                                     }
                                 }
@@ -2161,9 +2161,10 @@ define([
 	    svg.selectAll(".node").classed("lowlighted", false);
 	    svg.selectAll(".link").classed("highlighted", false);
             svg.selectAll(".link").classed("lowlighted", false);
+            svg.selectAll(".contact").classed("lowlighted", false);
         }
 
-        function highlightNodes(to_highlight) {
+        function highlightNodes(to_highlight, clicked_id) {
             svg.selectAll(".nodeSymbol").classed("highlighted", function (d) {
                 return to_highlight(d.id)
             });
@@ -2176,11 +2177,14 @@ define([
             svg.selectAll(".link").classed("lowlighted", function (d) {
                 return !to_highlight(d.source.id) || !to_highlight(d.target.id)
             });
+            svg.selectAll(".contact").classed("lowlighted", function (d) {
+                return !(clicked_id == d.source.id) && !(clicked_id == d.target.id)
+            });
         }
 
         // Only highlights node among the already highlighted.
 	// That function is bugged at the moment. Don't use it for now.
-        function highlightSubNodes(to_highlight) {
+        function highlightSubNodes(to_highlight, clicked_id) {
             svg.selectAll(".nodeSymbol").classed("highlighted", function (d) {
                 return (d3.select(this).classed("highlighted")) && to_highlight(d.id)
             });
@@ -2192,6 +2196,9 @@ define([
             });
             svg.selectAll(".link").classed("lowlighted", function (d) {
                 return (d3.select(this).classed("lowlighted")) || !to_highlight(d.source.id) || !to_highlight(d.target.id)
+            });
+            svg.selectAll(".contact").classed("lowlighted", function (d) {
+                return (d3.select(this).classed("lowlighted")) || (!(clicked_id == d.source.id) && !(clicked_id == d.target.id))
             });
         }
 
