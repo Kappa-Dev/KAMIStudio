@@ -798,7 +798,7 @@ define([
 
 
             //add all links as line in the svg
-            //if (path != "/kami_base/kami/action_graph") {
+            if (path != "/kami_base/kami/action_graph") {
                 var link = svg_content.selectAll(".link")
                     .data(links, function (d) { return d.source.id + "-" + d.target.id; });
                 link.enter()//.insert("line","g")
@@ -814,7 +814,7 @@ define([
                     simulation.force("link").links(links);
                 }
                 catch (err) { return 0; }
-            //}
+            }
 
 
             //add all node as circle in the svg
@@ -2161,7 +2161,7 @@ define([
 	    svg.selectAll(".node").classed("lowlighted", false);
 	    svg.selectAll(".link").classed("highlighted", false);
             svg.selectAll(".link").classed("lowlighted", false);
-            svg.selectAll(".contact").classed("lowlighted", false);
+            svg.selectAll(".contact").style("visibility", "visible");
         }
 
         function highlightNodes(to_highlight, clicked_id) {
@@ -2177,8 +2177,14 @@ define([
             svg.selectAll(".link").classed("lowlighted", function (d) {
                 return !to_highlight(d.source.id) || !to_highlight(d.target.id)
             });
-            svg.selectAll(".contact").classed("lowlighted", function (d) {
-                return !(clicked_id == d.source.id) && !(clicked_id == d.target.id)
+            svg.selectAll(".contact").style("visibility", function (d) {
+                //return !(clicked_id == d.source.id) && !(clicked_id == d.target.id)
+                if (!(clicked_id == d.source.id) && !(clicked_id == d.target.id)) {
+                    return "hidden";
+                }
+                else {
+                    return "visible";
+                }
             });
         }
 
@@ -2197,10 +2203,26 @@ define([
             svg.selectAll(".link").classed("lowlighted", function (d) {
                 return (d3.select(this).classed("lowlighted")) || !to_highlight(d.source.id) || !to_highlight(d.target.id)
             });
-            svg.selectAll(".contact").classed("lowlighted", function (d) {
-                return (d3.select(this).classed("lowlighted")) || (!(clicked_id == d.source.id) && !(clicked_id == d.target.id))
+            svg.selectAll(".contact").style("visibility", function (d) {
+                //return (d3.select(this).classed("lowlighted")) || (!(clicked_id == d.source.id) && !(clicked_id == d.target.id))
+                if ((d3.select(this).style("visibility") == "hidden") || (!(clicked_id == d.source.id) && !(clicked_id == d.target.id))) {
+                    return "hidden";
+                }
+                else {
+                    return "visible";
+                }
             });
         }
+
+        // Taken from the GitHubGist of Sundar Singh "SVG to the front and back".
+        d3.selection.prototype.moveToBack = function() {
+            return this.each(function() {
+                var firstChild = this.parentNode.firstChild;
+                if (firstChild) {
+                    this.parentNode.insertBefore(this, firstChild);
+                }
+            });
+        };
 
         function addDetails(to_show) {
             // Show the details around all the nodes
@@ -2208,27 +2230,23 @@ define([
                 if (to_show(d.id) == true) {return "visible"};
                 if (to_show(d.id) == false && d.type != "gene") {return "hidden"};
             });
-            svg.selectAll(".link").style("visibility", function (d) {
-                if (to_show(d.source.id) == true && to_show(d.target.id) == true) {return "visible"}
-                else {return "hidden"};
-            });
+            //svg.selectAll(".link").style("visibility", function (d) {
+            //    if (to_show(d.source.id) == true && to_show(d.target.id) == true) {return "visible"}
+            //    else {return "hidden"};
+            //});
+            var links_to_draw = links.filter((d) => (to_show(d.source.id) == true && to_show(d.target.id) == true));
+            var link = svg_content.selectAll(".link")
+                    .data(links_to_draw, function (d) { return d.source.id + "-" + d.target.id; });
+            link.enter().append("path").classed("link", true)
+                    .on("contextmenu", d3ContextMenu(edgeCtMenu));
+            d3.selectAll(".link").moveToBack();
+            simulation.restart();
+            link.exit().remove();
             // Hide all the contacts that involve the clicked gene.
             svg.selectAll(".contact").style("visibility", function (d) {
                 if (to_show(d.source.id) == true && to_show(d.target.id) == true) {return "hidden"}
                 else {return "visible"};
             });
-            //svg.selectAll(".node").style("visibility", function (d) {
-            //    return to_show(d.id)
-            //});
-            //var link = svg_content.selectAll(".link")
-            //        .data(links, function (d) { return d.source.id + "-" + d.target.id; });
-            //    link.enter()//.insert("line","g")
-            //        .append("path")
-            //        .classed("link", true)
-            //        // I think this is where I have to add arrows (Seb)
-            //        //.attr("marker-mid", "url(#arrow_end)")
-            //        .on("contextmenu", d3ContextMenu(edgeCtMenu));
-            //    link.exit().remove();
         }
 
         function newChild() {
