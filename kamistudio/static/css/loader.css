@@ -1,0 +1,36 @@
+.loading-elements {
+    display: none;
+    text-align: center;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.loader {
+    text-align: center;
+    margin-right: auto;
+    margin-left: auto;
+    border: 10px solid #f3f3f3; /* Light grey */
+    border-top: 10px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* When the body has the loading class, we turn
+   the scrollbar off with overflow:hidden */
+.tabs.loading {
+    overflow: hidden;   
+}
+
+/* Anytime the body has the loading class, our
+   modal element will be visible */
+.tabs.loading .loading-elements {
+    display: block;
+}

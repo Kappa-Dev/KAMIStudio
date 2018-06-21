@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block panel_buttons %}
+    <a href="{{ url_for('home.new_hierarchy') }}" class="btn btn-primary btn-md panel-button">New model</a>
+    <a href="{{ url_for('home.import_hierarchy') }}" class="btn btn-primary btn-md panel-button">Import model</a>
+    <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a>
+{% endblock %}
+
+{% block tabs %}
+
+<form action="{{ url_for('home.new_hierarchy') }}" method="post" class="form-inline">
+  <div class="form-group">
+    <label for="name">Hierarchy name:</label>
+    <input type="text" class="form-control" name="hierarchy_name">
+  </div>
+  <button type="submit" class="btn btn-default">Create</button>
+</form> 
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block home_button %}
+  <a href="/home" type="button" class="btn btn-primary btn-md panel-button home-button">
+    <span class="glyphicon glyphicon-home"></span> Home
+  </a>
+{% endblock %}
+{% block panel_buttons %}<h1 id="hierarchy_name">{{ hierarchy_id }}</h1>{% endblock %}
+
+{% block sidebar_items %}
+<!--   {% if hierarchies[hierarchy_id].empty() %}
+    <li>Empty action graph</li>
+    <li>No nuggets</li>
+  {% else %}
+    <li>Action graph ({{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes)</li>
+    <li>Nuggets ({{ hierarchies[hierarchy_id].nuggets()|length }})</li>
+  {% endif %}
+  <br> -->
+{% endblock %}
+
+{% block tabs %}
+
+<!--     <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link active" href="#">
+          Action graph ({% if hierarchies[hierarchy_id].empty() %}empty{% else %}{{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes {% endif %})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Nuggets ({% if hierarchies[hierarchy_id].empty() %}0{% else %}{{ hierarchies[hierarchy_id].nuggets()|length }}{% endif %} nuggets)</a>
+      </li>
+    </ul> -->
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" data-toggle="tab" href="#action_graph" role="tab">Action graph ({% if hierarchies[hierarchy_id].empty() %}empty{% else %}{{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes {% endif %})</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#nuggets" role="tab">Nuggets ({% if hierarchies[hierarchy_id].empty() %}0{% else %}{{ hierarchies[hierarchy_id].nuggets()|length }}{% endif %} nuggets)</a>
+      </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <div class="tab-pane active" id="action_graph" role="tabpanel">
+        {% if hierarchies[hierarchy_id].empty() %}
+          Action graph is empty
+        {% else %}
+          Agents: {{ hierarchies[hierarchy_id].agents()|length }}<br>
+          Modifications: {{ hierarchies[hierarchy_id].modifications()|length }}<br>
+          Bindings: {{ hierarchies[hierarchy_id].bindings()|length }}<br>
+        
+        <div id="mynetwork"></div>
+
+        {% endif %}
+
+      </div>
+      <div class="tab-pane" id="nuggets" role="tabpanel">Smth about nuggets</div>
+    </div>
+
+{% endblock %}
+{% if hierarchies[hierarchy_id].empty() %}
+{% else %}
+  {% block scripts %}
+
+    {{ super() }}
+    <script type="text/javascript">
+      // create an array with nodes
+
+      var nodes = new vis.DataSet([
+          {% for node in action_graph_nodelist %}{id: {{ node[0] }}, label: '{{ node[1] }}' },{% endfor %}
+      ]);
+
+      // create an array with edges
+      var edges = new vis.DataSet([
+        {% for edge in action_graph_edgelist %}{from: {{ edge[0] }}, to: {{ edge[1] }} },{% endfor %}
+      ]);
+
+      // create a network
+      var container = document.getElementById('mynetwork');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {};
+      var network = new vis.Network(container, data, options);
+    </script>
+  {% endblock %}
+{% endif %}

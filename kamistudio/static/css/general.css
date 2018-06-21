@@ -1,0 +1,63 @@
+/*!
+ * Start Bootstrap - Simple Sidebar (https://startbootstrap.com/template-overviews/simple-sidebar)
+ * Copyright 2013-2017 Start Bootstrap
+ * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-simple-sidebar/blob/master/LICENSE)
+ */
+.panel {
+  margin-bottom: 15px;
+  margin-top: 20px;
+}
+
+.panel-button {
+	margin: 10px;
+}
+
+.tabs {
+	margin: 0px;
+	padding-left: 0px;
+	padding-top: 10px;
+}
+
+.home-button {
+    margin-left: 30px;
+}
+
+#hierarchy_name {
+	margin-top: 0px;
+}
+
+p {
+	text-decoration: none;
+  	color: #999999;
+}
+
+body {
+	overflow-x: hidden;
+}
+
+.tab-pane {
+	margin: 20px;
+}
+
+#mynetwork{
+	margin: 20px;
+}
+
+.model-checkbox {
+	width: 25px;
+	float: right;
+}
+
+.all-models-checkbox {
+	float: right;
+	margin-right: 22px;
+}
+
+.panel-button-right {
+	float: right;
+	margin-right: 20px;
+}
+
+p.hidden {
+	display: none;
+}

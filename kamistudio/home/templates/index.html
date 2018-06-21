@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block panel_buttons %}
+    <a href="{{ url_for('home.new_hierarchy') }}" class="btn btn-primary btn-md panel-button">New model</a>
+    <a href="{{ url_for('home.import_hierarchy') }}" class="btn btn-primary btn-md panel-button">Import model</a>
+    <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a>
+{% endblock %}
+
+{% block tabs %}
+	<h1>Models{% if hierarchies|length > 0%}<div class="all-models-checkbox"><input type="checkbox" id="all-models-selection"/></div>{% endif %}</h1>
+    {% if hierarchies.keys()|length > 0 %}
+<!--       	<ul class="nav nav-tabs">
+    	  	{% for h_id in hierarchies.keys() %}
+        	    <li class="list-group-item"><a href="hierarchy/{{ h_id }}">{{ h_id }}</a></li>
+	      	{% endfor %}
+		</ul> -->
+
+      <ul class="list-group models">
+	      {% for h_id in hierarchies.keys() %}
+	            <li class="list-group-item model" id="{{ h_id }}"><a href="{{ url_for('model.model_view', hierarchy_id=h_id) }}">{{ h_id }}</a><div class="model-checkbox"><input type="checkbox" class="model-selection" id="{{ h_id }}"></div></li>
+	      {% endfor %}
+      </ul>
+      <p id="empty_ul" class="hidden">No models</p>
+    {% else %}
+      <p>No models</p>
+    {% endif %}
+{% endblock %}
