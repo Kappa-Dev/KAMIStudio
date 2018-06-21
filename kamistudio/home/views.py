@@ -48,10 +48,11 @@ def create_new_hierarchy():
 
 @home_blueprint.route("/import_hierarchy", methods=['GET', 'POST'])
 def import_hierarchy():
+    """Handler of hierarchy import."""
     if request.method == 'GET':
-        return render_template('import_hierarchy.html')
+        failed = request.args.get('failed')
+        return render_template('import_hierarchy.html', failed=failed)
     elif request.method == 'POST':
-        print("\n\nHERE")
         # check if the post request has the file part
         h_name = request.form['hierarchy_name']
         if 'file' not in request.files:
@@ -70,8 +71,14 @@ def import_hierarchy():
 
 
 def imported_hierarchy(filename, name):
+    """Internal handler of already imported hierarchy."""
+    # try:
     new_hierarchy = KamiHierarchy.load(
         os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # except Exception as e:
+        # print(e)
+        # return redirect(
+            # url_for('home.import_hierarchy', failed=True))
     hierarchy_id = _generate_unique_hie_id(name)
     app.hierarchies[hierarchy_id] = new_hierarchy
     return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))

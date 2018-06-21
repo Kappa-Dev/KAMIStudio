@@ -61,3 +61,7 @@ body {
 p.hidden {
 	display: none;
 }
+
+p.loading-error-message {
+	color: #c94c4c;
+}

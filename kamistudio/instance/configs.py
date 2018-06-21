@@ -1,5 +1,5 @@
 """KAMIStudio app default settings."""
 
 DEBUG = True
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = './kamistudio/uploads'
 ALLOWED_EXTENSIONS = set(['json'])
