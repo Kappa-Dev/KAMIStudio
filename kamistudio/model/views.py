@@ -2,6 +2,8 @@
 from flask import render_template, Blueprint
 from flask import current_app as app
 
+from kami.export.old_kami import ag_to_edge_list
+
 model_blueprint = Blueprint('model', __name__, template_folder='templates')
 
 
@@ -9,7 +11,7 @@ model_blueprint = Blueprint('model', __name__, template_folder='templates')
 def model_view(hierarchy_id):
     """View hierarchy."""
     if not app.hierarchies[hierarchy_id].empty():
-        edgelist = app.hierarchies[hierarchy_id].ag_to_edge_list()
+        edgelist = ag_to_edge_list(app.hierarchies[hierarchy_id])
         nodelist = set()
         for u, v in edgelist:
             nodelist.add(u)
