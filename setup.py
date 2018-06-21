@@ -19,7 +19,7 @@ setup(name='KAMIStudio',
           'kamistudio': [
               'templates/*', 'static/*',
               'static/bootstrap/*', 'static/css/*',
-              'static/js/*'],
+              'static/js/*', 'uploads/*'],
           'kamistudio.action_graph': ['templates/*', 'static/*'],
           'kamistudio.home': ['templates/*', 'static/*'],
           'kamistudio.model': ['templates/*', 'static/*'],
@@ -31,12 +31,14 @@ setup(name='KAMIStudio',
           'indra',
           'flask',
           'flask_bootstrap',
+          'flask_cors',
+          'flask-uploads',
           'flex',
           'lxml',
-          'jpype1',
-          'flask_cors'
+          'jpype1'
       ],
-      dependency_links=[
-          'git+https://github.com/Kappa-Dev/ReGraph@master#egg=regraph-1.0',
-          'git+https://github.com/Kappa-Dev/KAMI@master#egg=kami-1.2.0'
-      ])
+      # dependency_links=[
+      #     'git+https://github.com/Kappa-Dev/ReGraph@master#egg=regraph-1.0',
+      #     'git+https://github.com/Kappa-Dev/KAMI@master#egg=kami-1.2.0'
+      # ]
+)
