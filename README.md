@@ -20,7 +20,7 @@ python setup.py install
 ```
 
 
-In order to run KAMIStudion export an environment variable that tells Flask where to find the application instance:
+In order to run KAMIStudio export an environment variable that tells Flask where to find the application instance:
 
 ```
 export FLASK_APP=kamistudio
