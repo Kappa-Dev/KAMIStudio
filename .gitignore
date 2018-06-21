@@ -9,3 +9,4 @@ server/kami/__pycache__/*
 *.egg-info
 tests/__pycache__/*
 *.pyc
+kamistudio/uploads/*
