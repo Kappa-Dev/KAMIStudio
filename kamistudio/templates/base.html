@@ -11,6 +11,7 @@
     <link rel="stylesheet"
         href="{{url_for('static', filename='css/general.css')}}">
     <link href="{{url_for('static', filename='css/vis-network.min.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='css/add_interaction_form.css')}}" rel="stylesheet" type="text/css" />
 
     <style type="text/css">
       #mynetwork {
@@ -76,6 +77,8 @@
             <div class="container-fluid tabs">
               {% block tabs %}
               {% endblock %}
+              {% block interaction_form %}
+              {% endblock %}
             </div>
           </div>
           <div class="col-sm-2"></div>
@@ -89,5 +92,6 @@
   <script src="{{url_for('static', filename='js/import_button.js')}}"></script>
   <script src="{{url_for('static', filename='js/vis.js')}}" type="text/javascript"></script>
   <script src="{{url_for('static', filename='js/model_selectors.js')}}" type="text/javascript"></script>
+  <script src="{{url_for('static', filename='js/interactionTypeSwitching.js')}}" type="text/javascript"></script>
 {% endblock %}
 {% endblock %}

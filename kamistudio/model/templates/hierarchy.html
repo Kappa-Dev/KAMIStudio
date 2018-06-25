@@ -5,17 +5,14 @@
     <span class="glyphicon glyphicon-home"></span> Home
   </a>
 {% endblock %}
-{% block panel_buttons %}<h1 id="hierarchy_name">{{ hierarchy_id }}</h1>{% endblock %}
+{% block panel_buttons %}
+<a href="{{ hierarchy_id }}"><h1 id="hierarchy_name">{{ hierarchy_id }}</h1></a><a href="/model/{{ hierarchy_id }}/add_interaction" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+{% endblock %}
 
 {% block sidebar_items %}
-<!--   {% if hierarchies[hierarchy_id].empty() %}
-    <li>Empty action graph</li>
-    <li>No nuggets</li>
-  {% else %}
-    <li>Action graph ({{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes)</li>
-    <li>Nuggets ({{ hierarchies[hierarchy_id].nuggets()|length }})</li>
-  {% endif %}
-  <br> -->
+<!--   <div class="side-bar-tools">
+    <h3 id="browsing">Tools</h3>
+  </div> -->
 {% endblock %}
 
 {% block tabs %}
@@ -56,8 +53,51 @@
         {% endif %}
 
       </div>
-      <div class="tab-pane" id="nuggets" role="tabpanel">Smth about nuggets</div>
+      <div class="tab-pane" id="nuggets" role="tabpanel">
+
+        {% if hierarchies[hierarchy_id].empty() %}
+            Model does not contain any nuggets
+        {% else %}
+            <div class="nuggets-view">
+              <a type="button" class="btn btn-default btn-md panel-button nugget-list-view active"><span class="glyphicon glyphicon-list"></span> List view</a>
+              <a type="button" class="btn btn-default btn-md panel-button nugget-table-view"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-sm">
+                <!-- <thead>
+                  <tr>
+                    <th>#</th>
+                  <th>Header</th>
+                  <th>Header</th>
+                  <th>Header</th>
+                  <th>Header</th>
+                </tr>
+              </thead> -->
+                <tbody>
+                  {% for nugget in hierarchies[hierarchy_id].nuggets() %}
+                  <tr>
+                    <td>{{ nugget }}</td>
+                    <td class="nugget-desc">{{ nugget_desc[nugget] }}</td>
+                    <td class="nugget-nav-buttons"><a type="button" class="btn btn-primary btn-md panel-button show-nugget-button"><span class="glyphicon glyphicon-search"></span> Show graph</a></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+<!--           <ul class="list-group models">
+          {% for nugget in hierarchies[hierarchy_id].nuggets() %}
+            <li class="list-group-item nugget-item" id="{{ nugget }}">
+              {{ nugget }}
+              <span class="nugget-desc"> {{ nugget_desc[nugget] }}</span><span class="nugget-nav-buttons"><a type="button" class="btn btn-primary btn-md panel-button show-nugget-button"><span class="glyphicon glyphicon-search"></span> Show graph</a></span>
+          </li>
+          {% endfor %}
+          </ul> -->
+        {% endif %}
+      </div>
     </div>
+
+
 
 {% endblock %}
 {% if hierarchies[hierarchy_id].empty() %}

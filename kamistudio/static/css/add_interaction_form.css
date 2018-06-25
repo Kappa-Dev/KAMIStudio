@@ -1,0 +1,23 @@
+.form-row {
+	margin-top: 15px;
+}
+
+.add-button {
+	margin-left: 0px;
+}
+
+.no-elements-message {
+	color: #777;
+}
+
+#add-interaction-button {
+	float: right;
+}
+
+.dynamic-form-remove {
+	float: right;
+}
+
+.nested-form {
+	margin-top: 20px;
+}
