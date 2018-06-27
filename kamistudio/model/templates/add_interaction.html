@@ -17,103 +17,141 @@
 
 {% block interaction_form %}
 
-<div class="col-md-8 order-md-1">
-  <h2 class="mb-3">New interaction</h2>
-  <form class="needs-validation" novalidate> 
+<div class="col-md-12 order-md-1">
+  <h2 class="mb-6">New interaction</h2>
+  <form id="interactionForm" novalidate action="{{ url_for('model.add_interaction', hierarchy_id=hierarchy_id) }}" method="post"> 
 
       <div class="mb-3">
-        <input type="radio" onchange="switchToMod(this)" name="modorbnd" checked> Modification
+        <input type="radio" onchange="switchToMod(this)" name="modorbnd" value="mod" checked> Modification
       </div>
 
       <div class="mb-3">
-        <input type="radio" onchange="switchToBnd(this)" name="modorbnd"> Binding
+        <input type="radio" onchange="switchToBnd(this)" name="modorbnd" value="bnd"> Binding
       </div>
 
-      <hr class="mb-4">
+      <div class="row">
+        <div class="col-md-12">
+          <hr class="mb-4">
+        </div>
+      </div>
 
+      <!-- MODIFICATION FORM STARTS HERE -->
       <div id="mod">
 
         <div class="row form-row">
-          <div class="col-md-6 mb-3">
+          <div class="col-md-4 mb-3">
+            <div id="invalidFeedbackGlobal" class="invalid-feedback" style="display: none;">
+              Input to some fields is invalid.
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+          </div>
+        </div>
+
+        <div class="row form-row">
+          <div class="col-md-4 mb-3">
             <h3 class="mb-3">New modification interaction</h3>
           </div>
           <div class="col-md-4 mb-3">
-            <label for="sel1">Type of modification:</label>
-            <select onchange="switchModType(this)" class="form-control">
-              <option value="defaultMod">Default</option>
-              <option value="anonymousMod">Anonymous</option>
-              <option value="selfMod">Self modification</option>
-              <option value="ligandMod">Ligand modification</option>
+            <label for="modType">Type of modification:</label>
+            <select onchange="switchModType(this)" class="form-control" name="modType" id="modTypeSelection">
+              <option name="modType" id="Modification" value="Modification">Default</option>
+              <option name="modType" id="AnonymousModification" value="AnonymousModification">Anonymous</option>
+              <option name="modType" id="SelfModification" value="SelfModification">Self modification</option>
+              <option name="modType" id="LigandModification" value="LigandModification">Ligand modification</option>
             </select>
           </div>
         </div>
 
-        <hr class="mb-4">
-
 
         <!-- ENZYME FORM -->
-        <div id="enzymeBlock">
+        <div id="enzymeBlock" class="form-block">
+
           <div class="mb-3">
             <h4 class="mb-3">Enzyme</h4>
           </div>
 
           <div class="row form-row">
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="enzymeUniprotAC">UniProt AC*</label>
-                <input type="text" class="form-control" id="enzymeUniprotAC" placeholder="" value="" required>
-                <div class="invalid-feedback">
+                <input type="text" class="form-control" name="enzymeUniprotAC" id="enzymeUniprotAC" placeholder="" value="" required>
+                <div class="invalid-feedback" style="display: none;">
                   UniProt acession number is required.
                 </div>
               </div>
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="enzymeHgncSymbol">HGNC Symbol</label>
-                <input type="text" class="form-control" id="enzymeHgncSymbol" placeholder="" value="">
+                <input type="text" class="form-control" name="enzymeHgncSymbol" id="enzymeHgncSymbol" placeholder="" value="">
               </div>
           </div>
           
           <div class="row form-row">
             
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <label for="enzymeSynonyms">Synonyms</label>
-                <input type="text" class="form-control" id="enzymeSynonyms" placeholder="" value="">
+                <input type="text" class="form-control" name="enzymeSynonyms" id="enzymeSynonyms" placeholder="" value="">
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                   <label for="enzymeLocation">Location</label>
-                  <input type="text" class="form-control" id="enzymeLocation" placeholder="" value="">
+                  <input type="text" class="form-control" name="enzymeLocation" id="enzymeLocation" placeholder="" value="">
             </div>
 
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
           </div>
 
           <div class="row form-row">
             <div class="col-md-2 mb-3">
               <label>Regions</label>
             </div>
-            <div class="col-md-10 mb-6">
+            <div class="col-md-10 mb-3">
               <!-- enzyme region addition form will go here-->
               <div id="enzymeRegionFormFather"></div>
               <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'enzyme')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
             </div>
           </div>
 
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
           <div class="row form-row">
             <div class="col-md-2 mb-3">
               <label>Sites</label>
             </div>
-            <div class="col-md-10 mb-6">
+            <div class="col-md-10 mb-3">
               <!-- enzyme site addition form will go here-->
               <div id="enzymeSiteFormFather"></div>
               <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'enzyme')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
             </div>
           </div>
 
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
           <div class="row form-row">
             <div class="col-md-2 mb-3">
               <label>Residues</label>
             </div>
-            <div class="col-md-10 mb-6">
+            <div class="col-md-10 mb-3">
               <!-- enzyme residue addition form will go here-->
               <div id="enzymeResidueFormFather"></div>
               <a type="button" onclick="addNewResidueForm(this, 'enzyme')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
             </div>
           </div>
 
@@ -121,53 +159,71 @@
             <div class="col-md-2 mb-3">
               <label>States</label>
             </div>
-            <div class="col-md-10 mb-6">
+            <div class="col-md-10 mb-3">
               <!-- enzyme state addition form will go here-->
               <div id="enzymeStateFormFather"></div>
               <a type="button" onclick="addNewStateForm(this, 'enzyme')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
             </div>
           </div>
+
         </div>
+        <!-- END OF ENZYME FORM -->
+
 
         <!-- SUBSTRATE FORM -->
-        <div id="substrateBlock">
+        <div id="substrateBlock" class="form-block">
+
           <div class="mb-3">
             <h4 class="mb-3">Substrate</h4>
           </div>
 
           <div class="row form-row">
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="substrateUniprotAC">UniProt AC*</label>
-                <input type="text" class="form-control" id="substrateUniprotAC" placeholder="" value="" required>
-                <div class="invalid-feedback">
+                <input type="text" class="form-control" name="substrateUniprotAC"  id="substrateUniprotAC" placeholder="" value="" required>
+                <div class="invalid-feedback" style="display: none;">
                   UniProt acession number is required.
                 </div>
               </div>
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="substrateHgncSymbol">HGNC Symbol</label>
-                <input type="text" class="form-control" id="substrateHgncSymbol" placeholder="" value="">
+                <input type="text" class="form-control" name="substrateHgncSymbol"  id="substrateHgncSymbol" placeholder="" value="">
               </div>
           </div>
           
           <div class="row form-row">
             
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <label for="substrateSynonyms">Synonyms</label>
-                <input type="text" class="form-control" id="substrateSynonyms" placeholder="" value="">
+                <input type="text" class="form-control" name="substrateSynonyms"  id="substrateSynonyms" placeholder="" value="">
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                   <label for="substrateLocation">Location</label>
-                  <input type="text" class="form-control" id="substrateLocation" placeholder="" value="">
+                  <input type="text" class="form-control" name="substrateLocation" id="substrateLocation" placeholder="" value="">
             </div>
 
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
           </div>
 
           <div class="row form-row">
             <div class="col-md-2 mb-3">
               <label>Regions</label>
             </div>
-            <div class="col-md-3 mb-6">
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region"><span class="glyphicon glyphicon-plus"></span> Add</a>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme region addition form will go here-->
+              <div id="substrateRegionFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'substrate')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
             </div>
           </div>
 
@@ -175,8 +231,16 @@
             <div class="col-md-2 mb-3">
               <label>Sites</label>
             </div>
-            <div class="col-md-3 mb-6">
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site"><span class="glyphicon glyphicon-plus"></span> Add</a>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme site addition form will go here-->
+              <div id="substrateSiteFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'substrate')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
             </div>
           </div>
 
@@ -184,8 +248,16 @@
             <div class="col-md-2 mb-3">
               <label>Residues</label>
             </div>
-            <div class="col-md-6 mb-6">
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add</a>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme residue addition form will go here-->
+              <div id="substrateResidueFormFather"></div>
+              <a type="button" onclick="addNewResidueForm(this, 'substrate')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
             </div>
           </div>
 
@@ -193,51 +265,70 @@
             <div class="col-md-2 mb-3">
               <label>States</label>
             </div>
-            <div class="col-md-3 mb-6">
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add</a>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme state addition form will go here-->
+              <div id="substrateStateFormFather"></div>
+              <a type="button" onclick="addNewStateForm(this, 'substrate')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
             </div>
           </div>
-        </div>
 
-        <!-- SELF MODIFICATION FORM -->
-        <div id="enzimaticSubstrateBlock" style="display: none">
+        </div>
+        <!-- END OF SUBSTRATE FORM -->
+
+
+        <!-- ENZYMATIC SUBSTRATE FORM -->
+        <div id="enzimaticSubstrateBlock" class="form-block" style="display: none">
             <div class="mb-3">
               <h4 class="mb-3">Enzyme/Substrate</h4>
             </div>
 
             <div class="row form-row">
-                <div class="col-md-6 mb-3">
-                  <label for="enzymeUniprotAC">UniProt AC*</label>
-                  <input type="text" class="form-control" id="enzymeUniprotAC" placeholder="" value="" required>
-                  <div class="invalid-feedback">
+                <div class="col-md-4 mb-3">
+                  <label for="enzymeSubUniprotAC">UniProt AC*</label>
+                  <input type="text" class="form-control" name="enzymeSubUniprotAC" id="enzymeSubUniprotAC" placeholder="" value="">
+                  <div class="invalid-feedback" style="display: none;">
                     UniProt acession number is required.
                   </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                  <label for="enzymeHgncSymbol">HGNC Symbol</label>
-                  <input type="text" class="form-control" id="enzymeHgncSymbol" placeholder="" value="">
+                <div class="col-md-4 mb-3">
+                  <label for="enzymeSubHgncSymbol">HGNC Symbol</label>
+                  <input type="text" class="form-control" name="enzymeSubHgncSymbol" id="enzymeSubHgncSymbol" placeholder="" value="">
                 </div>
             </div>
-            
+              
             <div class="row form-row">
               
-              <div class="col-md-6 mb-3">
-                  <label for="enzymeSynonyms">Synonyms</label>
-                  <input type="text" class="form-control" id="enzymeSynonyms" placeholder="" value="">
+              <div class="col-md-4 mb-3">
+                  <label for="enzymeSubSynonyms">Synonyms</label>
+                  <input type="text" class="form-control" name="enzymeSubSynonyms" placeholder="" value="">
               </div>
-              <div class="col-md-6 mb-3">
-                    <label for="enzymeLocation">Location</label>
-                    <input type="text" class="form-control" id="enzymeLocation" placeholder="" value="">
+              <div class="col-md-4 mb-3">
+                    <label for="enzymeSubLocation">Location</label>
+                    <input type="text" class="form-control" name="enzymeSubLocation" placeholder="" value="">
               </div>
 
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <hr class="mb-4">
+              </div>
             </div>
 
             <div class="row form-row">
               <div class="col-md-2 mb-3">
                 <label>Regions</label>
               </div>
-              <div class="col-md-3 mb-6">
-                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region"><span class="glyphicon glyphicon-plus"></span> Add</a>
+              <div class="col-md-10 mb-3">
+                <!-- enzyme region addition form will go here-->
+                <div id="enzymeSubRegionFormFather"></div>
+                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'enzymeSub')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <hr class="mb-4">
               </div>
             </div>
 
@@ -245,8 +336,16 @@
               <div class="col-md-2 mb-3">
                 <label>Sites</label>
               </div>
-              <div class="col-md-3 mb-6">
-                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site"><span class="glyphicon glyphicon-plus"></span> Add</a>
+              <div class="col-md-10 mb-3">
+                <!-- enzyme site addition form will go here-->
+                <div id="enzymeSubSiteFormFather"></div>
+                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'enzymeSub')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <hr class="mb-4">
               </div>
             </div>
 
@@ -254,8 +353,16 @@
               <div class="col-md-2 mb-3">
                 <label>Residues</label>
               </div>
-              <div class="col-md-6 mb-6">
-                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add</a>
+              <div class="col-md-10 mb-3">
+                <!-- enzyme residue addition form will go here-->
+                <div id="enzymeSubResidueFormFather"></div>
+                <a type="button" onclick="addNewResidueForm(this, 'enzymeSub')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <hr class="mb-4">
               </div>
             </div>
 
@@ -263,187 +370,254 @@
               <div class="col-md-2 mb-3">
                 <label>States</label>
               </div>
-              <div class="col-md-3 mb-6">
-                <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add</a>
+              <div class="col-md-10 mb-3">
+                <!-- enzyme state addition form will go here-->
+                <div id="enzymeSubStateFormFather"></div>
+                <a type="button" onclick="addNewStateForm(this, 'enzymeSub')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
               </div>
             </div>
-          </div>
 
-        
-
-        <div id="bindingConditionBlock" style="display: none">
-          Binding condition something
         </div>
-
-      </div>
+        <!-- END OF ENZYMATIC SUBSTRATE FORM -->
       
+      </div>
+      <!-- END OF MODIFICATION FORM -->
 
-      <!-- BND FORM -->
+
+      <!-- BINDING FORM -->
       <div id="bnd" style="display:none">
-        
-        <div class="mb-3">
-          <h3 class="mb-3">New binding interaction</h3>
-        </div>
 
-        <hr class="mb-4">
+         <div class="row form-row">
+          <div class="col-md-4 mb-3">
+            <h3 class="mb-3">New binding interaction</h3>
+          </div>
+          <div class="col-md-4 mb-3"></div>
+        </div>
 
         <!-- LEFT FORM -->
+        <div id="leftBlock" class="form-block">
 
-        <div class="mb-3">
-          <h4 class="mb-3">Left Partner</h4>
-        </div>
+          <div class="mb-3">
+            <h4 class="mb-3">Left Partner</h4>
+          </div>
 
-        <div class="row form-row">
-            <div class="col-md-6 mb-3">
-              <label for="leftUniprotAC">UniProt AC*</label>
-              <input type="text" class="form-control" id="leftUniprotAC" placeholder="" value="" required>
-              <div class="invalid-feedback">
-                UniProt acession number is required.
+          <div class="row form-row">
+              <div class="col-md-4 mb-3">
+                <label for="leftUniprotAC">UniProt AC*</label>
+                <input type="text" class="form-control" name="leftUniprotAC" placeholder="" value="">
+                <div class="invalid-feedback" style="display: none;">
+                    UniProt acession number is required.
+                </div>
               </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="leftHgncSymbol">HGNC Symbol</label>
-              <input type="text" class="form-control" id="leftHgncSymbol" placeholder="" value="">
-            </div>
-        </div>
-        
-        <div class="row form-row">
+              <div class="col-md-4 mb-3">
+                <label for="leftHgncSymbol">HGNC Symbol</label>
+                <input type="text" class="form-control" name="leftHgncSymbol" placeholder="" value="">
+              </div>
+          </div>
           
-          <div class="col-md-6 mb-3">
+          <div class="row form-row">
+            <div class="col-md-4 mb-3">
               <label for="leftSynonyms">Synonyms</label>
-              <input type="text" class="form-control" id="leftSynonyms" placeholder="" value="">
+              <input type="text" class="form-control" name="leftSynonyms" placeholder="" value="">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="leftLocation">Location</label>
+              <input type="text" class="form-control" name="leftLocation" placeholder="" value="">
+            </div>
           </div>
-          <div class="col-md-6 mb-3">
-                <label for="leftLocation">Location</label>
-                <input type="text" class="form-control" id="leftLocation" placeholder="" value="">
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Regions</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme region addition form will go here-->
+              <div id="leftRegionFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'left')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Sites</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme site addition form will go here-->
+              <div id="leftSiteFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'left')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Residues</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme residue addition form will go here-->
+              <div id="leftResidueFormFather"></div>
+              <a type="button" onclick="addNewResidueForm(this, 'left')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>States</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme state addition form will go here-->
+              <div id="leftStateFormFather"></div>
+              <a type="button" onclick="addNewStateForm(this, 'left')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
+            </div>
           </div>
 
         </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Regions</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Sites</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Residues</label>
-          </div>
-          <div class="col-md-6 mb-6">
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>States</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
+        <!-- END OF LEFT FORM -->
 
         <!-- RIGHT FORM -->
+        <div id="rightBlock" class="form-block">
 
-        <div class="mb-3">
-          <h4 class="mb-3">Right Partner</h4>
-        </div>
+          <div class="mb-3">
+            <h4 class="mb-3">Right Partner</h4>
+          </div>
 
-        <div class="row form-row">
-            <div class="col-md-6 mb-3">
-              <label for="rightUniprotAC">UniProt AC*</label>
-              <input type="text" class="form-control" id="rightUniprotAC" placeholder="" value="" required>
-              <div class="invalid-feedback">
-                UniProt acession number is required.
+          <div class="row form-row">
+              <div class="col-md-4 mb-3">
+                <label for="rightUniprotAC">UniProt AC*</label>
+                <input type="text" class="form-control" id="rightUniprotAC" placeholder="" value="">
               </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="rightHgncSymbol">HGNC Symbol</label>
-              <input type="text" class="form-control" id="rightHgncSymbol" placeholder="" value="">
-            </div>
-        </div>
-        
-        <div class="row form-row">
+              <div class="col-md-4 mb-3">
+                <label for="rightHgncSymbol">HGNC Symbol</label>
+                <input type="text" class="form-control" id="rightHgncSymbol" placeholder="" value="">
+              </div>
+          </div>
           
-          <div class="col-md-6 mb-3">
-              <label for="rightSynonyms">Synonyms</label>
-              <input type="text" class="form-control" id="rightSynonyms" placeholder="" value="">
+          <div class="row form-row">
+            
+            <div class="col-md-4 mb-3">
+                <label for="rightSynonyms">Synonyms</label>
+                <input type="text" class="form-control" id="rightSynonyms" placeholder="" value="">
+            </div>
+            <div class="col-md-4 mb-3">
+                  <label for="rightLocation">Location</label>
+                  <input type="text" class="form-control" id="rightLocation" placeholder="" value="">
+            </div>
+
           </div>
-          <div class="col-md-6 mb-3">
-                <label for="rightLocation">Location</label>
-                <input type="text" class="form-control" id="rightLocation" placeholder="" value="">
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Regions</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme region addition form will go here-->
+              <div id="rightRegionFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'right')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Sites</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme site addition form will go here-->
+              <div id="rightSiteFormFather"></div>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'right')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>Residues</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme residue addition form will go here-->
+              <div id="rightResidueFormFather"></div>
+              <a type="button" onclick="addNewResidueForm(this, 'right')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <hr class="mb-4">
+            </div>
+          </div>
+
+          <div class="row form-row">
+            <div class="col-md-2 mb-3">
+              <label>States</label>
+            </div>
+            <div class="col-md-10 mb-3">
+              <!-- enzyme state addition form will go here-->
+              <div id="rightStateFormFather"></div>
+              <a type="button" onclick="addNewStateForm(this, 'right')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
+            </div>
           </div>
 
         </div>
+        <!-- END OF RIGHT FORM -->
 
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Regions</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <span class="no-elements-message">No region conditions</span><br>
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Sites</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <span class="no-elements-message">No site conditions</span><br>
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>Residues</label>
-          </div>
-          <div class="col-md-6 mb-6">
-            <span class="no-elements-message">No residue conditions</span><br>
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
-        <div class="row form-row">
-          <div class="col-md-2 mb-3">
-            <label>States</label>
-          </div>
-          <div class="col-md-3 mb-6">
-            <span class="no-elements-message">No state conditions</span><br>
-            <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add</a>
-          </div>
-        </div>
-
+      <!-- END OF BINDING FORM -->
       </div>
 
       <!-- SUBMITTING BUTTTONS -->
-      <hr class="mb-4">
       <div class="row form-row">
-        <div class="col-md-4 mb-6">
-          <button class="btn btn-default btn-lg" type="submit">Nugget preview</button>
-        </div>
-        <div class="col-md-4 mb-6" id="add-interaction-button">
-          <button class="btn btn-primary btn-lg btn-block" type="submit">Add</button> 
+        <div class="col-md-6 mb-6"></div>
+        <div class="col-md-6 mb-6" id="buttons">
+          <button type="button" id="submitInteraction" class="btn btn-primary btn-lg" onclick="checkAndSubmit(this)">Add interaction</button> 
+          <!-- <button class="btn btn-default btn-lg" type="submit">Nugget preview</button> -->
         </div>
       </div>
 
   </form>
 </div>
 
+
+{% endblock %}
+{% block scipts %}
+  {{ super() }}
+  <script src="../../dist/js/bootstrap.min.js"></script>
 
 {% endblock %}

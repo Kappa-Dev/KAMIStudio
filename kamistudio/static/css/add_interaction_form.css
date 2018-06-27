@@ -10,7 +10,7 @@
 	color: #777;
 }
 
-#add-interaction-button {
+#buttons {
 	float: right;
 }
 
@@ -20,4 +20,23 @@
 
 .nested-form {
 	margin-top: 20px;
+}
+
+.remove-form-button {
+	color: #c9302c;
+	float: right;
+}
+
+.form-block {
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.invalid-feedback {
+	color: #c9302c;
 }
