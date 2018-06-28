@@ -217,7 +217,7 @@
             <div class="col-md-10 mb-3">
               <!-- enzyme region addition form will go here-->
               <div id="substrateRegionFormFather"></div>
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'substrate')"><span class="glyphicon glyphicon-plus"></span> Add region</a>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-region" onclick="addNewRegionForm(this, 'substrate', true)"><span class="glyphicon glyphicon-plus"></span> Add region</a>
             </div>
           </div>
 
@@ -234,7 +234,7 @@
             <div class="col-md-10 mb-3">
               <!-- enzyme site addition form will go here-->
               <div id="substrateSiteFormFather"></div>
-              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'substrate')"><span class="glyphicon glyphicon-plus"></span> Add site</a>
+              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, 'substrate', true)"><span class="glyphicon glyphicon-plus"></span> Add site</a>
             </div>
           </div>
 
@@ -251,7 +251,7 @@
             <div class="col-md-10 mb-3">
               <!-- enzyme residue addition form will go here-->
               <div id="substrateResidueFormFather"></div>
-              <a type="button" onclick="addNewResidueForm(this, 'substrate')" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
+              <a type="button" onclick="addNewResidueForm(this, 'substrate', true)" class="btn btn-default btn-md panel-button add-button add-enzyme-residue"><span class="glyphicon glyphicon-plus"></span> Add residue</a>
             </div>
           </div>
 
@@ -268,13 +268,12 @@
             <div class="col-md-10 mb-3">
               <!-- enzyme state addition form will go here-->
               <div id="substrateStateFormFather"></div>
-              <a type="button" onclick="addNewStateForm(this, 'substrate')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
+              <a type="button" onclick="addNewStateForm(this, 'substrate', true)" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>
             </div>
           </div>
 
         </div>
         <!-- END OF SUBSTRATE FORM -->
-
 
         <!-- ENZYMATIC SUBSTRATE FORM -->
         <div id="enzimaticSubstrateBlock" class="form-block" style="display: none">
@@ -380,6 +379,80 @@
         </div>
         <!-- END OF ENZYMATIC SUBSTRATE FORM -->
       
+        <!-- MODIFICATION TARGET FORM -->
+        <div id="modificationTargetBlock" class="form-block">
+
+          <div class="mb-3">
+            <h4 class="mb-3">Modification target</h4>
+          </div>
+
+          <div id="inputTarget">
+
+            <div class="mb-3">
+                 <input type="radio" onchange="switchToStateTarget(this)" name="stateOrResidue" value="state" checked> State <input type="radio" onchange="switchToResidueTarget(this)" name="stateOrResidue" value="residue"> Residue
+            </div>
+
+            <div class="form-block nested-form" id="targetResidueForm" style="display: none;">
+              <div class="row">
+                <div class="col-md-3">
+                  <label for="targetResidueAA">Amino acid</label>
+                  <input type="text" class="form-control" name="targetResidueAA"  id="targetResidueAA" placeholder="" value="">
+                </div>
+
+                <div class="col-md-2">
+                  <label for="'targetResidueLocation">Location</label>
+                  <input type="text" class="form-control" name="targetResidueLocation"  id="targetResidueLocation"placeholder="" value="">
+                </div>
+                <div class="col-md-3">
+                  <label for="targetResidueTest">Test</label><br>
+                  <input type="radio" value="true" name="targetResidueTest" id="targetResidueTest" checked/> True<br>
+                  <input type="radio" value="false" name="targetResidueTest" id="targetResidueTest"/> False
+                </div>
+              </div>
+
+              <div class="row ">
+                <div class="col-md-2 mb-3">
+                  <label>State</label>
+                </div>
+                <div class="col-md-10 mb-3">
+                  <div class="form-block nested-form" id="targetResidueStateForm">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label for="targetResidueStateName">Name</label>
+                        <input type="text" class="form-control" name="targetResidueStateName" id="targetResidueStateName" placeholder="" value="">
+                      </div>
+                      <div class="col-md-4">
+                            <label for="targetResidueStateSet">Set</label><br>
+                            <input type="radio" value="true" name="targetResidueStateSet" checked/> True<br>
+                            <input type="radio" value="false" name="targetResidueStateSet"/> False
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-block nested-form" id="targetStateForm">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="targetStateName">Name</label>
+                  <input type="text" class="form-control" name="targetStateName" id="targetStateName" placeholder="" value="" required>
+                </div>
+                <div class="col-md-4">
+                      <label for="targetStateSet">Set</label><br>
+                      <input type="radio" value="true" name="targetStateSet" checked/> True<br>
+                      <input type="radio" value="false" name="targetStateSet"/> False
+                </div>
+              </div>
+            </div>
+
+          </div>
+          
+          <div id="predefinedTarget"></div>
+        </div>
+        <!-- END OF MODIFICATION TARGET FORM -->
+
+
       </div>
       <!-- END OF MODIFICATION FORM -->
 

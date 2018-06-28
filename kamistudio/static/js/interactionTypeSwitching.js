@@ -2,6 +2,7 @@ var regionForms = {};
 var siteForms = {};
 var residueForms = {};
 var stateForms = {};
+// var targetImplicit = false;
 
 
 function htmlToElement(html) {
@@ -54,6 +55,7 @@ function switchToMod(x) {
 	}
 }
 
+
 function switchModType(x) {
 	if (x.value == "defaultMod") {
 		document.getElementById("enzymeBlock").style.display = "inline-block";
@@ -94,8 +96,89 @@ function switchModType(x) {
 	}
 }
 
+function switchToStateTarget(x) {
+	if (x.checked) {
+	 document.getElementById("targetResidueForm").style.display = "none";
+	 document.getElementById("targetStateForm").style.display = "inline-block";
 
-function addNewRegionForm(x, actorName) {
+	 document.getElementById("targetStateName").required = true;
+	 document.getElementById("targetResidueAA").required = false;
+	 document.getElementById("targetResidueStateName").required = false;	 
+	}
+}
+
+function switchToResidueTarget(x) {
+	if (x.checked) {
+	 document.getElementById("targetResidueForm").style.display = "inline-block";
+	 document.getElementById("targetStateForm").style.display = "none";
+
+	 document.getElementById("targetStateName").required = false;
+	 document.getElementById("targetResidueAA").required = true;
+	 document.getElementById("targetResidueStateName").required = true;	
+	}
+}
+
+function showInputTarget(x) {
+	var targetSelectors = document.getElementsByClassName("target-select");
+	for (var i = 0; i < targetSelectors.length; i++) {
+		targetSelectors[i].checked = false;
+	}
+	var father = document.getElementById("predefinedTarget");
+	father.innerHTML = "";
+	console.log("here");
+	console.log(document.getElementById('inputTarget').style.display);
+	document.getElementById('inputTarget').style.display = "block";
+	console.log(document.getElementById('inputTarget').style.display);
+}
+
+function switchModTarget(x, parentActor, parentType, count) {
+	if (x.checked) {
+		var targetSelectors = document.getElementsByClassName("target-select");
+		for (var i = 0; i < targetSelectors.length; i++) {
+			targetSelectors[i].checked = false;
+		}
+		x.checked = true;
+		// prepopulate modification target block
+		
+		if (parentType == 'residue') {
+			var aaInput = document.getElementById(parentActor + 'ResidueAA' + count);
+			var locInput = document.getElementById(parentActor + 'ResidueLoc' + count);
+			var testInput = document.getElementById(parentActor + 'ResidueTest' + count);
+			var stateNameInput = document.getElementById(parentActor + 'ResidueStateName' + count);
+			var stateTestInput = document.getElementById(parentActor + 'ResidueStateTest' + count);
+			if (aaInput.value != "" && stateNameInput.value != "") {
+				var prepulatedTargetHTML =
+					'<div>\n'+
+					'	<p>State <b>' + stateNameInput.value + 
+					'	</b> of the residue <b>' + aaInput.value + locInput.value + '</b> was selected as the target <a href="#' + parentActor + 'ResidueForm' + count + '">here</a></p>\n' +
+					'	<a type="button" class="btn btn-default btn-md panel-button add-button" onclick="showInputTarget(this)"><span class="glyphicon glyphicon-plus"></span> Input another target</a>\n' +
+					'</div>\n';
+				var father = document.getElementById("predefinedTarget");
+				father.innerHTML = '';
+				father.appendChild(htmlToElement(prepulatedTargetHTML));
+				document.getElementById('inputTarget').style.display = "none";
+			}
+		} else {
+			var stateNameInput = document.getElementById(parentActor + 'StateName' + count);
+			var stateTestInput = document.getElementById(parentActor + 'StateTest' + count);
+			if (stateNameInput.value != "") {
+				var prepulatedTargetHTML =
+					'<div>\n'+
+					'	<p>State <b>' + stateNameInput.value + 
+					'	</b> was selected as the target <a href="#' + parentActor + 'StateForm' + count + '">here</a></p>'+
+					'	<a type="button" class="btn btn-default btn-md panel-button add-button" onclick="showInputTarget(this)"><span class="glyphicon glyphicon-plus"></span> Input another target</a>\n' +
+					'</div>\n';
+				var father = document.getElementById("predefinedTarget");
+				father.innerHTML = '';
+				father.appendChild(htmlToElement(prepulatedTargetHTML));
+				document.getElementById('inputTarget').style.display = "none";
+			}
+		}
+	}
+}
+
+
+function addNewRegionForm(x, actorName, addTargetCheckBox=false) {
 	if (actorName in regionForms) {
 		regionForms[actorName] += 1;
 	} else {
@@ -150,7 +233,7 @@ function addNewRegionForm(x, actorName) {
 		'            </div>\n' +
 		'            <div class="col-md-10 mb-6">\n' +
 		'              <div id="' + actorName + 'Region' + count + 'SiteFormFather"></div>\n' +
-		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, \'' + actorName + 'Region' + count + '\')"><span class="glyphicon glyphicon-plus"></span> Add site</a>\n' +
+		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, \'' + actorName + 'Region' + count + '\', ' + addTargetCheckBox + ')"><span class="glyphicon glyphicon-plus"></span> Add site</a>\n' +
 		'            </div>\n' +
 		'   </div>\n\n' +
         '   <div class="row">\n' +
@@ -164,7 +247,7 @@ function addNewRegionForm(x, actorName) {
 		'            </div>\n' +
 		'            <div class="col-md-10 mb-3">\n' +
 		'              <div id="' + actorName + 'Region' + count + 'ResidueFormFather"></div>\n' +
-		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue" onclick="addNewResidueForm(this, \'' + actorName + 'Region' + count + '\')"><span class="glyphicon glyphicon-plus"></span> Add residue</a>\n' +
+		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue" onclick="addNewResidueForm(this, \'' + actorName + 'Region' + count + '\', ' + addTargetCheckBox + ')"><span class="glyphicon glyphicon-plus"></span> Add residue</a>\n' +
 		'            </div>\n' +
 		'    </div>\n\n' +
         '   <div class="row">\n' +
@@ -178,14 +261,9 @@ function addNewRegionForm(x, actorName) {
 		'        </div>\n' +
 		'        <div class="col-md-10 mb-3">\n' +
 		'            <div id="' + actorName + 'Region' + count + 'StateFormFather"></div>\n' +
-		'            <a type="button" onclick="addNewStateForm(this, \'' + actorName + 'Region' + count + '\')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>\n' +
+		'            <a type="button" onclick="addNewStateForm(this, \'' + actorName + 'Region' + count + '\', ' + addTargetCheckBox + ')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>\n' +
 		'        </div>\n' +
 		'   </div>\n' +
-        // '   <div class="row">\n' +
-        // '   	<div class="col-md-12">\n' +
-        // '   		<hr class="mb-2">\n' +
-        // '		</div>\n' +
-        // '   </div>\n\n' +
         '</div>';
     document.getElementById(actorName + "RegionFormFather").appendChild(htmlToElement(regionFormHTML));
 }
@@ -194,7 +272,7 @@ function removeForm(actorName, formName, count) {
 	document.getElementById(actorName + formName + count).remove();
 }
 
-function addNewSiteForm(x, actorName) {
+function addNewSiteForm(x, actorName, addTargetCheckBox=false) {
 	if (actorName in siteForms) {
 		siteForms[actorName] += 1;
 	} else {
@@ -245,7 +323,7 @@ function addNewSiteForm(x, actorName) {
 		'            </div>\n' +
 		'            <div class="col-md-10 mb-6">\n' +
 		'              <div id="' + actorName + 'Site' + count + 'ResidueFormFather"></div>\n' +
-		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue" onclick="addNewResidueForm(this, \'' + actorName + 'Site' + count + '\')"><span class="glyphicon glyphicon-plus"></span> Add residue</a>\n' +
+		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-residue" onclick="addNewResidueForm(this, \'' + actorName + 'Site' + count + '\', ' + addTargetCheckBox + ')"><span class="glyphicon glyphicon-plus"></span> Add residue</a>\n' +
 		'            </div>\n' +
 		'    </div>\n' +
 		'    <hr class="mb-2">\n\n' +
@@ -256,14 +334,9 @@ function addNewSiteForm(x, actorName) {
 		'            <div class="col-md-10 mb-6">\n' +
 		'              <!-- enzyme state addition form will go here-->\n' +
 		'              <div id="' + actorName + 'Site' + count + 'StateFormFather"></div>\n' +
-		'              <a type="button" onclick="addNewStateForm(this, \'' + actorName + 'Site' + count + '\')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>\n' +
+		'              <a type="button" onclick="addNewStateForm(this, \'' + actorName + 'Site' + count + '\', ' + addTargetCheckBox + ')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>\n' +
 		'          </div>\n' +
 		'   </div>\n\n' +
-		// '   <div class="row">\n' +
-  //       '		<div class="col-md-12">\n' +
-  //       '			<hr class="mb-7">\n' +
-  //       '		</div>\n'
-  //       '   </div>\n' +
         '</div>';
 
     document.getElementById(actorName + "SiteFormFather").appendChild(
@@ -271,7 +344,7 @@ function addNewSiteForm(x, actorName) {
 }
 
 
-function addNewResidueForm(x, actorName) {
+function addNewResidueForm(x, actorName, addTargetCheckBox=false) {
 
 	if (actorName in residueForms) {
 		residueForms[actorName] += 1;
@@ -280,6 +353,16 @@ function addNewResidueForm(x, actorName) {
 	}
 
 	var count = residueForms[actorName];
+
+	var targetCheckBoxHTML = "";
+	if (addTargetCheckBox == true) {
+		targetCheckBoxHTML = 
+			'		<div class="row">\n' +
+			'			<div class="col-md-12 mb-3">\n' +
+			'				<label><input onclick="switchModTarget(this, \'' + actorName + '\', \'residue\', ' + count + ')" style="display: inline-block;" type="checkbox" class="radio target-select" id="' + actorName + "Residue" + count + '" value="' + actorName + "Residue" + count + '" name="targetSelection" /> Set as the target of modification</label>\n' +
+			'			</div>\n' +
+			'		</div>\n'
+	}
 
 	var residueFormHTML = 
 		'<div class="form-block nested-form" id="' + actorName + 'ResidueForm' + count + '">\n' +
@@ -294,7 +377,7 @@ function addNewResidueForm(x, actorName) {
         ' 		</div>\n' +
         '  		<div class="col-md-3">\n' +
         '    		<label for="' + actorName + 'ResidueTest' + count + '">Test</label><br>\n' +
-        '    		<input type="radio" value="true" name="' + actorName + 'ResidueTest' + count + '" checked> True</input><br><input type="radio" value="false" name="' + actorName + 'ResidueTest' + count + '"> False</input>\n' +
+        '    		<input  type="radio" value="true" name="' + actorName + 'ResidueTest' + count + '" checked/> True<br><input type="radio" value="false" name="' + actorName + 'ResidueTest' + count + '"/> False\n' +
         ' 		</div>\n' +
         '  		<div class="col-md-4">\n' +
 		'	   		<button type="button" class="btn btn-default btn-sm remove-form-button" onclick="removeForm(\'' + actorName + '\', \'ResidueForm\', ' + count + ')"><span class="glyphicon glyphicon-remove"></span></button>\n' +
@@ -302,26 +385,42 @@ function addNewResidueForm(x, actorName) {
         '	</div>\n' +
         '    <div class="row ">\n' +
 		'            <div class="col-md-2 mb-3">\n' +
-		'              <label>States</label>\n' +
+		'              <label>State</label>\n' +
 		'            </div>\n' +
-		'            <div class="col-md-10 mb-6">\n' +
-		'              <!-- enzyme state addition form will go here-->\n' +
-		'              <div id="' + actorName + 'Residue' + count + 'StateFormFather"></div>\n' +
-		'              <a type="button" onclick="addNewStateForm(this, \'' + actorName + 'Residue' + count + '\')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Add state</a>\n' +
-		'          </div>\n' +
+		'            <div class="col-md-10 mb-3">\n' +
+		'              <div class="form-block nested-form" id="' + actorName + 'Residue' + count + 'StateForm" style="display: none;">\n' +
+		'					<div class="row">\n' +
+        '  						<div class="col-md-4">\n' +
+        '    	 	 				<label for="' + actorName + 'ResidueStateName' + count + '">Name</label>\n' +
+        '     		 				<input type="text" class="form-control" name="' + actorName + 'ResidueStateName' + count + '" id="' + actorName + 'ResidueStateName' + count + '" placeholder="" value="" required>\n' +
+        ' 						</div>\n' +
+        '  						<div class="col-md-4">\n' +
+        '    						<label for="' + actorName + 'ResidueStateTest' + count + '">Test</label><br>\n' +
+        '    						<input type="radio" value="true" name="' + actorName + 'ResidueStateTest' + count + '" checked/> True<br><input type="radio" value="false" name="' + actorName + 'ResidueStateTest' + count + '"/> False\n' +
+        ' 						</div>\n' +
+        '  						<div class="col-md-4">\n' +
+		'	   						<button type="button" class="btn btn-default btn-sm remove-form-button" onclick="hideResidueState(\'' + actorName + 'Residue\', ' + count + ')"><span class="glyphicon glyphicon-remove"></span></button>\n' +
+		'  						</div>\n' + 
+        '					</div>\n\n' + targetCheckBoxHTML +
+		'              </div>\n' +
+		'              <a type="button" onclick="showResidueState(\'' + actorName + 'Residue\', ' + count + ')" class="btn btn-default btn-md panel-button add-button add-enzyme-state"><span class="glyphicon glyphicon-plus"></span> Specify state</a>\n' +
+		'          </div>\n'
 		'   </div>\n\n' +
-        // '   <div class="row">\n' +
-        // '		<div class="col-md-12">\n' +
-        // '			<hr class="mb-4">\n' +
-        // '		</div>\n'
-        // '   </div>\n' +
         '</div>\n\n';
 
     document.getElementById(actorName + "ResidueFormFather").appendChild(
     	htmlToElement(residueFormHTML));
 }
 
-function addNewStateForm(x, actorName) {
+function showResidueState(residueName, residueId) {
+	document.getElementById(residueName + residueId + "StateForm").style.display = "inline-block";
+}
+
+function hideResidueState(residueName, residueId) {
+	document.getElementById(residueName + residueId + "StateForm").style.display = "none";
+}
+
+function addNewStateForm(x, actorName, addTargetCheckBox=false) {
 	if (actorName in stateForms) {
 		stateForms[actorName] += 1;
 	} else {
@@ -330,12 +429,23 @@ function addNewStateForm(x, actorName) {
 
 	var count = stateForms[actorName];
 
+
+	var targetCheckBoxHTML = "";
+	if (addTargetCheckBox == true) {
+		targetCheckBoxHTML = 
+			'		<div class="row">\n' +
+			'			<div class="col-md-12 mb-3">\n' +
+			'				<label><input onclick="switchModTarget(this, \'' + actorName + '\', \'state\', ' + count + ')" style="display: inline-block;" type="checkbox" class="radio target-select" id="' + actorName + "Residue" + count + '" value="' + actorName + "Residue" + count + '" name="targetSelection" /> Set as the target of modification</label>\n' +
+			'			</div>\n' +
+			'		</div>\n'
+	}
+
 	var stateFormHTML = 
 		'<div class="form-block nested-form" id="' + actorName + 'StateForm' + count + '">\n' +
 		'	<div class="row">\n' +
         '  		<div class="col-md-4">\n' +
         '    	 	 <label for="' + actorName + 'StateName' + count + '">Name</label>\n' +
-        '     		 <input type="text" class="form-control" name="' + actorName + 'StateName' + count + '" id="' + actorName + 'ResidueAA' + count + '" placeholder="" value="" required>\n' +
+        '     		 <input type="text" class="form-control" name="' + actorName + 'StateName' + count + '" id="' + actorName + 'StateName' + count + '" placeholder="" value="" required>\n' +
         ' 		</div>\n' +
         '  		<div class="col-md-4">\n' +
         '    		<label for="' + actorName + 'StateTest' + count + '">Test</label><br>\n' +
@@ -344,12 +454,7 @@ function addNewStateForm(x, actorName) {
         '  		<div class="col-md-4">\n' +
 		'	   		<button type="button" class="btn btn-default btn-sm remove-form-button" onclick="removeForm(\'' + actorName + '\', \'StateForm\', ' + count + ')"><span class="glyphicon glyphicon-remove"></span></button>\n' +
 		'  		</div>\n' +
-        '	</div>\n' +
-        // '   <div class="row">\n' +
-        // '		<div class="col-md-12">\n' +
-        // '			<hr class="mb-4">\n' +
-        // '		</div>\n'
-        // '   </div>\n' +
+        '	</div>\n' + targetCheckBoxHTML +
         '</div>\n\n';
 
     document.getElementById(actorName + "StateFormFather").appendChild(
