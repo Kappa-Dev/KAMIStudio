@@ -201,9 +201,11 @@ def retrieve_residues(form, actor_name, wanted_target):
     return residues, target_residue
 
 
-def retrieve_sites(form, actor_name, wanted_target):
+def retrieve_sites(form, actor_name, wanted_actor, wanted_target):
     """Retrieve sites of an actor from the form."""
     target = None
+    actor = None
+
     sites = []
     site_data_dict = {
         "name": "Name",
@@ -229,8 +231,10 @@ def retrieve_sites(form, actor_name, wanted_target):
                 site[k] = request.form[field_name]
 
         # Retrieve site subcomponents
-        site["residues"], target_residue = retrieve_residues(form, new_actor_name, wanted_target)
-        site["states"], target_state = retrieve_states(form, new_actor_name, wanted_target)
+        site["residues"], target_residue = retrieve_residues(
+            form, new_actor_name, wanted_target)
+        site["states"], target_state = retrieve_states(
+            form, new_actor_name, wanted_target)
 
         if target_residue is not None:
             target = {
@@ -242,14 +246,17 @@ def retrieve_sites(form, actor_name, wanted_target):
                 "target": {"type": "State", "data": target_state},
                 "site": site
             }
+        elif actor_name + "Site" + site_id == wanted_actor:
+            actor = site
         else:
             sites.append(site)
-    return sites, target
+    return sites, actor, target
 
 
-def retrieve_regions(form, actor_name, wanted_target):
+def retrieve_regions(form, actor_name, wanted_actor, wanted_target):
     """Retrieve regions of an actor from the form."""
     target = None
+    actor = None
 
     regions = []
     region_data_dict = {
@@ -276,8 +283,8 @@ def retrieve_regions(form, actor_name, wanted_target):
                 region[k] = request.form[field_name]
 
         # Retrieve region subcomponents
-        region["sites"], target_site = retrieve_sites(
-            form, new_actor_name, wanted_target)
+        region["sites"], site_actor, target_site = retrieve_sites(
+            form, new_actor_name, wanted_actor, wanted_target)
         region["residues"], target_residue = retrieve_residues(
             form, new_actor_name, wanted_target)
         region["states"], target_state = retrieve_states(
@@ -296,17 +303,22 @@ def retrieve_regions(form, actor_name, wanted_target):
                 "target": {"type": "State", "data": target_state},
                 "region": region
             }
+        elif site_actor is not None:
+            actor = {
+                "site": site_actor,
+                "region": region
+            }
+        elif actor_name + "Region" + region_id == wanted_actor:
+            actor = {"region": region}
         else:
             regions.append(region)
-    return regions, target
+    return regions, actor, target
 
 
 def added_interaction(hierarchy_id, request):
     """Add interaction to the hierarchy."""
-    print(request.form)
-    if request.form['modorbnd'] == 'mod':
 
-        print("\n\nCreating modification object...")
+    if request.form['modorbnd'] == 'mod':
 
         if request.form['modType'] == "Modification":
             modification_dict = {"type": "Modification", "data": {}}
@@ -315,12 +327,18 @@ def added_interaction(hierarchy_id, request):
             actors = {"enzyme", "substrate"}
 
             # Look for an implicit specification of target and substrate actor
+
             wanted_target = None
             if "targetSelection" in request.form.keys():
                 wanted_target = request.form["targetSelection"]
 
             for actor_name in actors:
                 actor = {}
+
+                wanted_actor = None
+                if actor_name + "ActorSelection" in request.form.keys():
+                    wanted_actor = request.form[actor_name + "ActorSelection"]
+
                 gene_data_dict = {
                     "uniprotid": "UniprotAC",
                     "hgnc_symbol": "HgncSymbol",
@@ -331,41 +349,62 @@ def added_interaction(hierarchy_id, request):
                     if request.form[actor_name + v] != "":
                         actor[k] = request.form[actor_name + v]
 
-                actor["regions"], target_in_regions = retrieve_regions(
-                    request.form, actor_name, wanted_target)
-                actor["sites"], target_in_sites = retrieve_sites(
-                    request.form, actor_name, wanted_target)
+                actor["regions"], actor_in_regions, target_in_regions =\
+                    retrieve_regions(
+                        request.form, actor_name, wanted_actor, wanted_target)
+                actor["sites"], actor_in_sites, target_in_sites =\
+                    retrieve_sites(
+                        request.form, actor_name, wanted_actor, wanted_target)
                 actor["residues"], target_in_residues = retrieve_residues(
                     request.form, actor_name, wanted_target)
                 actor["states"], target_in_states = retrieve_states(
                     request.form, actor_name, wanted_target)
 
                 if target_in_regions is not None:
-                    # TODO here
-                    pass
+                    if "site" in target_in_regions:
+                        modification_dict["data"][actor_name] = {
+                            "type": "SiteActor",
+                            "data": {
+                                "gene": actor,
+                                "site": target_in_regions["site"],
+                                "region": target_in_regions["region"]
+                            }
+                        }
+                        modification_dict["data"]["target"] =\
+                            target_in_regions["target"]
+                    else:
+                        modification_dict["data"][actor_name] = {
+                            "type": "RegionActor",
+                            "data": {
+                                "gene": actor,
+                                "region": target_in_regions["region"]
+                            }
+                        }
+                        modification_dict["data"]["target"] = {
+                            target_in_sites["target"]
+                        }
                 elif target_in_sites is not None:
-                    modification_dict["data"][actor] = {
+                    modification_dict["data"][actor_name] = {
                         "type": "SiteActor",
                         "data": {
                             "gene": actor,
                             "site": target_in_sites["site"]
                         }
                     }
-                    modification_dict["data"]["target"] = {
+                    modification_dict["data"]["target"] =\
                         target_in_sites["target"]
-                    }
                     # TODO how to find mod value
                 elif target_in_residues is not None:
-                    modification_dict["data"][actor] = {
+                    modification_dict["data"][actor_name] = {
                         "type": "Gene", "data": actor}
                     modification_dict["data"]["target"] = {
-                        "type": "residue",
+                        "type": "Residue",
                         "data": target_in_residues
                     }
                     modification_dict["data"]["value"] = not target_in_residues[
                         "state"]["test"]
                 elif target_in_states is not None:
-                    modification_dict["data"][actor] = {
+                    modification_dict["data"][actor_name] = {
                         "type": "Gene", "data": actor}
                     modification_dict["data"]["target"] = {
                         "type": "State",
@@ -373,8 +412,34 @@ def added_interaction(hierarchy_id, request):
                     }
                     modification_dict["data"]["value"] = not target_in_states[
                         "test"]
+                elif actor_in_regions is not None:
+                    if "site" in actor_in_regions.keys():
+                        modification_dict["data"][actor_name] = {
+                            "type": "SiteActor",
+                            "data": {
+                                "gene": actor,
+                                "region": actor_in_sites["region"],
+                                "site": actor_in_sites["site"]
+                            }
+                        }
+                    else:
+                        modification_dict["data"][actor_name] = {
+                            "type": "RegionActor",
+                            "data": {
+                                "gene": actor,
+                                "region": actor_in_regions["region"]
+                            }
+                        }
+                elif actor_in_sites is not None:
+                    modification_dict["data"][actor_name] = {
+                        "type": "SiteActor",
+                        "data": {
+                            "gene": actor,
+                            "site": actor_in_sites
+                        }
+                    }
                 else:
-                    modification_dict["data"][actor] = {
+                    modification_dict["data"][actor_name] = {
                         "type": "Gene", "data": actor}
 
                 # modification_dict["data"][actor_name]["data"] = actor
@@ -385,10 +450,9 @@ def added_interaction(hierarchy_id, request):
                 modification_dict["data"]["target"] = target
                 modification_dict["data"]["value"] = value
 
-            print(modification_dict)
             mod = Modification.from_json(modification_dict["data"])
             print(mod)
-
+            return("Pretty nugget was created successfully!")
         elif request.form['modType'] == "AnonymousModification":
             print("\tCreating 'AnonymousModification'...")
         elif request.form['modType'] == "SelfModification":

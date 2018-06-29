@@ -105,6 +105,7 @@
   {% block scripts %}
 
     {{ super() }}
+    <script src="{{url_for('static', filename='js/vis.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
       // create an array with nodes
 

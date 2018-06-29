@@ -157,6 +157,12 @@ function switchModTarget(x, parentActor, parentType, count) {
 				father.innerHTML = '';
 				father.appendChild(htmlToElement(prepulatedTargetHTML));
 				document.getElementById('inputTarget').style.display = "none";
+				console.log('residue');
+				console.log(document.getElementById("targetStateName").required);
+				document.getElementById("targetStateName").required = false;
+				console.log(document.getElementById("targetStateName").required);
+				document.getElementById("targetResidueAA").required = false;
+				document.getElementById("targetResidueStateName").required = false;	
 			}
 		} else {
 			var stateNameInput = document.getElementById(parentActor + 'StateName' + count);
@@ -172,13 +178,27 @@ function switchModTarget(x, parentActor, parentType, count) {
 				father.innerHTML = '';
 				father.appendChild(htmlToElement(prepulatedTargetHTML));
 				document.getElementById('inputTarget').style.display = "none";
+				document.getElementById("targetStateName").required = false;
+				document.getElementById("targetResidueAA").required = false;
+				document.getElementById("targetResidueStateName").required = false;	
 			}
 		}
 	}
 }
 
 
-function addNewRegionForm(x, actorName, addTargetCheckBox=false) {
+function switchActor(x, parentActor, topLevelActor, parentType, count) {
+	if (x.checked) {
+		var actorSelectors = document.getElementsByClassName("actor-select-" + topLevelActor);
+		for (var i = 0; i < actorSelectors.length; i++) {
+			actorSelectors[i].checked = false;
+		}
+		x.checked = true;
+	}
+}
+
+
+function addNewRegionForm(x, actorName, addTargetCheckBox=false, addActorCheckBox=false) {
 	if (actorName in regionForms) {
 		regionForms[actorName] += 1;
 	} else {
@@ -186,6 +206,16 @@ function addNewRegionForm(x, actorName, addTargetCheckBox=false) {
 	}
 
 	var count = regionForms[actorName];
+
+	actorCheckBoxHTML = "";
+	if (addActorCheckBox == true) {
+		actorCheckBoxHTML =
+			'		<div class="row">\n' +
+			'			<div class="col-md-12 mb-3">\n' +
+			'				<label><input onclick="switchActor(this, \'' + actorName + '\', \'' + actorName + '\', \'region\', ' + count + ')" style="display: inline-block;" type="checkbox" class="radio actor-select-' + actorName + '" id="' + actorName + "Region" + count + '" value="' + actorName + "Region" + count + '" name="' + actorName + 'ActorSelection" /> Set as an actor of modification</label>\n' +
+			'			</div>\n' +
+			'		</div>\n'
+	} 
 
 	var regionFormHTML = 
 		'<div class="form-block nested-form" id="' + actorName + 'RegionForm' + count + '">\n' +
@@ -221,7 +251,7 @@ function addNewRegionForm(x, actorName, addTargetCheckBox=false) {
         '            <label for="' + actorName + 'RegionOrder' + count + '">Order</label>\n' +
         '            <input type="text" class="form-control" name="' + actorName + 'RegionOrder' + count + '" id="' + actorName + 'RegionOrder' + count + '" placeholder="" value="">\n' +
         '          </div>\n' +
-        '   </div>\n\n' +
+        '   </div>\n\n' + actorCheckBoxHTML +
         '   <div class="row">\n' +
         '   	<div class="col-md-12">\n' +
         '   		<hr class="mb-2">\n' +
@@ -233,7 +263,7 @@ function addNewRegionForm(x, actorName, addTargetCheckBox=false) {
 		'            </div>\n' +
 		'            <div class="col-md-10 mb-6">\n' +
 		'              <div id="' + actorName + 'Region' + count + 'SiteFormFather"></div>\n' +
-		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, \'' + actorName + 'Region' + count + '\', ' + addTargetCheckBox + ')"><span class="glyphicon glyphicon-plus"></span> Add site</a>\n' +
+		'              <a type="button" class="btn btn-default btn-md panel-button add-button add-enzyme-site" onclick="addNewSiteForm(this, \'' + actorName + 'Region' + count + '\', \'' + actorName + '\', ' + addTargetCheckBox + ', ' + addActorCheckBox +')"><span class="glyphicon glyphicon-plus"></span> Add site</a>\n' +
 		'            </div>\n' +
 		'   </div>\n\n' +
         '   <div class="row">\n' +
@@ -272,7 +302,9 @@ function removeForm(actorName, formName, count) {
 	document.getElementById(actorName + formName + count).remove();
 }
 
-function addNewSiteForm(x, actorName, addTargetCheckBox=false) {
+function addNewSiteForm(
+	x, actorName, topLevelActor,
+	addTargetCheckBox=false, addActorCheckBox=false) {
 	if (actorName in siteForms) {
 		siteForms[actorName] += 1;
 	} else {
@@ -280,6 +312,16 @@ function addNewSiteForm(x, actorName, addTargetCheckBox=false) {
 	}
 
 	var count = siteForms[actorName];
+
+	actorCheckBoxHTML = "";
+	if (addActorCheckBox == true) {
+		actorCheckBoxHTML =
+			'		<div class="row">\n' +
+			'			<div class="col-md-12 mb-3">\n' +
+			'				<label><input onclick="switchActor(this, \'' + actorName + '\', \'' + topLevelActor + '\', \'region\', ' + count + ')" style="display: inline-block;" type="checkbox" class="radio actor-select-' + topLevelActor + '" id="' + actorName + "Site" + count + '" value="' + actorName + "Site" + count + '" name="' + topLevelActor + 'ActorSelection" /> Set as an actor of modification</label>\n' +
+			'			</div>\n' +
+			'		</div>\n'
+	}
 
 	var siteFormHTML = 
 		'<div class="form-block nested-form" id="' + actorName + 'SiteForm' + count + '">\n' +
@@ -315,7 +357,7 @@ function addNewSiteForm(x, actorName, addTargetCheckBox=false) {
         '            <label for="' + actorName + 'SiteOrder' + count + '">Order</label>\n' +
         '            <input type="text" class="form-control" name="' + actorName + 'SiteOrder' + count + '" placeholder="" id="' + actorName + 'SiteOrder' + count + '" placeholder="" value="">\n' +
         '          </div>\n' +
-        '   </div>\n\n' +
+        '   </div>\n\n' + actorCheckBoxHTML + 
         '   <hr class="mb-2">\n\n' +
 		'   <div class="row">\n' +
 		'            <div class="col-md-2 mb-3">\n' +
