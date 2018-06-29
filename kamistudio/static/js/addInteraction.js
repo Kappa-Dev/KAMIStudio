@@ -57,38 +57,39 @@ function switchToMod(x) {
 
 
 function switchModType(x) {
-	if (x.value == "defaultMod") {
+	if (x.value == "Modification") {
 		document.getElementById("enzymeBlock").style.display = "inline-block";
 		document.getElementById("substrateBlock").style.display = "inline-block";
 		document.getElementById("enzimaticSubstrateBlock").style.display = "none";
-		document.getElementById("bindingConditionBlock").style.display = "none";
+		// document.getElementById("bindingConditionBlock").style.display = "none";
 
 		document.getElementById("enzymeUniprotAC").required = true;
 		document.getElementById("substrateUniprotAC").required = true;
 		document.getElementById("enzymeSubUniprotAC").required = false;
-	} else if (x.value == "anonymousMod") {
+	} else if (x.value == "AnonymousModification") {
+		console.log("here");
 		document.getElementById("enzymeBlock").style.display = "none";
 		document.getElementById("substrateBlock").style.display = "inline-block";
 		document.getElementById("enzimaticSubstrateBlock").style.display = "none";
-		document.getElementById("bindingConditionBlock").style.display = "none";
+		// document.getElementById("bindingConditionBlock").style.display = "none";
 
 		document.getElementById("enzymeUniprotAC").required = false;
 		document.getElementById("substrateUniprotAC").required = true;
 		document.getElementById("enzymeSubUniprotAC").required = false;
-	} else if (x.value == "selfMod") {
+	} else if (x.value == "SelfModification") {
 		document.getElementById("enzymeBlock").style.display = "none";
 		document.getElementById("substrateBlock").style.display = "none";
 		document.getElementById("enzimaticSubstrateBlock").style.display = "inline-block";
-		document.getElementById("bindingConditionBlock").style.display = "none";
+		// document.getElementById("bindingConditionBlock").style.display = "none";
 
 		document.getElementById("enzymeUniprotAC").required = false;
 		document.getElementById("substrateUniprotAC").required = false;
 		document.getElementById("enzymeSubUniprotAC").required = true;
-	} else if (x.value == "ligandMod") {
+	} else if (x.value == "LigandModification") {
 		document.getElementById("enzymeBlock").style.display = "inline-block";
 		document.getElementById("substrateBlock").style.display = "inline-block";
 		document.getElementById("enzimaticSubstrateBlock").style.display = "none";
-		document.getElementById("bindingConditionBlock").style.display = "inline-block";
+		// document.getElementById("bindingConditionBlock").style.display = "inline-block";
 
 		document.getElementById("enzymeUniprotAC").required = true;
 		document.getElementById("substrateUniprotAC").required = true;

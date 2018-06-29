@@ -315,146 +315,170 @@ def retrieve_regions(form, actor_name, wanted_actor, wanted_target):
     return regions, actor, target
 
 
+def retrieve_actor(form, actor_name, wanted_actor=None, wanted_target=None):
+    actor_data = {}
+    target = None
+    value = None
+
+    gene_data = {}
+
+    gene_data_dict = {
+        "uniprotid": "UniprotAC",
+        "hgnc_symbol": "HgncSymbol",
+        "synonyms": "Synonyms",
+        "location": "Location",
+    }
+    for k, v in gene_data_dict.items():
+        if request.form[actor_name + v] != "":
+            gene_data[k] = request.form[actor_name + v]
+
+    gene_data["regions"], actor_in_regions, target_in_regions =\
+        retrieve_regions(
+            request.form, actor_name, wanted_actor, wanted_target)
+    gene_data["sites"], actor_in_sites, target_in_sites =\
+        retrieve_sites(
+            request.form, actor_name, wanted_actor, wanted_target)
+    gene_data["residues"], target_in_residues = retrieve_residues(
+        request.form, actor_name, wanted_target)
+    gene_data["states"], target_in_states = retrieve_states(
+        request.form, actor_name, wanted_target)
+
+    if target_in_regions is not None:
+        if "site" in target_in_regions:
+            actor_data = {
+                "type": "SiteActor",
+                "data": {
+                    "gene": gene_data,
+                    "site": target_in_regions["site"],
+                    "region": target_in_regions["region"]
+                }
+            }
+            target = target_in_regions["target"]
+        else:
+            actor_data = {
+                "type": "RegionActor",
+                "data": {
+                    "gene": gene_data,
+                    "region": target_in_regions["region"]
+                }
+            }
+            target = target_in_sites["target"]
+    elif target_in_sites is not None:
+        actor_data = {
+            "type": "SiteActor",
+            "data": {
+                "gene": gene_data,
+                "site": target_in_sites["site"]
+            }
+        }
+        target = target_in_sites["target"]
+        # TODO how to find mod value
+    elif target_in_residues is not None:
+        actor_data = {
+            "type": "Gene",
+            "data": gene_data
+        }
+        target = {
+            "type": "Residue",
+            "data": target_in_residues
+        }
+        value = not target_in_residues["state"]["test"]
+    elif target_in_states is not None:
+        actor_data = {
+            "type": "Gene", "data": gene_data
+        }
+        target = {
+            "type": "State",
+            "data": target_in_states
+        }
+        value = not target_in_states["test"]
+    elif actor_in_regions is not None:
+        if "site" in actor_in_regions.keys():
+            actor_data = {
+                "type": "SiteActor",
+                "data": {
+                    "gene": gene_data,
+                    "region": actor_in_regions["region"],
+                    "site": actor_in_regions["site"]
+                }
+            }
+        else:
+            actor_data = {
+                "type": "RegionActor",
+                "data": {
+                    "gene": gene_data,
+                    "region": actor_in_regions["region"]
+                }
+            }
+    elif actor_in_sites is not None:
+        actor_data = {
+            "type": "SiteActor",
+            "data": {
+                "gene": gene_data,
+                "site": actor_in_sites
+            }
+        }
+    else:
+        actor_data = {"type": "Gene", "data": gene_data}
+
+    return actor_data, target, value
+
+
 def added_interaction(hierarchy_id, request):
     """Add interaction to the hierarchy."""
 
     if request.form['modorbnd'] == 'mod':
 
         if request.form['modType'] == "Modification":
-            modification_dict = {"type": "Modification", "data": {}}
 
-            # retrieve enzyme gene
-            actors = {"enzyme", "substrate"}
+            modification_data = {}
 
-            # Look for an implicit specification of target and substrate actor
+            wanted_enzyme_subactor = None
+            if "enzymeActorSelection" in request.form.keys():
+                wanted_enzyme_subactor = request.form["enzymeActorSelection"]
 
-            wanted_target = None
+            modification_data["enzyme"], _, _ = retrieve_actor(
+                request.form, "enzyme", wanted_enzyme_subactor)
+
+            wanted_substrate_target = None
             if "targetSelection" in request.form.keys():
-                wanted_target = request.form["targetSelection"]
+                wanted_substrate_target = request.form["targetSelection"]
 
-            for actor_name in actors:
-                actor = {}
+            modification_data["substrate"], target, value = retrieve_actor(
+                request.form, "substrate", None, wanted_substrate_target)
 
-                wanted_actor = None
-                if actor_name + "ActorSelection" in request.form.keys():
-                    wanted_actor = request.form[actor_name + "ActorSelection"]
-
-                gene_data_dict = {
-                    "uniprotid": "UniprotAC",
-                    "hgnc_symbol": "HgncSymbol",
-                    "synonyms": "Synonyms",
-                    "location": "Location",
-                }
-                for k, v in gene_data_dict.items():
-                    if request.form[actor_name + v] != "":
-                        actor[k] = request.form[actor_name + v]
-
-                actor["regions"], actor_in_regions, target_in_regions =\
-                    retrieve_regions(
-                        request.form, actor_name, wanted_actor, wanted_target)
-                actor["sites"], actor_in_sites, target_in_sites =\
-                    retrieve_sites(
-                        request.form, actor_name, wanted_actor, wanted_target)
-                actor["residues"], target_in_residues = retrieve_residues(
-                    request.form, actor_name, wanted_target)
-                actor["states"], target_in_states = retrieve_states(
-                    request.form, actor_name, wanted_target)
-
-                if target_in_regions is not None:
-                    if "site" in target_in_regions:
-                        modification_dict["data"][actor_name] = {
-                            "type": "SiteActor",
-                            "data": {
-                                "gene": actor,
-                                "site": target_in_regions["site"],
-                                "region": target_in_regions["region"]
-                            }
-                        }
-                        modification_dict["data"]["target"] =\
-                            target_in_regions["target"]
-                    else:
-                        modification_dict["data"][actor_name] = {
-                            "type": "RegionActor",
-                            "data": {
-                                "gene": actor,
-                                "region": target_in_regions["region"]
-                            }
-                        }
-                        modification_dict["data"]["target"] = {
-                            target_in_sites["target"]
-                        }
-                elif target_in_sites is not None:
-                    modification_dict["data"][actor_name] = {
-                        "type": "SiteActor",
-                        "data": {
-                            "gene": actor,
-                            "site": target_in_sites["site"]
-                        }
-                    }
-                    modification_dict["data"]["target"] =\
-                        target_in_sites["target"]
-                    # TODO how to find mod value
-                elif target_in_residues is not None:
-                    modification_dict["data"][actor_name] = {
-                        "type": "Gene", "data": actor}
-                    modification_dict["data"]["target"] = {
-                        "type": "Residue",
-                        "data": target_in_residues
-                    }
-                    modification_dict["data"]["value"] = not target_in_residues[
-                        "state"]["test"]
-                elif target_in_states is not None:
-                    modification_dict["data"][actor_name] = {
-                        "type": "Gene", "data": actor}
-                    modification_dict["data"]["target"] = {
-                        "type": "State",
-                        "data": target_in_states
-                    }
-                    modification_dict["data"]["value"] = not target_in_states[
-                        "test"]
-                elif actor_in_regions is not None:
-                    if "site" in actor_in_regions.keys():
-                        modification_dict["data"][actor_name] = {
-                            "type": "SiteActor",
-                            "data": {
-                                "gene": actor,
-                                "region": actor_in_sites["region"],
-                                "site": actor_in_sites["site"]
-                            }
-                        }
-                    else:
-                        modification_dict["data"][actor_name] = {
-                            "type": "RegionActor",
-                            "data": {
-                                "gene": actor,
-                                "region": actor_in_regions["region"]
-                            }
-                        }
-                elif actor_in_sites is not None:
-                    modification_dict["data"][actor_name] = {
-                        "type": "SiteActor",
-                        "data": {
-                            "gene": actor,
-                            "site": actor_in_sites
-                        }
-                    }
-                else:
-                    modification_dict["data"][actor_name] = {
-                        "type": "Gene", "data": actor}
-
-                # modification_dict["data"][actor_name]["data"] = actor
-
-            # retrieve target
-            if wanted_target is None:
+            if target is None:
                 target, value = retrieve_target(request.form)
-                modification_dict["data"]["target"] = target
-                modification_dict["data"]["value"] = value
+                modification_data["target"] = target
+                modification_data["value"] = value
+            else:
+                modification_data["target"] = target
+                modification_data["value"] = value
 
-            mod = Modification.from_json(modification_dict["data"])
+            mod = Modification.from_json(modification_data)
             print(mod)
-            return("Pretty nugget was created successfully!")
+            return("Pretty Modification nugget was created successfully!")
         elif request.form['modType'] == "AnonymousModification":
-            print("\tCreating 'AnonymousModification'...")
+            modification_data = {}
+
+            wanted_substrate_target = None
+            if "targetSelection" in request.form.keys():
+                wanted_substrate_target = request.form["targetSelection"]
+
+            modification_data["substrate"], target, value = retrieve_actor(
+                request.form, "substrate", None, wanted_substrate_target)
+
+            if target is None:
+                target, value = retrieve_target(request.form)
+                modification_data["target"] = target
+                modification_data["value"] = value
+            else:
+                modification_data["target"] = target
+                modification_data["value"] = value
+
+            mod = AnonymousModification.from_json(modification_data)
+            print(mod)
+            return("Pretty AnonymousModification nugget was created successfully!")
         elif request.form['modType'] == "SelfModification":
             print("\tCreating 'SelfModification'...")
         elif request.form['modType'] == "LigandModification":
