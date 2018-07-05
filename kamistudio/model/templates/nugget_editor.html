@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block home_button %}
+  <a href="/home" type="button" class="btn btn-primary btn-md panel-button home-button">
+    <span class="glyphicon glyphicon-home"></span> Home
+  </a>
+{% endblock %}
+{% block panel_buttons %}
+<a href="/model/{{ hierarchy_id }}"><h1 id="hierarchy_name">{{ hierarchy_id }}</h1></a>
+{% endblock %}
+
+{% block sidebar_items %}
+
+{% endblock %}
+
+{% block interaction_form %}
+
+<div class="col-md-12 order-md-1">
+  <h2 class="mb-6">Nugget editing</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <hr class="mb-4">
+    </div>
+  </div>
+
+
+  <svg width="960" height="600"></svg>
+
+</div>
+
+
+{% endblock %}
+{% block customScripts %}
+  <script type="text/javascript">
+    visualiseNugget('{{ nugget_graph | safe }}', '{{ nugget_meta_typing | safe }}');
+  </script>
+{% endblock %}

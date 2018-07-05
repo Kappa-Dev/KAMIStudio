@@ -9,6 +9,8 @@ from kamistudio.model.views import model_blueprint
 # from kamistudio.action_graph.views import action_graph_blueprint
 # from kamistudio.nuggets.views import nuggets_blueprint
 
+from kami import KamiHierarchy
+
 
 class KAMIStudio(Flask):
     """Flask server for KAMIStudio."""
@@ -24,7 +26,9 @@ Bootstrap(app)
 
 # Configure the KAMIStudio server
 app.config.from_pyfile('instance/configs.py')
-app.hierarchies = dict()
+app.hierarchies = {
+    "test_hierarchy": KamiHierarchy()
+}
 
 # register the blueprints
 app.register_blueprint(home_blueprint)
