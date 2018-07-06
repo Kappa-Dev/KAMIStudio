@@ -4,7 +4,7 @@ import json
 from flask import render_template, Blueprint, request, redirect, url_for
 from flask import current_app as app
 
-from regraph import graph_to_d3_json
+from regraph import (graph_to_d3_json, print_graph)
 
 from kami.export.old_kami import ag_to_edge_list
 from kami.aggregation.generators import generate_from_interaction
@@ -63,12 +63,20 @@ def add_interaction(hierarchy_id):
         interaction = parse_interaction(request.form)
         nugget, nugget_type = generate_from_interaction(
             app.hierarchies[hierarchy_id], interaction)
+
+        template_relation = {}
+        for k, v in nugget.template_rel.items():
+            for vv in v:
+                template_relation[vv] = k
+        print(template_relation)
+
         return render_template(
             "nugget_editor.html",
             new_nugget=True,
             hierarchy_id=hierarchy_id,
             hierarchies=app.hierarchies,
             nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
+            nugget_type=nugget_type,
             nugget_meta_typing=json.dumps(nugget.meta_typing),
-            nugget_ag_typing=nugget.ag_typing,
-            nugget_template_rel=nugget.template_rel)
+            nugget_ag_typing=json.dumps(nugget.ag_typing),
+            nugget_template_rel=json.dumps(template_relation))

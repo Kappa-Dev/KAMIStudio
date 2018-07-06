@@ -23,8 +23,8 @@
     </div>
   </div>
 
-
   <svg width="960" height="600"></svg>
+  <!-- <div class="tooltip"></div> -->
 
 </div>
 
@@ -32,6 +32,6 @@
 {% endblock %}
 {% block customScripts %}
   <script type="text/javascript">
-    visualiseNugget('{{ nugget_graph | safe }}', '{{ nugget_meta_typing | safe }}');
+    visualiseNugget('{{ nugget_graph | safe }}', '{{ nugget_type }}', '{{ nugget_meta_typing | safe }}', '{{ nugget_ag_typing | safe }}', '{{ nugget_template_rel | safe }}');
   </script>
 {% endblock %}
