@@ -38,7 +38,7 @@ def _process_explict_target(form):
             "test": residue_test
         }
         if form['targetResidueLocation'] != "":
-            target["data"]["loc"] = form['targetResidueLocation']
+            target["data"]["loc"] = int(form['targetResidueLocation'])
 
         if form['targetResidueStateSet'] == 'true':
             state_to_set = True
@@ -122,7 +122,10 @@ def retrieve_residues(form, actor_name, wanted_target):
                     else:
                         residue[k] = False
                 else:
-                    residue[k] = form[field_name]
+                    if k == "loc":
+                        residue[k] = int(form[field_name])
+                    else:
+                        residue[k] = form[field_name]
 
         # Retrieve state
         state_name = None
@@ -176,7 +179,10 @@ def retrieve_sites(form, actor_name, wanted_actors=None, wanted_target=None):
         for k, v in site_data_dict.items():
             field_name = actor_name + "Site" + v + site_id
             if form[field_name] != "":
-                site[k] = form[field_name]
+                if k == "start" or k == "end":
+                    site[k] = int(form[field_name])
+                else:
+                    site[k] = form[field_name]
 
         # Retrieve site subcomponents
         site["residues"], target_residue = retrieve_residues(
@@ -241,7 +247,10 @@ def retrieve_regions(form, actor_name, wanted_actors=None, wanted_target=None):
         for k, v in region_data_dict.items():
             field_name = actor_name + "Region" + v + region_id
             if form[field_name] != "":
-                region[k] = form[field_name]
+                if k == "start" or k == "end":
+                    region[k] = int(form[field_name])
+                else:
+                    region[k] = form[field_name]
 
         # Retrieve region subcomponents
         region["sites"], site_actors, target_site = retrieve_sites(
@@ -369,7 +378,7 @@ def _process_actor(gene_data, actor_data):
             "type": "SiteActor",
             "data": {
                 "gene": gene_data,
-                "site": actor_data["in_sites"][1]
+                "site": actor_data["in_sites"]["site"][1]
             }
         }
     else:

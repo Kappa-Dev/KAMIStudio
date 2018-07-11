@@ -28,6 +28,15 @@ var META_LABEL_DY = {
   "bnd":"-2.5em"
 }
 
+function singleValueToString(obj, attr_name) {
+  var value = "";
+  if (attr_name in obj.attrs) {
+    value = obj.attrs[attr_name].data[0];
+  } else {
+    value = '<p class="faded">not specified</p>';
+  }
+  return value;
+}
 
 
 function initializePositions(width, height, nodes, nuggetType, templateRelation) {
@@ -89,18 +98,41 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       width = +svg.attr("width"),
       height = +svg.attr("height");
 
+  // define arrow markers for graph links
+  svg.append("defs").append("marker")
+    .attr("id", "arrow")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 7)
+    .attr("refY", 0)
+    .attr("markerWidth", 3.5)
+    .attr("markerHeight", 3.5)
+    .attr("orient", "auto")
+  .append("svg:path")
+    .attr("d", "M0,-5L10, 0L0, 5")
+    .attr('fill', '#B8B8B8');
+
+  svg.append("defs").append("marker")
+    .attr("id", "arrow-selected")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8)
+    .attr("refY", 0)
+    .attr("markerWidth", 3.5)
+    .attr("markerHeight", 3.5)
+    .attr("orient", "auto")
+  .append("svg:path")
+    .attr("d", "M0,-5L10, 0L0, 5")
+    .attr('fill', '#337ab7');
+
   // define simulation
   var simulation = d3.forceSimulation()
       .force("link", d3.forceLink().id(function(d) { return d.id; }))
-      .force("charge", d3.forceManyBody().strength(-200))
+      .force("charge", d3.forceManyBody().strength(-100))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
   // readout nugget graph
   var graph = JSON.parse(nuggetJson);
   var metaTyping = JSON.parse(metaTyping);
   var templateRelation = JSON.parse(templateRelation);
-
-  console.log(nuggetJson);
 
   // get initial positions of elements according to the template relation
   fixedPositions = initializePositions(
@@ -111,8 +143,9 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
   var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
-    .attr("class", "link")
-    .attr("stroke-width", 3).attr("stroke", d3.rgb("#B8B8B8"));
+      .attr("stroke-width", 4).attr("stroke", d3.rgb("#B8B8B8"))
+      .attr("marker-end", "url(#arrow)")
+    .on("click", handleEdgeClick);
 
   // define nodes of the graph
   var node = svg.selectAll(".node")
@@ -138,8 +171,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       .attr("r", function(d) { return META_SIZES[metaTyping[d.id]]; })
       .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
       .attr("stroke-width", 0).attr("stroke", d3.rgb("#B8B8B8"))
-      .on("mouseover", handleMouseOver)
-      .on("mouseout", handleMouseOut);
+      .on("click", handleNodeClick);
 
   node.append("title")
       .text(function(d) { return d.id; });
@@ -148,7 +180,13 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       .style('fill', d3.rgb("#5e5e5e"))
       .attr("dx", 0)
       .attr("dy", function(d) { return META_LABEL_DY[metaTyping[d.id]]; })
-      .text(function(d) { return d.id; });
+      .text(function(d) {
+        if (d.id.length > 15) {
+          text = d.id.slice(0, 15) + "...";
+        } else {
+          text = d.id;
+        }
+        return text});
 
   simulation
       .nodes(graph.nodes)
@@ -158,11 +196,27 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       .links(graph.links).strength(0.1);
 
   function ticked() {
+
     link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+        .attr("x2", function(d) {
+            radius = META_SIZES[metaTyping[d.target.id]];
+            diffX = d.target.x - d.source.x;
+            diffY = d.target.y - d.source.y;
+            pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+            offsetX = (diffX * radius) / pathLength;
+            return (d.target.x - offsetX - offsetX * 0.05);
+          })
+        .attr("y2", function(d) {
+            radius = META_SIZES[metaTyping[d.target.id]];
+
+            diffX = d.target.x - d.source.x;
+            diffY = d.target.y - d.source.y;
+            pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+            offsetY = (diffY * radius) / pathLength;
+            return (d.target.y - offsetY - offsetY * 0.05);
+          });
     node.attr(
       "transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   }
@@ -190,47 +244,299 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
     d.fy = null;
   }
 
-  // tooltip stuff
-  var tooltip = svg.append("g")
-    .attr("class", "tooltip")   
-    .style("opacity", 0);
+  function handleNodeClick(d) {
 
-  tooltip.append("rect")
-      .attr("class", "desc")
-      .attr("fill", "white")
-      .attr("stroke-width", 1).attr("stroke", d3.rgb("#B8B8B8"))
-      .attr("width", "6em")
-      .attr("height", "6em")
-      .attr("rx", 15)
-      .attr("ry", 15);
+    var metaDataHTML = "";
+    if (metaTyping[d.id] == "gene") {
+      metaDataHTML = 
+        '<div><table class="table table-hover">\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <td><b>UniProt AC:</b></td>\n' +
+        '      <td id="uniprotid"><a href="https://www.uniprot.org/uniprot/' + singleValueToString(d, "uniprotid") +
+        '">' + singleValueToString(d, "uniprotid") + '</a></td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <td><b>HGNC Symbol:</b></td>\n' +
+        '      <td id="hgnc-symbol">' + singleValueToString(d, "hgnc_symbol") + '</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <td><b>Synonyms: </b></td>\n' +
+        '      <td id="synonyms">' + singleValueToString(d, "synonyms") + '</td>\n' +
+        '    </tr>\n' +
+        ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick="showGeneMetaDataForm(this, ' + d.id + ')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    } else if (metaTyping[d.id] == "region" || metaTyping[d.id] == "site") {
+        metaDataHTML = 
+        '<div><table class="table table-hover">\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <td><b>Name:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "name") + '</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <td><b>InterPro ID:</b></td>\n' +
+        '      <td><a href="http://www.ebi.ac.uk/interpro/entry/' + singleValueToString(d, "interproid") + '">' + singleValueToString(d, "interproid") + '</a></td>\n' +
+        '    </tr>\n' +
+        ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    } else if (metaTyping[d.id] == "residue") {
+      metaDataHTML =
+        '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Amino Acid:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "aa") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>Test:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "test") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    } else if (metaTyping[d.id] == "state") {
+      metaDataHTML =
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Name:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "name") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>Test:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "test") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    } else if (metaTyping[d.id] == "mod") {
+      metaDataHTML =
+        '<div><table class="table table-hover">\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <td><b>Value:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "value") + '</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <td><b>Rate:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "rate") + '</td>\n' +
+        '    </tr>\n' +
+          '    <tr>\n' +
+        '      <td><b>Description:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "desc") + '</td>\n' +
+        '    </tr>\n' +
+        ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    } else if (metaTyping[d.id] == "bnd") {
+      metaDataHTML = 
+        '<div><table class="table table-hover">\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <td><b>Rate:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "rate") + '</td>\n' +
+        '    </tr>\n' +
+          '    <tr>\n' +
+        '      <td><b>Description:</b></td>\n' +
+        '      <td>' + singleValueToString(d, "desc") + '</td>\n' +
+        '    </tr>\n' +
+        ' </tbody>\n' +
+        '</table>\n' + 
+        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+    }
 
-  function handleMouseOver(d) {
+    svg.selectAll("line")
+      .attr("stroke-width", 4)
+      .attr("stroke", d3.rgb("#B8B8B8"))
+      .attr("marker-end", "url(#arrow)");
 
-    tooltip.transition()    
-      .duration(200)  
-      .style("opacity", .9);
+    svg.selectAll("circle")
+      .attr("stroke-width", 0);
 
-    var tooltipParent = tooltip.node().parentElement;
-    var matrix = 
-      this.getTransformToElement(tooltipParent)
-          .translate(+this.getAttribute("cx"),
-               +this.getAttribute("cy"));
+    d3.select(this)
+      .attr("stroke-width", 3)
+      .attr("stroke", d3.rgb("#337ab7"));
 
-    tooltip.attr("transform", "translate(" + (matrix.e)
-                      + "," + (matrix.f-20) + ")");
-    tooltip.append("text")
-      .attr("text-anchor", "start")
-      .style('fill', d3.rgb("#5e5e5e"))
-      .text(d.id);
-    tooltip.select('rect')
-      .attr("width", function(d) {return this.parentNode.getBBox().width;})
+    var selectedNodeInfo = document.getElementById("selectedNodeInfo");
+    while (selectedNodeInfo.firstChild) {
+      selectedNodeInfo.removeChild(selectedNodeInfo.firstChild);
+    }
+    selectedNodeInfo.appendChild(htmlToElement(metaDataHTML));
+    document.getElementById("noSelectedNodes").style.display = "none";
+    document.getElementById("noMetaData").style.display = "none";
   }
 
+  function handleEdgeClick(d) {
+    var metaDataFound = false;
+    var metaDataHTML = "";
+    if (metaTyping[d.target.id] == "gene") {
+      if (metaTyping[d.source.id] == "region" || metaTyping[d.source.id] == "site") { 
+        metaDataFound = true;
+        metaDataHTML = 
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Start:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "start") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>End:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "end") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>Order: </b></td>\n' +
+          '      <td>' + singleValueToString(d, "order") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+          '</table>\n' + 
+          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+      } else if (metaTyping[d.source.id] == "residue") {
+        metaDataFound = true;
+        metaDataHTML = 
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Location:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+          '</table>\n' + 
+          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
 
-  function handleMouseOut(d) {
-    tooltip.transition()   
-        .duration(500)    
-        .style("opacity", 0);
-    tooltip.select("text").remove();
+      }
+    } else if (metaTyping[d.target.id] == "region") {
+      if (metaTyping[d.source.id] == "site") {
+        metaDataFound = true;
+        metaDataHTML = 
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Start:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "start") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>End:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "end") + '</td>\n' +
+          '    </tr>\n' +
+          '    <tr>\n' +
+          '      <td><b>Order: </b></td>\n' +
+          '      <td>' + singleValueToString(d, "order") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+          '</table>\n' + 
+          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+      } else if (metaTyping[d.source.id] == "residue") {
+        metaDataFound = true;
+        metaDataHTML = 
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Location:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
+          '    </tr>\n' +
+          ' </tbody>\n' +
+          '</table>\n' + 
+          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+      }
+    } else if (metaTyping[d.target.id] == "site") {
+      if (metaTyping[d.source.id] == "residue") {
+        metaDataFound = true;
+        metaDataHTML = 
+          '<div><table class="table table-hover">\n' +
+          '  <tbody>\n' +
+          '    <tr>\n' +
+          '      <td><b>Location:</b></td>\n' +
+          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
+          '    </tr>\n' +
+          '</table>\n' + 
+          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+      }
+    }
+    svg.selectAll("circle")
+      .attr("stroke-width", 0);
+    svg.selectAll("line")
+      .attr("stroke-width", 4)
+      .attr("stroke", d3.rgb("#B8B8B8"))
+      .attr("marker-end", "url(#arrow)");
+    d3.select(this)
+    .attr("stroke-width", 4)
+    .attr("stroke", d3.rgb("#337ab7"))
+    .attr("marker-end", "url(#arrow-selected)");
+
+    var selectedNodeInfo = document.getElementById("selectedNodeInfo");
+    while (selectedNodeInfo.firstChild) {
+      selectedNodeInfo.removeChild(selectedNodeInfo.firstChild);
+    }
+
+    if (metaDataFound == true) {
+      selectedNodeInfo.appendChild(htmlToElement(metaDataHTML));
+      document.getElementById("noSelectedNodes").style.display = "none";
+      document.getElementById("noMetaData").style.display = "none";
+    } else {
+      document.getElementById("noMetaData").style.display = "inline-block";
+    }
+
   }
+
+  // // tooltip stuff
+  // var tooltip = svg.append("g")
+  //   .attr("class", "tooltip")   
+  //   .style("opacity", 0);
+
+  // tooltip.append("rect")
+  //     .attr("class", "desc")
+  //     .attr("fill", "white")
+  //     .attr("stroke-width", 1).attr("stroke", d3.rgb("#B8B8B8"))
+  //     .attr("width", "6em")
+  //     .attr("height", "6em")
+  //     .attr("rx", 15)
+  //     .attr("ry", 15);
+
+  // function handleMouseOver(d) {
+
+  //   tooltip.transition()    
+  //     .duration(200)  
+  //     .style("opacity", .9);
+
+  //   var tooltipParent = tooltip.node().parentElement;
+  //   var matrix = 
+  //     this.getTransformToElement(tooltipParent)
+  //         .translate(+this.getAttribute("cx"),
+  //              +this.getAttribute("cy"));
+
+  //   tooltip.attr("transform", "translate(" + (matrix.e)
+  //                     + "," + (matrix.f-20) + ")");
+  //   tooltip.append("text")
+  //     .attr("text-anchor", "start")
+  //     .style('fill', d3.rgb("#5e5e5e"))
+  //     .text(d.id);
+  //   tooltip.select('rect')
+  //     .attr("width", function(d) {return this.parentNode.getBBox().width;})
+  // }
+
+
+  // function handleMouseOut(d) {
+  //   tooltip.transition()   
+  //       .duration(500)    
+  //       .style("opacity", 0);
+  //   tooltip.select("text").remove();
+  // }
 }
+
+// function equalToEventTarget() {
+//     return this == d3.event.target;
+// }
+
+// d3.select("body").on("click",function(){
+//     if (arrows.filter(equalToEventTarget).empty() && circles.filter(equalToEventTarget).empty()) {
+//       svg.selectAll("circle")
+//         .attr("stroke-width", 0);
+//       svg.selectAll("line")
+//         .attr("stroke-width", 4)
+//         .attr("stroke", d3.rgb("#B8B8B8"))
+//         .attr("marker-end", "url(#arrow)");
+//       }
+// });

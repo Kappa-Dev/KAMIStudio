@@ -36,7 +36,7 @@
 .sidebar-nav {
   position: absolute;
   top: 0;
-  width: 200px;
+  width: 95%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -81,4 +81,23 @@
 
 p.nugget-desc {
   color: #777;;
+}
+
+ul.info-list {
+  list-style-type: none;
+  padding-left: 5px;
+}
+
+.table-hover {
+  margin-left: 15px;
+  margin-bottom: 0px;
+  width: 90%;
+}
+
+.edit-data-button {
+  margin-left: 25px;
+}
+
+.edit-sign {
+  text-indent: 0px;
 }

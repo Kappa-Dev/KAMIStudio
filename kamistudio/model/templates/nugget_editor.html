@@ -10,7 +10,16 @@
 {% endblock %}
 
 {% block sidebar_items %}
-
+  <li class="node-info-block">
+      <h3>Modify element</h3>
+      <p id="noSelectedNodes">Click on an element to select</p>
+      <p id="noMetaData" style="display: none;">No meta-data</p>
+      <div id="selectedNodeInfo"></div>
+  </li>
+  <li class="graph-edit">
+    <h3>Modify graph</h3>
+    <hr class="mb-4">
+  </li>
 {% endblock %}
 
 {% block interaction_form %}
@@ -27,7 +36,6 @@
   <!-- <div class="tooltip"></div> -->
 
 </div>
-
 
 {% endblock %}
 {% block customScripts %}
