@@ -1,3 +1,9 @@
+/**
+ * Untils for nugget visualisation
+ * 
+ */
+
+// global vars defining visualisation configs for different types of nodes
 var META_SIZES = {
   "gene":40,
   "region":30,
@@ -27,17 +33,6 @@ var META_LABEL_DY = {
   "mod":"-2.5em",
   "bnd":"-2.5em"
 }
-
-function singleValueToString(obj, attr_name) {
-  var value = "";
-  if (attr_name in obj.attrs) {
-    value = obj.attrs[attr_name].data[0];
-  } else {
-    value = '<p class="faded">not specified</p>';
-  }
-  return value;
-}
-
 
 function initializePositions(width, height, nodes, nuggetType, templateRelation) {
   // initialize positions for enzyme group
@@ -249,103 +244,104 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
     var metaDataHTML = "";
     if (metaTyping[d.id] == "gene") {
       metaDataHTML = 
-        '<div><table class="table table-hover">\n' +
+        '<div>\n' + 
+        ' <table class="table table-hover">\n' +
         '  <tbody>\n' +
         '    <tr>\n' +
         '      <td><b>UniProt AC:</b></td>\n' +
-        '      <td id="uniprotid"><a href="https://www.uniprot.org/uniprot/' + singleValueToString(d, "uniprotid") +
+        '      <td id="uniprotidTD"><a href="https://www.uniprot.org/uniprot/' + singleValueToString(d, "uniprotid") +
         '">' + singleValueToString(d, "uniprotid") + '</a></td>\n' +
         '    </tr>\n' +
         '    <tr>\n' +
         '      <td><b>HGNC Symbol:</b></td>\n' +
-        '      <td id="hgnc-symbol">' + singleValueToString(d, "hgnc_symbol") + '</td>\n' +
+        '      <td id="hgncSymbolTD">' + singleValueToString(d, "hgnc_symbol") + '</td>\n' +
         '    </tr>\n' +
         '    <tr>\n' +
         '      <td><b>Synonyms: </b></td>\n' +
-        '      <td id="synonyms">' + singleValueToString(d, "synonyms") + '</td>\n' +
+        '      <td id="synonymsTD">' + singleValueToString(d, "synonyms") + '</td>\n' +
         '    </tr>\n' +
         ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick="showGeneMetaDataForm(this, ' + d.id + ')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
+        '</div>\n';
     } else if (metaTyping[d.id] == "region" || metaTyping[d.id] == "site") {
         metaDataHTML = 
         '<div><table class="table table-hover">\n' +
         '  <tbody>\n' +
         '    <tr>\n' +
         '      <td><b>Name:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "name") + '</td>\n' +
+        '      <td id="nameTD">' + singleValueToString(d, "name") + '</td>\n' +
         '    </tr>\n' +
         '    <tr>\n' +
         '      <td><b>InterPro ID:</b></td>\n' +
-        '      <td><a href="http://www.ebi.ac.uk/interpro/entry/' + singleValueToString(d, "interproid") + '">' + singleValueToString(d, "interproid") + '</a></td>\n' +
+        '      <td id="interproIdTD"><a href="http://www.ebi.ac.uk/interpro/entry/' + singleValueToString(d, "interproid") + '">' + singleValueToString(d, "interproid") + '</a></td>\n' +
         '    </tr>\n' +
         ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) + 
+        '</div>\n';
     } else if (metaTyping[d.id] == "residue") {
       metaDataHTML =
         '<div><table class="table table-hover">\n' +
           '  <tbody>\n' +
           '    <tr>\n' +
           '      <td><b>Amino Acid:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "aa") + '</td>\n' +
+          '      <td id="aaTD">' + singleValueToString(d, "aa") + '</td>\n' +
           '    </tr>\n' +
           '    <tr>\n' +
           '      <td><b>Test:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "test") + '</td>\n' +
+          '      <td id="testTD">' + singleValueToString(d, "test") + '</td>\n' +
           '    </tr>\n' +
           ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
+        '</div>';
     } else if (metaTyping[d.id] == "state") {
       metaDataHTML =
-          '<div><table class="table table-hover">\n' +
+          '<div id="metaData"><table class="table table-hover">\n' +
           '  <tbody>\n' +
           '    <tr>\n' +
           '      <td><b>Name:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "name") + '</td>\n' +
+          '      <td id="nameTD">' + singleValueToString(d, "name") + '</td>\n' +
           '    </tr>\n' +
           '    <tr>\n' +
           '      <td><b>Test:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "test") + '</td>\n' +
+          '      <td id="testTD">' + singleValueToString(d, "test") + '</td>\n' +
           '    </tr>\n' +
           ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
+        '</div>';
     } else if (metaTyping[d.id] == "mod") {
       metaDataHTML =
-        '<div><table class="table table-hover">\n' +
+        '<div id="metaData"><table class="table table-hover">\n' +
         '  <tbody>\n' +
         '    <tr>\n' +
         '      <td><b>Value:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "value") + '</td>\n' +
+        '      <td id="valueTD">' + singleValueToString(d, "value") + '</td>\n' +
         '    </tr>\n' +
         '    <tr>\n' +
         '      <td><b>Rate:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "rate") + '</td>\n' +
+        '      <td id="rateTD">' + singleValueToString(d, "rate") + '</td>\n' +
         '    </tr>\n' +
           '    <tr>\n' +
         '      <td><b>Description:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "desc") + '</td>\n' +
+        '      <td id="descTD">' + singleValueToString(d, "desc") + '</td>\n' +
         '    </tr>\n' +
         ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditButton(d.id, metaTyping[d.id]) +
+        '</div>\n';
     } else if (metaTyping[d.id] == "bnd") {
       metaDataHTML = 
-        '<div><table class="table table-hover">\n' +
+        '<div id="metaData"><table class="table table-hover">\n' +
         '  <tbody>\n' +
         '    <tr>\n' +
         '      <td><b>Rate:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "rate") + '</td>\n' +
+        '      <td id="rateTD">' + singleValueToString(d, "rate") + '</td>\n' +
         '    </tr>\n' +
           '    <tr>\n' +
         '      <td><b>Description:</b></td>\n' +
-        '      <td>' + singleValueToString(d, "desc") + '</td>\n' +
+        '      <td id="descTD">' + singleValueToString(d, "desc") + '</td>\n' +
         '    </tr>\n' +
         ' </tbody>\n' +
-        '</table>\n' + 
-        '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) + 
+        '</div>';
     }
 
     svg.selectAll("line")
@@ -373,87 +369,86 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
     var metaDataFound = false;
     var metaDataHTML = "";
     if (metaTyping[d.target.id] == "gene") {
-      if (metaTyping[d.source.id] == "region" || metaTyping[d.source.id] == "site") { 
-        metaDataFound = true;
-        metaDataHTML = 
-          '<div><table class="table table-hover">\n' +
-          '  <tbody>\n' +
-          '    <tr>\n' +
-          '      <td><b>Start:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "start") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>End:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "end") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>Order: </b></td>\n' +
-          '      <td>' + singleValueToString(d, "order") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-          '</table>\n' + 
-          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
-      } else if (metaTyping[d.source.id] == "residue") {
-        metaDataFound = true;
-        metaDataHTML = 
-          '<div><table class="table table-hover">\n' +
-          '  <tbody>\n' +
-          '    <tr>\n' +
-          '      <td><b>Location:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-          '</table>\n' + 
-          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
-
-      }
+        if (metaTyping[d.source.id] == "region" || metaTyping[d.source.id] == "site") { 
+          metaDataFound = true;
+          metaDataHTML = 
+            '<div id="metaData"><table class="table table-hover">\n' +
+            '  <tbody>\n' +
+            '    <tr>\n' +
+            '      <td><b>Start:</b></td>\n' +
+            '      <td id="startTD">' + singleValueToString(d, "start") + '</td>\n' +
+            '    </tr>\n' +
+            '    <tr>\n' +
+            '      <td><b>End:</b></td>\n' +
+            '      <td id="endTD">' + singleValueToString(d, "end") + '</td>\n' +
+            '    </tr>\n' +
+            '    <tr>\n' +
+            '      <td><b>Order: </b></td>\n' +
+            '      <td id="orderTD">' + singleValueToString(d, "order") + '</td>\n' +
+            '    </tr>\n' +
+            ' </tbody>\n' +
+            '</table>\n' + generateEditEdgeButton(d.source.id, d.target.id, metaTyping[d.source.id], metaTyping[d.target.id]) +
+            '</div>\n';
+        } else if (metaTyping[d.source.id] == "residue") {
+          metaDataFound = true;
+          metaDataHTML = 
+            '<div id="metaData"><table class="table table-hover">\n' +
+            '  <tbody>\n' +
+            '    <tr>\n' +
+            '      <td><b>Location:</b></td>\n' +
+            '      <td id="locTD">' + singleValueToString(d, "loc") + '</td>\n' +
+            '    </tr>\n' +
+            ' </tbody>\n' +
+            '</table>\n' + generateEditEdgeButton(d.source.id, d.target.id, metaTyping[d.source.id], metaTyping[d.target.id]) +
+            '</div>\n';
+        }
     } else if (metaTyping[d.target.id] == "region") {
-      if (metaTyping[d.source.id] == "site") {
-        metaDataFound = true;
-        metaDataHTML = 
-          '<div><table class="table table-hover">\n' +
-          '  <tbody>\n' +
-          '    <tr>\n' +
-          '      <td><b>Start:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "start") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>End:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "end") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>Order: </b></td>\n' +
-          '      <td>' + singleValueToString(d, "order") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-          '</table>\n' + 
-          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
-      } else if (metaTyping[d.source.id] == "residue") {
-        metaDataFound = true;
-        metaDataHTML = 
-          '<div><table class="table table-hover">\n' +
-          '  <tbody>\n' +
-          '    <tr>\n' +
-          '      <td><b>Location:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-          '</table>\n' + 
-          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
-      }
+        if (metaTyping[d.source.id] == "site") {
+          metaDataFound = true;
+          metaDataHTML = 
+            '<div id="metaData"><table class="table table-hover">\n' +
+            '  <tbody>\n' +
+            '    <tr>\n' +
+            '      <td><b>Start:</b></td>\n' +
+            '      <td id="startTD">' + singleValueToString(d, "start") + '</td>\n' +
+            '    </tr>\n' +
+            '    <tr>\n' +
+            '      <td><b>End:</b></td>\n' +
+            '      <td id="endTD">' + singleValueToString(d, "end") + '</td>\n' +
+            '    </tr>\n' +
+            '    <tr>\n' +
+            '      <td><b>Order: </b></td>\n' +
+            '      <td id="orderTD">' + singleValueToString(d, "order") + '</td>\n' +
+            '    </tr>\n' +
+            ' </tbody>\n' +
+            '</table>\n' + generateEditEdgeButton(d.source.id, d.target.id, metaTyping[d.source.id], metaTyping[d.target.id]) +
+            '</div>\n';
+        } else if (metaTyping[d.source.id] == "residue") {
+          metaDataFound = true;
+          metaDataHTML = 
+            '<div id="metaData"><table class="table table-hover">\n' +
+            '  <tbody>\n' +
+            '    <tr>\n' +
+            '      <td><b>Location:</b></td>\n' +
+            '      <td id="locTD">' + singleValueToString(d, "loc") + '</td>\n' +
+            '    </tr>\n' +
+            ' </tbody>\n' +
+            '</table>\n' + generateEditEdgeButton(d.source.id, d.target.id, metaTyping[d.source.id], metaTyping[d.target.id]) +
+            '</div>\n';
+        }
     } else if (metaTyping[d.target.id] == "site") {
-      if (metaTyping[d.source.id] == "residue") {
-        metaDataFound = true;
-        metaDataHTML = 
-          '<div><table class="table table-hover">\n' +
-          '  <tbody>\n' +
-          '    <tr>\n' +
-          '      <td><b>Location:</b></td>\n' +
-          '      <td>' + singleValueToString(d, "loc") + '</td>\n' +
-          '    </tr>\n' +
-          '</table>\n' + 
-          '<a type="button" class="btn btn-default btn-md edit-data-button" onclick=""><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a></div>\n';
-      }
+        if (metaTyping[d.source.id] == "residue") {
+          metaDataFound = true;
+          metaDataHTML = 
+            '<div id="metaData"><table class="table table-hover">\n' +
+            '  <tbody>\n' +
+            '    <tr>\n' +
+            '      <td><b>Location:</b></td>\n' +
+            '      <td id="locTD">' + singleValueToString(d, "loc") + '</td>\n' +
+            '    </tr>\n' +
+            '</table>\n' + generateEditEdgeButton(d.source.id, d.target.id, metaTyping[d.source.id], metaTyping[d.target.id]) +
+            '</div>\n';
+        }
     }
     svg.selectAll("circle")
       .attr("stroke-width", 0);
@@ -481,51 +476,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
 
   }
 
-  // // tooltip stuff
-  // var tooltip = svg.append("g")
-  //   .attr("class", "tooltip")   
-  //   .style("opacity", 0);
-
-  // tooltip.append("rect")
-  //     .attr("class", "desc")
-  //     .attr("fill", "white")
-  //     .attr("stroke-width", 1).attr("stroke", d3.rgb("#B8B8B8"))
-  //     .attr("width", "6em")
-  //     .attr("height", "6em")
-  //     .attr("rx", 15)
-  //     .attr("ry", 15);
-
-  // function handleMouseOver(d) {
-
-  //   tooltip.transition()    
-  //     .duration(200)  
-  //     .style("opacity", .9);
-
-  //   var tooltipParent = tooltip.node().parentElement;
-  //   var matrix = 
-  //     this.getTransformToElement(tooltipParent)
-  //         .translate(+this.getAttribute("cx"),
-  //              +this.getAttribute("cy"));
-
-  //   tooltip.attr("transform", "translate(" + (matrix.e)
-  //                     + "," + (matrix.f-20) + ")");
-  //   tooltip.append("text")
-  //     .attr("text-anchor", "start")
-  //     .style('fill', d3.rgb("#5e5e5e"))
-  //     .text(d.id);
-  //   tooltip.select('rect')
-  //     .attr("width", function(d) {return this.parentNode.getBBox().width;})
-  // }
-
-
-  // function handleMouseOut(d) {
-  //   tooltip.transition()   
-  //       .duration(500)    
-  //       .style("opacity", 0);
-  //   tooltip.select("text").remove();
-  // }
 }
-
 // function equalToEventTarget() {
 //     return this == d3.event.target;
 // }

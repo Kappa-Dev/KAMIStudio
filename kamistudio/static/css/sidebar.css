@@ -46,29 +46,26 @@
   text-indent: 20px;
   line-height: 40px;
 }
-
+/*
 .sidebar-nav li a {
-  display: block;
   text-decoration: none;
-  color: #999999;
 }
 
 .sidebar-nav li a:hover {
   text-decoration: none;
-  color: #2e6da4;
   background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-nav li a:active, .sidebar-nav li a:focus {
   text-decoration: none;
-}
+}*/
 
 .sidebar-nav>.sidebar-brand {
   height: 65px;
   font-size: 18px;
   line-height: 60px;
 }
-
+/*
 .sidebar-nav>.sidebar-brand a {
   color: #999999;
 }
@@ -76,7 +73,7 @@
 .sidebar-nav>.sidebar-brand a:hover {
   color: #fff;
   background: none;
-}
+}*/
 
 
 p.nugget-desc {
@@ -95,9 +92,12 @@ ul.info-list {
 }
 
 .edit-data-button {
+  margin-top: 15px;
   margin-left: 25px;
+  text-indent: 0px;
+  width: 85%;
 }
-
+/*
 .edit-sign {
   text-indent: 0px;
-}
+}*/
