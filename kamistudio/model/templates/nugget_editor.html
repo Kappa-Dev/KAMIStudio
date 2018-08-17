@@ -10,16 +10,29 @@
 {% endblock %}
 
 {% block sidebar_items %}
+  <li class="node-element-block">
+      <h3>Element</h3>
+      <p id="noSelectedElements">Click on an element to select</p>
+      <p id="edgeElementInfo" style="display: none;">Not available for edges</p>
+      <div id="selectedElementInfo"></div>
+  </li>
   <li class="node-info-block">
-      <h3>Modify element</h3>
+      <h3>Meta-data</h3>
       <p id="noSelectedNodes">Click on an element to select</p>
       <p id="noMetaData" style="display: none;">No meta-data</p>
       <div id="selectedNodeInfo"></div>
   </li>
-  <li class="graph-edit">
+  <li class="node-ag-typing-block">
+      <h3>Action Graph Typing</h3>
+      <p id="noSelectedNodesToType">Click on a node to select</p>
+      <p id="noTyping" style="display: none;">Not typed by any node in the action graph</p>
+      <p id="edgeTyping" style="display: none;">Not available for edges</p>
+      <div id="selectedNodeTyping"></div>
+  </li>
+<!--   <li class="graph-edit">
     <h3>Modify graph</h3>
     <hr class="mb-4">
-  </li>
+  </li> -->
 {% endblock %}
 
 {% block interaction_form %}
@@ -35,6 +48,8 @@
   <svg width="960" height="600"></svg>
   <!-- <div class="tooltip"></div> -->
 
+  <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-md" onclick=""><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>
+   
 </div>
 
 {% endblock %}

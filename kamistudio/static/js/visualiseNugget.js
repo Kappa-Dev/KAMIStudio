@@ -127,6 +127,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
   // readout nugget graph
   var graph = JSON.parse(nuggetJson);
   var metaTyping = JSON.parse(metaTyping);
+  var agTyping = JSON.parse(agTyping);
   var templateRelation = JSON.parse(templateRelation);
 
   // get initial positions of elements according to the template relation
@@ -241,6 +242,14 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
 
   function handleNodeClick(d) {
 
+    var elementInfoHTML = 
+        '<div>\n' + 
+        ' <table class="table table-hover">\n' +
+        '  <tbody>\n' + addNodeIdTr(d.id) + addNodeTypeTr(metaTyping[d.id]) +
+        ' </tbody>\n' +
+        '</table>\n' +
+        '</div>\n';
+
     var metaDataHTML = "";
     if (metaTyping[d.id] == "gene") {
       metaDataHTML = 
@@ -325,7 +334,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
         '      <td id="descTD">' + singleValueToString(d, "desc") + '</td>\n' +
         '    </tr>\n' +
         ' </tbody>\n' +
-        '</table>\n' + generateEditButton(d.id, metaTyping[d.id]) +
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
         '</div>\n';
     } else if (metaTyping[d.id] == "bnd") {
       metaDataHTML = 
@@ -344,6 +353,32 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
         '</div>';
     }
 
+    var agNodeId = null;
+    if (d.id in agTyping) {
+      agNodeId = agTyping[d.id];
+    }
+
+
+    var typingHTML =
+      '<div>\n' +
+      '  <p class="faded">Typing node was not identified</p>'
+      '</div>\n';
+    if (agNodeId !== null) {
+      typingHTML = 
+        '<div id="agTyping"><table class="table table-hover">\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <td><b>AG Node ID:</b></td>\n' +
+        '      <td id="agNodeId">' + agTyping[d.id] + '</td>\n' +
+        '    </tr>\n' +
+        ' </tbody>\n' +
+        '</table>\n' +
+        '</div>';
+    } else {
+      console.log("No action graph typing");
+    }
+
+    // deselect all the selected elements
     svg.selectAll("line")
       .attr("stroke-width", 4)
       .attr("stroke", d3.rgb("#B8B8B8"))
@@ -356,6 +391,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       .attr("stroke-width", 3)
       .attr("stroke", d3.rgb("#337ab7"));
 
+    // autofill the data on the sidebar
     var selectedNodeInfo = document.getElementById("selectedNodeInfo");
     while (selectedNodeInfo.firstChild) {
       selectedNodeInfo.removeChild(selectedNodeInfo.firstChild);
@@ -363,7 +399,25 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
     selectedNodeInfo.appendChild(htmlToElement(metaDataHTML));
     document.getElementById("noSelectedNodes").style.display = "none";
     document.getElementById("noMetaData").style.display = "none";
+
+    var selectedElementInfo = document.getElementById("selectedElementInfo");
+    while (selectedElementInfo.firstChild) {
+      selectedElementInfo.removeChild(selectedElementInfo.firstChild);
+    }
+    selectedElementInfo.appendChild(htmlToElement(elementInfoHTML));
+    document.getElementById("noSelectedElements").style.display = "none";
+    document.getElementById("edgeElementInfo").style.display = "none";
+
+    var selectedNodeTyping = document.getElementById("selectedNodeTyping");
+    while (selectedNodeTyping.firstChild) {
+      selectedNodeTyping.removeChild(selectedNodeTyping.firstChild);
+    }
+    selectedNodeTyping.appendChild(htmlToElement(typingHTML));
+    document.getElementById("noSelectedNodesToType").style.display = "none";
+    document.getElementById("edgeTyping").style.display = "none";
+
   }
+
 
   function handleEdgeClick(d) {
     var metaDataFound = false;
@@ -474,9 +528,44 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       document.getElementById("noMetaData").style.display = "inline-block";
     }
 
+    document.getElementById("noSelectedElements").style.display = "none";
+    var selectedElementInfo = document.getElementById("selectedElementInfo");
+    while (selectedElementInfo.firstChild) {
+      selectedElementInfo.removeChild(selectedElementInfo.firstChild);
+    }
+    document.getElementById("edgeElementInfo").style.display = "inline-block";
+
+    document.getElementById("noSelectedNodesToType").style.display = "none";
+    var selectedNodeTyping = document.getElementById("selectedNodeTyping");
+    while (selectedNodeTyping.firstChild) {
+      selectedNodeTyping.removeChild(selectedNodeTyping.firstChild);
+    }
+    document.getElementById("edgeTyping").style.display = "inline-block";
+
   }
 
 }
+
+
+function addNodeIdTr(nodeId) {
+  var trHtml =
+    '    <tr>\n' +
+    '      <td><b>Node ID:</b></td>\n' +
+    '      <td>' + nodeId + '</td>\n' +
+    '    </tr>\n';
+  return trHtml;
+}
+
+
+function addNodeTypeTr(nodeType) {
+  var trHtml =
+    '    <tr>\n' +
+    '      <td><b>Node Type:</b></td>\n' +
+    '      <td><span class="dot dot-' + nodeType + '"></span>' + nodeType + '</td>\n' +
+    '    </tr>\n';
+  return trHtml;
+}
+
 // function equalToEventTarget() {
 //     return this == d3.event.target;
 // }

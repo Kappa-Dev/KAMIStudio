@@ -90,3 +90,39 @@ p.loading-error-message {
 	margin-left: 0px;
 }
 
+.dot {
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: text-bottom;
+    margin-right: 5px;
+}
+
+.dot-gene {
+	background-color: #FFA19E;
+}
+
+.dot-region {
+	background-color: #ffb080;
+}
+
+.dot-site {
+	background-color: #ffd780;
+}
+
+.dot-residue {
+	background-color: #ccb3ff;
+}
+
+.dot-state {
+	background-color: #A3DEFF;
+}
+
+.dot-mod {
+	background-color: #9DAEFD;
+}
+
+.dot-bnd {
+	background-color: #9EFFC5;
+}
