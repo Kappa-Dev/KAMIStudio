@@ -76,9 +76,12 @@
                 <tbody>
                   {% for nugget in hierarchies[hierarchy_id].nuggets() %}
                   <tr>
-                    <td>{{ nugget }}</td>
-                    <td class="nugget-desc">{{ nugget_desc[nugget] }}</td>
-                    <td class="nugget-nav-buttons"><a type="button" class="btn btn-primary btn-md panel-button show-nugget-button"><span class="glyphicon glyphicon-search"></span> Show graph</a></td>
+                    <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.nugget_view', hierarchy_id=hierarchy_id, nugget_id=nugget) }}">{{ nugget }}</a></td>
+                    <td class="nugget-record nugget-desc"><p>{{ nugget_desc[nugget] }}</p></td>
+                    <td class="nugget-nav-buttons">
+                      <a type="button" id="showNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button" onclick="addSvgAndVisualizeNugget(this,  '{{ hierarchy_id }}', '{{ nugget }}')"><span class="glyphicon glyphicon-search"></span> Show graph</a>
+                      <a type="button" id="hideNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button" onclick="removeNuggetSvg(this, '{{ nugget }}')" style='display: none;'><span class="glyphicon glyphicon-remove"></span> Hide graph</a>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
