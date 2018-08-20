@@ -23,7 +23,7 @@
     </style>
 {% endblock %}
 
-{% block title %}KAMIStudio{% endblock %}
+{% block title %} KAMIStudio {% endblock %}
 
 {% block navbar %}
 <nav class="navbar navbar-default navbar-static-top">
@@ -35,7 +35,7 @@
           <span class="icon-bar"></span>
         </button>    
       </div>
-      <a class="navbar-brand" href="/home">KAMIStudio v0.1</a>
+      <a class="navbar-brand" href="/home"><div class="title-block"><img src="{{url_for('static', filename='img/logo.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio v0.1</div></a>
     </div>
 </nav>
 {% endblock %}
