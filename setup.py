@@ -19,7 +19,7 @@ setup(name='KAMIStudio',
           'kamistudio': [
               'templates/*', 'static/*',
               'static/bootstrap/*', 'static/css/*',
-              'static/js/*', 'uploads/*'],
+              'static/js/*', 'uploads/*', 'static/img/*'],
           'kamistudio.action_graph': ['templates/*', 'static/*'],
           'kamistudio.home': ['templates/*', 'static/*'],
           'kamistudio.model': ['templates/*', 'static/*'],

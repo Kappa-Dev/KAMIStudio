@@ -2,12 +2,13 @@
 import os
 
 from flask import Flask, url_for
+from flask.ext.session import Session
 from flask_bootstrap import Bootstrap
 
 from kamistudio.home.views import home_blueprint
 from kamistudio.model.views import model_blueprint
 # from kamistudio.action_graph.views import action_graph_blueprint
-# from kamistudio.nuggets.views import nuggets_blueprint
+from kamistudio.nuggets.views import nuggets_blueprint
 
 from kami import KamiHierarchy
 
@@ -20,21 +21,29 @@ class KAMIStudio(Flask):
         super().__init__(name)
 
 
+# App initialization
 app = KAMIStudio(__name__,
                  template_folder="./kamistudio/templates")
 Bootstrap(app)
+
+# Session config
+app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 # Configure the KAMIStudio server
 app.config.from_pyfile('instance/configs.py')
 app.hierarchies = {
     "test_hierarchy": KamiHierarchy()
 }
+app.new_nugget = None
+app.new_nugget_type = None
 
 # register the blueprints
 app.register_blueprint(home_blueprint)
 app.register_blueprint(model_blueprint)
 # app.register_blueprint(action_graph_blueprint)
-# app.register_blueprint(nuggets_blueprint)
+app.register_blueprint(nuggets_blueprint)
 
 
 @app.context_processor
