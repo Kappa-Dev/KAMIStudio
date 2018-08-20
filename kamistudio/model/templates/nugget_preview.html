@@ -38,17 +38,17 @@
 {% block interaction_form %}
 
 <div class="col-md-12 order-md-1">
-  <h2 class="mb-6">Nugget editing</h2>
+  <h2 class="mb-6">Nugget preview</h2>
   <div class="row">
     <div class="col-md-12">
       <hr class="mb-4">
     </div>
   </div>
 
-  <svg width="960" height="600"></svg>
+  <svg id="nuggetSvg" width="960" height="600"></svg>
   <!-- <div class="tooltip"></div> -->
 
-  <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-md" onclick=""><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>
+  <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-md" href="{{ url_for('model.add_nugget', hierarchy_id=hierarchy_id) }}"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>
    
 </div>
 
