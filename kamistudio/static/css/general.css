@@ -70,8 +70,13 @@ p.loading-error-message {
 	color: #c94c4c;
 }
 
-.nugget-desc {
-  color: #777;
+td.nugget-desc {
+	color: #777;
+	vertical-align: middle;
+}
+
+td.nugget-id {
+  	vertical-align: middle;
 }
 
 .nugget-nav-buttons {
@@ -89,6 +94,17 @@ p.loading-error-message {
 .nugget-list-view {
 	margin-left: 0px;
 }
+
+.nugget-record.nugget-id {
+    vertical-align: middle;
+}
+.nugget-record.nugget-desc {
+    vertical-align: middle;
+}
+.nugget-record.nugget-nav-buttons {
+    vertical-align: middle;
+}
+
 
 .dot {
     height: 15px;
@@ -125,4 +141,8 @@ p.loading-error-message {
 
 .dot-bnd {
 	background-color: #9EFFC5;
+}
+
+#addNuggetToTheModel {
+	float: right;
 }

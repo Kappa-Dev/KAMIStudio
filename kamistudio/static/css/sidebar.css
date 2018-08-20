@@ -89,6 +89,8 @@ ul.info-list {
   margin-left: 15px;
   margin-bottom: 0px;
   width: 100%;
+  table-layout: fixed;
+  word-wrap: break-word;
 }
 
 .edit-data-button {
