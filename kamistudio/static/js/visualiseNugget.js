@@ -1,9 +1,9 @@
 /**
- * Untils for nugget visualisation
+ * Utils for nugget visualisation
  * 
  */
 
-// global vars defining visualisation configs for different types of nodes
+// global vars defining default visualisation configs for different types of nodes
 var META_SIZES = {
   "gene":40,
   "region":30,
@@ -87,9 +87,15 @@ function initializePositions(width, height, nodes, nuggetType, templateRelation)
   return fixedPositions;
 }
 
-function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateRelation) {
+function visualiseNugget(nuggetJson, nuggetType, metaTyping,
+                         agTyping, templateRelation, configs=null,
+                         detailsOnClicks=true, svgId=null) {
   // get svg canvas
-  var svg = d3.select("svg"),
+  if (svgId == null) {
+    svgId = "nuggetSvg";
+  }
+
+  var svg = d3.select("#" + svgId),
       width = +svg.attr("width"),
       height = +svg.attr("height");
 
@@ -140,8 +146,11 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
     .data(graph.links)
     .enter().append("line")
       .attr("stroke-width", 4).attr("stroke", d3.rgb("#B8B8B8"))
-      .attr("marker-end", "url(#arrow)")
-    .on("click", handleEdgeClick);
+      .attr("marker-end", "url(#arrow)");
+
+  if (detailsOnClicks == true) {
+    link.on("click", handleEdgeClick);
+  }
 
   // define nodes of the graph
   var node = svg.selectAll(".node")
@@ -166,8 +175,11 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
       .attr("class", "node")
       .attr("r", function(d) { return META_SIZES[metaTyping[d.id]]; })
       .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
-      .attr("stroke-width", 0).attr("stroke", d3.rgb("#B8B8B8"))
-      .on("click", handleNodeClick);
+      .attr("stroke-width", 0).attr("stroke", d3.rgb("#B8B8B8"));
+
+  if (detailsOnClicks == true) {
+    node.select("circle").on("click", handleNodeClick);
+  }
 
   node.append("title")
       .text(function(d) { return d.id; });
@@ -213,8 +225,15 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping, agTyping, templateR
             offsetY = (diffY * radius) / pathLength;
             return (d.target.y - offsetY - offsetY * 0.05);
           });
-    node.attr(
-      "transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+    node.attr("cx", function(d) {
+          var r  = META_SIZES[metaTyping[d.id]];
+          return d.x = Math.max(r, Math.min(width - r, d.x)); })
+        .attr("cy", function(d) { 
+          var r  = META_SIZES[metaTyping[d.id]];
+          return d.y = Math.max(r, Math.min(height - r, d.y)); })
+        .attr(
+          "transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   }
 
   function dragstarted(d) {
@@ -580,3 +599,34 @@ function addNodeTypeTr(nodeType) {
 //         .attr("marker-end", "url(#arrow)");
 //       }
 // });
+
+
+function addSvgAndVisualizeNugget(element, hierarchy_id, nugget_id) {
+  svgElement = htmlToElement('<tr><td colspan="3"><svg id="nuggetSvg' + nugget_id + '" width="600" height="200"></svg></td></tr>');
+  
+  var immediateParent = element.parentNode;
+  var previousSibling = immediateParent.previousElementSibling.appendChild(svgElement);
+
+  // use AJAX to send request for retrieving the nugget data
+  $.get(hierarchy_id + "/raw-nugget/" + nugget_id, function(data, status) {
+    var svgId = "nuggetSvg" + nugget_id;
+    visualiseNugget(JSON.stringify(data["nuggetJson"]),
+                    JSON.stringify(data["nuggetType"]),
+                    JSON.stringify(data["metaTyping"]),
+                    JSON.stringify(data["agTyping"]),
+                    JSON.stringify(data["templateRelation"]),
+                    null,
+                    detailsOnClicks=false,
+                    svgId=svgId);
+  })
+  // Remove 'Show graph' button 
+  element.style.display = 'none';
+  document.getElementById("hideNuggetButton" + nugget_id).style.display = "inline-block";
+}
+
+function removeNuggetSvg(element, nugget_id) {
+  var svg = document.getElementById("nuggetSvg" + nugget_id);
+  svg.parentNode.removeChild(svg);
+  element.style.display = "none";
+  document.getElementById("showNuggetButton" + nugget_id).style.display = "inline-block";
+}
