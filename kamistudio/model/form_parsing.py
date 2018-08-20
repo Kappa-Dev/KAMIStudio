@@ -424,6 +424,10 @@ def _process_target_carriers(target_data):
 
 def parse_interaction(form):
     """Parse interaction from the form."""
+    desc = None
+    if form["interactionDesc"] != "":
+        desc = form["interactionDesc"]
+
     if form['modorbnd'] == 'mod':
 
         if form['modType'] == "Modification":
@@ -463,6 +467,9 @@ def parse_interaction(form):
             mod_json["target"] = target
             mod_json["value"] = value
 
+            if desc is not None:
+                mod_json["desc"] = desc
+
             mod = Modification.from_json(mod_json)
             return mod
         elif form['modType'] == "AnonymousModification":
@@ -484,6 +491,9 @@ def parse_interaction(form):
 
             mod_json["target"] = target
             mod_json["value"] = value
+
+            if desc is not None:
+                mod_json["desc"] = desc
 
             mod = AnonymousModification.from_json(mod_json)
             return mod
@@ -527,6 +537,10 @@ def parse_interaction(form):
 
             mod_json["target"] = target
             mod_json["value"] = value
+
+            if desc is not None:
+                mod_json["desc"] = desc
+
             mod = SelfModification.from_json(mod_json)
             return mod
         elif form['modType'] == "LigandModification":
@@ -686,6 +700,10 @@ def parse_interaction(form):
                     else:
                         mod_json["substrate_bnd_site"] =\
                             bnd_subactor_data[1]
+
+            if desc is not None:
+                mod_json["desc"] = desc
+
             mod = LigandModification.from_json(mod_json)
             return mod
     else:
@@ -724,6 +742,9 @@ def parse_interaction(form):
         else:
             bnd_json["right"] = _process_actor(
                 right_gene, {})
+
+        if desc is not None:
+            mod_json["desc"] = desc
 
         bnd = Binding.from_json(bnd_json)
         return bnd
