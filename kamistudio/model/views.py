@@ -55,10 +55,11 @@ def model_view(hierarchy_id):
                            nugget_desc=nugget_desc)
 
 
-@model_blueprint.route("/model/<hierarchy_id>/add_interaction",
+@model_blueprint.route("/model/<hierarchy_id>/add-interaction",
                        methods=["GET", "POST"])
-def add_interaction(hierarchy_id):
-    """Add interaction to the hierarchy."""
+def add_interaction(hierarchy_id, add_agents=True,
+                    anatomize=True, apply_semantics=True):
+    """Handle interaction addition."""
     if request.method == 'GET':
         return render_template(
             "add_interaction.html",
@@ -67,37 +68,57 @@ def add_interaction(hierarchy_id):
         interaction = parse_interaction(request.form)
         nugget, nugget_type = generate_from_interaction(
             app.hierarchies[hierarchy_id], interaction)
-
-        session["nugget"] = nugget
-        session["nugget_type"] = nugget_type
-        session.modified = True
-
-        template_relation = {}
-        for k, v in nugget.template_rel.items():
-            for vv in v:
-                template_relation[vv] = k
-
-        return render_template(
-            "nugget_preview.html",
-            new_nugget=True,
-            hierarchy_id=hierarchy_id,
-            hierarchies=app.hierarchies,
-            nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
-            nugget_type=nugget_type,
-            nugget_meta_typing=json.dumps(nugget.meta_typing),
-            nugget_ag_typing=json.dumps(nugget.ag_typing),
-            nugget_template_rel=json.dumps(template_relation))
+        app.hierarchies[hierarchy_id].add_nugget(
+            nugget, nugget_type,
+            add_agents=add_agents,
+            anatomize=anatomize,
+            apply_semantics=apply_semantics)
+        return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
 
 
-@model_blueprint.route("/model/<hierarchy_id>/add_nugget",
+@model_blueprint.route("/model/<hierarchy_id>/nugget-preview",
+                       methods=["POST"])
+def preview_nugget(hierarchy_id):
+    """Generate nugget, store in the session and redirect to nugget preview."""
+    interaction = parse_interaction(request.form)
+    nugget, nugget_type = generate_from_interaction(
+        app.hierarchies[hierarchy_id], interaction)
+
+    session["nugget"] = nugget
+    session["nugget_type"] = nugget_type
+    session.modified = True
+
+    template_relation = {}
+    for k, v in nugget.template_rel.items():
+        for vv in v:
+            template_relation[vv] = k
+
+    return render_template(
+        "nugget_preview.html",
+        new_nugget=True,
+        hierarchy_id=hierarchy_id,
+        hierarchies=app.hierarchies,
+        nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
+        nugget_type=nugget_type,
+        nugget_meta_typing=json.dumps(nugget.meta_typing),
+        nugget_ag_typing=json.dumps(nugget.ag_typing),
+        nugget_template_rel=json.dumps(template_relation))
+
+
+@model_blueprint.route("/model/<hierarchy_id>/add-generated-nugget",
                        methods=["GET"])
-def add_nugget(hierarchy_id, add_agents=True,
-               anatomize=True, apply_semantics=True):
-    nugget_id = app.hierarchies[hierarchy_id].add_nugget(
+def add_nugget_from_session(hierarchy_id, add_agents=True,
+                            anatomize=True, apply_semantics=True):
+    """Add nugget stored in session to the model."""
+    app.hierarchies[hierarchy_id].add_nugget(
         session["nugget"], session["nugget_type"],
         add_agents=add_agents,
         anatomize=anatomize,
         apply_semantics=apply_semantics)
-    session.pop('nugget', None)
-    session.pop('nugget_type', None)
+
+    if "nugget" in session.keys():
+        session.pop("nugget", None)
+    if "nugget_type" in session.keys():
+        session.pop("nugget_type", None)
+
     return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))

@@ -6,7 +6,13 @@
   </a>
 {% endblock %}
 {% block panel_buttons %}
-<a href="{{ hierarchy_id }}"><h1 id="hierarchy_name">{{ hierarchy_id }}</h1></a><a href="/model/{{ hierarchy_id }}/add_interaction" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+
+<div class="model-brand">
+  <a href="{{ hierarchy_id }}">
+    <h1 id="hierarchy_name">{{ hierarchy_id }}</h1>
+  </a>
+  <a href="{{ url_for('model.add_interaction', hierarchy_id=hierarchy_id) }}" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+</div>
 {% endblock %}
 
 {% block sidebar_items %}
@@ -30,7 +36,7 @@
 
     <!-- Nav tabs -->
     <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
+      <li class="nav-item active">
         <a class="nav-link active" data-toggle="tab" href="#action_graph" role="tab">Action graph ({% if hierarchies[hierarchy_id].empty() %}empty{% else %}{{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes {% endif %})</a>
       </li>
       <li class="nav-item">

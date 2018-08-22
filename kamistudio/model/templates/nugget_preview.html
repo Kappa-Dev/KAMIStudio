@@ -45,11 +45,41 @@
     </div>
   </div>
 
-  <svg id="nuggetSvg" width="960" height="600"></svg>
-  <!-- <div class="tooltip"></div> -->
+  <div class="row">
+    <div class="col-md-12">
+      <h4 class="mb-3">{{ nugget_type }} interaction</h4>
+    </div>
+  </div>
 
-  <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-md" href="{{ url_for('model.add_nugget', hierarchy_id=hierarchy_id) }}"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>
-   
+  <div class="row">
+    <div class="col-md-12">
+      <b>Description:</b> 
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <b>Rate:</b>
+    </div> 
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <h4 class="mb-3">Graph preview</h4>
+      <svg id="nuggetSvg" width="960" height="400"></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    </div>
+      <b>Entities identification:</b> 
+    </div>
+  </div>
+  
+  <div class="row">
+    <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-lg" href="{{ url_for('model.add_nugget_from_session', hierarchy_id=hierarchy_id) }}"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>    
+  </div>
+
 </div>
 
 {% endblock %}
