@@ -425,8 +425,11 @@ def _process_target_carriers(target_data):
 def parse_interaction(form):
     """Parse interaction from the form."""
     desc = None
+    rate = None
     if form["interactionDesc"] != "":
         desc = form["interactionDesc"]
+    if form["biRate"] != "":
+        rate = form["biRate"]
 
     if form['modorbnd'] == 'mod':
 
@@ -469,6 +472,8 @@ def parse_interaction(form):
 
             if desc is not None:
                 mod_json["desc"] = desc
+            if rate is not None:
+                mod_json["rate"] = rate
 
             mod = Modification.from_json(mod_json)
             return mod
@@ -494,6 +499,8 @@ def parse_interaction(form):
 
             if desc is not None:
                 mod_json["desc"] = desc
+            if rate is not None:
+                mod_json["rate"] = rate
 
             mod = AnonymousModification.from_json(mod_json)
             return mod
@@ -540,6 +547,8 @@ def parse_interaction(form):
 
             if desc is not None:
                 mod_json["desc"] = desc
+            if rate is not None:
+                mod_json["rate"] = rate
 
             mod = SelfModification.from_json(mod_json)
             return mod
@@ -703,6 +712,8 @@ def parse_interaction(form):
 
             if desc is not None:
                 mod_json["desc"] = desc
+            if rate is not None:
+                mod_json["rate"] = rate
 
             mod = LigandModification.from_json(mod_json)
             return mod
@@ -744,7 +755,9 @@ def parse_interaction(form):
                 right_gene, {})
 
         if desc is not None:
-            mod_json["desc"] = desc
+            bnd_json["desc"] = desc
+        if rate is not None:
+            bnd_json["rate"] = rate
 
         bnd = Binding.from_json(bnd_json)
         return bnd
