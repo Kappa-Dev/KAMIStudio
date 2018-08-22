@@ -28,13 +28,6 @@
 {% block navbar %}
 <nav class="navbar navbar-default navbar-static-top">
     <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>    
-      </div>
       <a class="navbar-brand" href="/home"><div class="title-block"><img src="{{url_for('static', filename='img/logo.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio v0.1</div></a>
     </div>
 </nav>
@@ -58,15 +51,6 @@
           <div class="col-sm-2" id="sidebar-wrapper">
             <ul class="sidebar-nav">
               {% block sidebar_items %}
-<!--                 <li>
-                    <a href="#">Dashboard</a>
-                </li>
-                <li>
-                    <a href="#">Shortcuts</a>
-                </li>
-                <li>
-                    <a href="#">Overview</a>
-                </li> -->
               {% endblock %}
             </ul>
           </div>
