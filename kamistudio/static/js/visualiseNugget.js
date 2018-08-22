@@ -5,7 +5,7 @@
 
 // global vars defining default visualisation configs for different types of nodes
 var META_SIZES = {
-  "gene":40,
+  "gene":35,
   "region":30,
   "site":15,
   "residue":10,
@@ -124,10 +124,14 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
     .attr("d", "M0,-5L10, 0L0, 5")
     .attr('fill', '#337ab7');
 
+  //add encompassing group for the zoom 
+  var g = svg.append("g")
+      .attr("class", "everything");
+
   // define simulation
   var simulation = d3.forceSimulation()
       .force("link", d3.forceLink().id(function(d) { return d.id; }))
-      .force("charge", d3.forceManyBody().strength(-100))
+      .force("charge", d3.forceManyBody().strength(-50))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
   // readout nugget graph
@@ -142,7 +146,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
     nuggetType, templateRelation);
 
   // define edges of the graph
-  var link = svg.selectAll(".link")
+  var link = g.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
       .attr("stroke-width", 4).attr("stroke", d3.rgb("#B8B8B8"))
@@ -153,7 +157,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
   }
 
   // define nodes of the graph
-  var node = svg.selectAll(".node")
+  var node = g.selectAll(".node")
       .data(graph.nodes)
       .enter().append("g")
       .attr("class", "node")
@@ -201,7 +205,13 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
       .on("tick", ticked);
 
   simulation.force("link")
-      .links(graph.links).strength(0.1);
+      .links(graph.links).strength(0.05);
+
+  //add zoom capabilities 
+  // var zoom_handler = d3.zoom()
+  //   .on("zoom", zoom_actions);
+
+  // zoom_handler(svg); 
 
   function ticked() {
 
@@ -258,6 +268,13 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
     d.fx = null;
     d.fy = null;
   }
+
+
+  //Zoom functions 
+  function zoom_actions(){
+      g.attr("transform", d3.event.transform)
+  }
+
 
   function handleNodeClick(d) {
 
@@ -398,12 +415,12 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
     }
 
     // deselect all the selected elements
-    svg.selectAll("line")
+    g.selectAll("line")
       .attr("stroke-width", 4)
       .attr("stroke", d3.rgb("#B8B8B8"))
       .attr("marker-end", "url(#arrow)");
 
-    svg.selectAll("circle")
+    g.selectAll("circle")
       .attr("stroke-width", 0);
 
     d3.select(this)
@@ -523,12 +540,13 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
             '</div>\n';
         }
     }
-    svg.selectAll("circle")
+    g.selectAll("circle")
       .attr("stroke-width", 0);
-    svg.selectAll("line")
+    g.selectAll("line")
       .attr("stroke-width", 4)
       .attr("stroke", d3.rgb("#B8B8B8"))
       .attr("marker-end", "url(#arrow)");
+
     d3.select(this)
     .attr("stroke-width", 4)
     .attr("stroke", d3.rgb("#337ab7"))

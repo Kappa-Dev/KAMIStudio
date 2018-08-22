@@ -13,7 +13,7 @@
 }
 
 .tabs {
-	margin: 0px;
+	margin: 20px;
 	padding-left: 0px;
 	padding-top: 10px;
 }
@@ -73,14 +73,22 @@ p.loading-error-message {
 td.nugget-desc {
 	color: #777;
 	vertical-align: middle;
+	border-bottom: 1px solid #ddd;
 }
 
 td.nugget-id {
   	vertical-align: middle;
+	border-bottom: 1px solid #ddd;
+	width: 20%;
+}
+
+td.data {
+	border-top: 1px solid #eee;
 }
 
 .nugget-nav-buttons {
 	text-align: right;
+	border-bottom: 1px solid #ddd;
 }
 
 .show-nugget-button {
@@ -88,7 +96,7 @@ td.nugget-id {
 }
 
 #nuggets {
-	margin-top: 0px
+	margin-top: 20px
 }
 
 .nugget-list-view {
@@ -96,13 +104,13 @@ td.nugget-id {
 }
 
 .nugget-record.nugget-id {
-    vertical-align: middle;
+    vertical-align: top;
 }
 .nugget-record.nugget-desc {
-    vertical-align: middle;
+    vertical-align: top;
 }
 .nugget-record.nugget-nav-buttons {
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 
@@ -145,4 +153,8 @@ td.nugget-id {
 
 #addNuggetToTheModel {
 	float: right;
+}
+
+.model-brand {
+	margin-left: 30px;
 }

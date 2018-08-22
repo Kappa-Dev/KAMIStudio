@@ -574,6 +574,49 @@ function addNewStateForm(x, actorName, addTargetCheckBox=false) {
 }
 
 
+function checkAndSubmitForNuggetGeneration(x, previewUrl) {
+
+  var form = document.getElementById('interactionForm');
+  var success = true;
+  
+  for(var i=0; i < form.elements.length; i++){
+    if(form.elements[i].hasAttribute('required') && form.elements[i].required == true) {
+
+    	var parent = form.elements[i].parentElement;
+
+    	console.log(form.elements[i].id);
+
+    	if (form.elements[i].value === '') {
+		    
+		    for (var j = 0; j < parent.childNodes.length; j++) {
+			    if (parent.childNodes[j].className == "invalid-feedback") {
+			      	parent.childNodes[j].style.display = "initial";
+			      	if (success == true) {
+						success = false;
+						parent.scrollIntoView(true);
+					}
+			    }        
+			}
+		} else {
+			for (var j = 0; j < parent.childNodes.length; j++) {
+			    if (parent.childNodes[j].className == "invalid-feedback") {
+			      	parent.childNodes[j].style.display = "none";
+			    }        
+			}
+		}
+	}
+  }
+  if (success == true) {
+  	console.log("Here");
+  	$('#interactionForm').attr('action', previewUrl);
+  	$('#interactionForm').submit();
+  } else {
+  	document.getElementById("invalidFeedbackGlobal").style.display = "initial";
+  }
+
+}; 
+
+
 function checkAndSubmit(x) {
 
   var form = document.getElementById('interactionForm');
@@ -610,7 +653,6 @@ function checkAndSubmit(x) {
 	 form.submit();
   } else {
   	document.getElementById("invalidFeedbackGlobal").style.display = "initial";
-  	// document.getElementById("invalidFeedbackGlobal").scrollIntoView(true);
   }
 
 }; 
