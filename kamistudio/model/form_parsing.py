@@ -378,7 +378,7 @@ def _process_actor(gene_data, actor_data):
             "type": "SiteActor",
             "data": {
                 "gene": gene_data,
-                "site": actor_data["in_sites"]["site"][1]
+                "site": actor_data["in_sites"][1]
             }
         }
     else:

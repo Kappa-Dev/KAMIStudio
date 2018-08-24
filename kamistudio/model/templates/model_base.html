@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+
+{% block model_navigation %}
+<div class="model-brand">
+  <a href="{{ url_for('model.model_view', hierarchy_id=hierarchy_id) }}"><h1 id="hierarchy_name">{{ hierarchy_id }}</h1></a>
+</div>
+{% endblock %}

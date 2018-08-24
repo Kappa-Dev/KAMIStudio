@@ -1,13 +1,18 @@
 .navbar-brand
 {
-    position: absolute;
+    /*position: absolute;
     width: 100%;
     left: 0;
-    text-align: center;
-    margin: 0 auto;
+    text-align: center;*/
+    /*margin: 0 auto;*/
+    font-size: 20pt;
 }
 
 .navbar {
 	margin-bottom: 5px;
 	min-height: 70px;
+}
+
+.container {
+	width: 100%;
 }

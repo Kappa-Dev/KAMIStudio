@@ -93,6 +93,9 @@ def preview_nugget(hierarchy_id):
         for vv in v:
             template_relation[vv] = k
 
+    desc = interaction.desc
+    rate = interaction.rate
+
     return render_template(
         "nugget_preview.html",
         new_nugget=True,
@@ -102,7 +105,11 @@ def preview_nugget(hierarchy_id):
         nugget_type=nugget_type,
         nugget_meta_typing=json.dumps(nugget.meta_typing),
         nugget_ag_typing=json.dumps(nugget.ag_typing),
-        nugget_template_rel=json.dumps(template_relation))
+        nugget_template_rel=json.dumps(template_relation),
+        nugget_desc=desc,
+        nugget_rate=rate,
+        nugget_nodes=nugget.graph.nodes(),
+        nugget_ag_typing_dict=nugget.ag_typing)
 
 
 @model_blueprint.route("/model/<hierarchy_id>/add-generated-nugget",

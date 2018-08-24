@@ -69,26 +69,22 @@ function replaceByText(nodeId, fieldName, fieldValue, linkPrefix=null) {
 }
 
 function newEditNodeButton(nodeId, nodeType) {
-	return '<a type="button" id="editButton" class="btn btn-default btn-md center-block" onclick="editNodeMetaData(this, \'' + nodeId + '\', \'' + nodeType + '\')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a>\n';    
+	return '<a type="button" id="editButton" class="btn btn-default btn-md center-block edit-sidebar-block-button" onclick="editNodeMetaData(this, \'' + nodeId + '\', \'' + nodeType + '\')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a>\n';    
 }
 
 function generateEditNodeButton(nodeId, nodeType){
-  buttonHTML = 
-    '<div class="row edit-data-button">\n' + newEditNodeButton(nodeId, nodeType) +
-    '</div>\n';
+  buttonHTML = newEditNodeButton(nodeId, nodeType);
   return buttonHTML;
 }
 
 
 function newEditEdgeButton(sourceId, targetId, sourceType, targetType) {
-	return '<a type="button" id="editButton" class="btn btn-default btn-md center-block" onclick="editEdgeMetaData(this, \'' + sourceId + '\', \'' + targetId + '\', \'' + sourceType + '\', \'' + targetType + '\')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a>\n';
+	return '<a type="button" id="editButton" class="btn btn-default btn-md center-block edit-sidebar-block-button" onclick="editEdgeMetaData(this, \'' + sourceId + '\', \'' + targetId + '\', \'' + sourceType + '\', \'' + targetType + '\')"><span class="glyphicon glyphicon-pencil edit-sign"></span> Edit</a>\n';
     
 }
 
 function generateEditEdgeButton(sourceId, targetId, sourceType, targetType){
-  buttonHTML = 
-    '<div class="row edit-data-button">\n' + newEditEdgeButton(sourceId, targetId, sourceType, targetType) + 
-    '</div>\n';
+  buttonHTML = newEditEdgeButton(sourceId, targetId, sourceType, targetType);
   return buttonHTML;
 }
 

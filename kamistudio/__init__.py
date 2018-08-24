@@ -7,7 +7,7 @@ from flask_bootstrap import Bootstrap
 
 from kamistudio.home.views import home_blueprint
 from kamistudio.model.views import model_blueprint
-# from kamistudio.action_graph.views import action_graph_blueprint
+from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
 
 from kami import KamiHierarchy
@@ -34,7 +34,7 @@ Session(app)
 # Configure the KAMIStudio server
 app.config.from_pyfile('instance/configs.py')
 app.hierarchies = {
-    "test_hierarchy": KamiHierarchy()
+    "Test model": KamiHierarchy()
 }
 app.new_nugget = None
 app.new_nugget_type = None
@@ -42,7 +42,7 @@ app.new_nugget_type = None
 # register the blueprints
 app.register_blueprint(home_blueprint)
 app.register_blueprint(model_blueprint)
-# app.register_blueprint(action_graph_blueprint)
+app.register_blueprint(action_graph_blueprint)
 app.register_blueprint(nuggets_blueprint)
 
 

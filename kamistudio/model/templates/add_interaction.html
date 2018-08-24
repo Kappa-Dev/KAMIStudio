@@ -1,26 +1,22 @@
-{% extends "base.html" %}
+{% extends "model_base.html" %}
 
-{% block home_button %}
-  <a href="/home" type="button" class="btn btn-primary btn-md panel-button home-button">
-    <span class="glyphicon glyphicon-home"></span> Home
-  </a>
-{% endblock %}
+
 {% block panel_buttons %}
-<div class="model-brand">
-  <a href="{{ url_for('model.model_view', hierarchy_id=hierarchy_id) }}"><h1 id="hierarchy_name">{{ hierarchy_id }}</h1></a>
-</div>
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="mb-6 model-action-brand">New interaction</h1>
+    </div>
+  </div>
 {% endblock %}
 
 {% block sidebar_items %}
-<!--   <div class="side-bar-tools">
-    <h3 id="browsing">Tools</h3>
-  </div> -->
+
 {% endblock %}
 
 {% block interaction_form %}
 
 <div class="col-md-12 order-md-1">
-  <h2 class="mb-6">New interaction</h2>
+  <h2 class="mb-6">Interaction type</h2>
   <form id="interactionForm" novalidate action="{{ url_for('model.add_interaction', hierarchy_id=hierarchy_id) }}" method="post"> 
 
       <div class="mb-3">
@@ -926,11 +922,5 @@
   </form>
 </div>
 
-
-{% endblock %}
-{% block scipts %}
-  {{ super() }}
-
-  <script src="../../dist/js/bootstrap.min.js"></script>
 
 {% endblock %}
