@@ -141,7 +141,51 @@ function initializePositions(width, height, graph, nuggetType, templateRelation)
     fixedPositions[modNode] = [modX, modY];
 
   } else {
+    var leftNode = templateRelation["left_partner"];
+    var rightNode = templateRelation["right_partner"];
+    var bnd = templateRelation["bnd"];
 
+    var baseLineY = height * 0.5;
+    var leftX = width * 0.125;
+    var leftY = baseLineY;
+    var rightX = width - width * 0.125;
+    var rightY = baseLineY;
+    var bndX = width * 0.5;
+    var bndY = baseLineY;
+
+    if ("left_partner_site" in templateRelation) {
+      if ("left_partner_region" in templateRelation) {
+        fixedPositions[templateRelation["left_partner_region"]] =
+          [leftX + (bndX - leftX) * 0.33, baseLineY];
+        fixedPositions[templateRelation["left_partner_site"]] = 
+          [leftX + (bndX - leftX) * 0.66, baseLineY];
+      } else {
+        fixedPositions[templateRelation["left_partner_site"]] = 
+          [leftX + (bndX - leftX) * 0.5, baseLineY];
+      }
+    } else if ("left_partner_region" in templateRelation) {
+      fixedPositions[templateRelation["left_partner_region"]] =
+          [leftX + (bndX - leftX) * 0.5, baseLineY];
+    }
+
+    if ("right_partner_site" in templateRelation) {
+      if ("right_partner_region" in templateRelation) {
+        fixedPositions[templateRelation["right_partner_region"]] =
+          [bndX + (rightX - bndX) * 0.66, baseLineY];
+        fixedPositions[templateRelation["right_partner_site"]] = 
+          [bndX + (rightX - bndX) * 0.33, baseLineY];
+      } else {
+        fixedPositions[templateRelation["right_partner_site"]] = 
+          [bndX + (rightX - bndX) * 0.5, baseLineY];
+      }
+    } else if ("right_partner_region" in templateRelation) {
+      fixedPositions[templateRelation["right_partner_region"]] =
+          [bndX + (rightX - bndX) * 0.5, baseLineY];
+    }
+
+    fixedPositions[leftNode] = [leftX, leftY];
+    fixedPositions[rightNode] = [rightX, rightY];
+    fixedPositions[bnd] = [bndX, bndY];
   }
 
   for (var i=0; i < graph.links.length; i++) {
@@ -162,6 +206,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
   var agTyping = JSON.parse(agTyping);
   var templateRelation = JSON.parse(templateRelation);
 
+  initializeLinkStrengthDistance(graph, metaTyping);
 
   for (var i=0; i < graph.links.length; i++) {
     var d = graph.links[i];
@@ -235,9 +280,15 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
 
   // define simulation
   var simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().id(function(d) { return d.id; }))
-      .force("charge", d3.forceManyBody().strength(-60 * scale))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("link", d3.forceLink()
+                        .id(function(d) { return d.id; })
+                        .strength(function(d) {return d.strength; })
+                        .distance(function(d) {return d.distance; }))
+      .force("charge", d3.forceManyBody().strength(-200 * scale))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collide",d3.forceCollide().strength(1.8).radius(
+        function(d) {return d.radius})
+      );
 
   // get initial positions of elements according to the template relation
   fixedPositions = initializePositions(
@@ -267,10 +318,19 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
 
   // set initial positions 
   node.each(function(d) {
-    if (d.id in fixedPositions) {
-      d.x = fixedPositions[d.id][0];
-      d.y = fixedPositions[d.id][1];
-    }
+      if (d.id in fixedPositions) {
+        d.x = fixedPositions[d.id][0];
+        d.y = fixedPositions[d.id][1];
+        // if ((metaTyping[d.id] == "bnd") ||
+        //     (metaTyping[d.id] == "mod") ||
+        //     (templateRelation[d.id] == "enzyme") ||
+        //     (templateRelation[d.id] == "substrate") ||
+        //     (templateRelation[d.id] == "left_partner") ||
+        //     (templateRelation[d.id] == "right_partner")) {
+        //   d.fx = d.x;
+        //   d.fy = d.y;
+        // } 
+      }
   });
 
   // setup nodes circles
@@ -322,7 +382,11 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
             diffX = d.target.x - d.source.x;
             diffY = d.target.y - d.source.y;
             pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-            offsetX = (diffX * radius) / pathLength;
+            if (pathLength == 0) {
+              offsetX = 0;
+            } else {
+              offsetX = (diffX * radius) / pathLength;
+            }
             return (d.target.x - offsetX - offsetX * 0.05);
           })
         .attr("y2", function(d) {
@@ -331,7 +395,11 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
             diffX = d.target.x - d.source.x;
             diffY = d.target.y - d.source.y;
             pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-            offsetY = (diffY * radius) / pathLength;
+            if (pathLength == 0) {
+              offsetY = 0;
+            } else {
+              offsetY = (diffY * radius) / pathLength;
+            }
             return (d.target.y - offsetY - offsetY * 0.05);
           });
 
