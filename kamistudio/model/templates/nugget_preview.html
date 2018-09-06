@@ -50,47 +50,111 @@
           <tbody>
             <tr>
               <td class="nugget-info-table-header">Interaction type: </td>
-              <td>
+              <td style="width: 80%;">
                 {% if nugget_type == "mod" %}
-                  modification
+                  Modification
                 {% else %}
-                  binding
+                  Binding
                 {% endif %}
               </td>
             </tr>
             <tr>
               <td class="nugget-info-table-header">Description:</td>
-              <td>{{ nugget_desc }}</td>
+              <td>
+                {% if nugget_desc %}
+                  {{ nugget_desc }}
+                {% else %}
+                  <p style="margin-bottom: 0px">Not specified</p>
+                {% endif %}
+              </td>
             </tr>
             <tr>
               <td class="nugget-info-table-header">Bimolecular rate:</td>
-              <td>{{ nugget_rate }}</td>
+              <td>
+                {% if nugget_rate %}
+                  {{ nugget_rate }}
+                {% else %}
+                  <p style="margin-bottom: 0px">Not specified</p>
+                {% endif %}
+              </td>
             </tr>
             <tr>
               <td class="nugget-info-table-header no-border">Graph preview:</td>
-              <td class="nugget-info-table-huge-cell"><svg id="nuggetSvg" width="660" height="300"></svg></td>
+              <td class="nugget-info-table-huge-cell"><svg id="nuggetSvg" width="600" height="300"></svg></td>
             </tr>
             <tr>
               <td class="nugget-info-table-header no-border">
                 Entity identification:
               </td>
               <td class="nugget-info-table-huge-cell">
-                <table class="table table-hover">
+                <table class="table table-hover entity-identification-table">
                   <thead>
                     <tr>
                       <th scope="col">Node ID</th>
-                      <th scope="col">Action Graph Node ID</th>
+                      <th scope="col">Action Graph Node</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for node in nugget_nodes %}
                       <tr>
                         <td>{{ node }}</td>
-                        {% if node in nugget_ag_typing_dict.keys() %}
-                          <td>{{ nugget_ag_typing_dict[node] }}</td>
-                        {% else %}
-                          <td>NA</td>
-                        {% endif %}
+                        <td>
+                          <div class="row">
+                            {% if node in nugget_ag_typing_dict.keys() %}
+                              <div class="col-md-4">
+                                {{ nugget_ag_typing_dict[node] }} 
+                              </div>
+                              <div class="col-md-4">
+                                <a><span class="glyphicon glyphicon-search"></span> Show meta-data</a>
+                              </div>
+                            {% else %}
+                              <div class="col-md-4">
+                                NA 
+                              </div>
+                              <div class="col-md-4">
+                                <a class="disabled"><span class="glyphicon glyphicon-search"></span> Show meta-data</a>
+                              </div>
+                            {% endif %}
+
+                            <div class="col-md-4">
+
+
+                              <div class="dropdown">
+                                <button class="btn btn-default dropdown-toggle btn-block" onclick="showReferenceEntityCandidates('{{node}}', '{{nugget_meta_typing[node]}}')" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                  Change
+                                  <span class="caret"></span>
+                                </button>
+                                <div id="entityChoiceDropdown{{node}}" class="entity-choice-dropdown">
+                                  <input class="form-control"  type="text" placeholder="Search..." class="entityFilterInput" onkeyup="filterEntities()">
+                                  <div class="row dropdown-row">
+                                    <div class="col-md-4">
+                                      Lala
+                                    </div>
+                                    <div class="col-md-6">
+                                      Meta-data
+                                    </div>
+                                  </div>
+                                  <div class="row dropdown-row">
+                                    <div class="col-md-4">
+                                      Papapa
+                                    </div>
+                                    <div class="col-md-6">
+                                      Meta-data
+                                    </div>
+                                  </div>
+<!--                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                  <li><a href="#">Action</a></li>
+                                  <li><a href="#">Another action</a></li>
+                                  <li><a href="#">Something else here</a></li>
+                                  <li role="separator" class="divider"></li>
+                                  <li><a href="#">Separated link</a></li>
+                                </ul> -->
+                                </div>
+                              </div>
+
+                            </div>
+                          </div>
+                        </td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -109,7 +173,7 @@
 </div>
 
 {% endblock %}
-{% block customScripts %}
+{% block custom_scripts %}
   <script type="text/javascript">
     visualiseNugget('{{ nugget_graph | safe }}', '{{ nugget_type }}', '{{ nugget_meta_typing | safe }}', '{{ nugget_ag_typing | safe }}', '{{ nugget_template_rel | safe }}');
   </script>
