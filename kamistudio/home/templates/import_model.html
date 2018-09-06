@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block panel_buttons %}
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="mb-6 model-action-brand">Import model</h1>
+    </div>
+  </div>
+{% endblock %}
+
+{% block tabs %}
+
+<form id="modelImportForm" novalidate="{{ url_for('home.import_hierarchy') }}" method="post" enctype="multipart/form-data">
+	<div class="col-md-6">
+	    <div class="model-input-form-block">
+			<div class="row form-row">
+			      <label for="name">Name</label>
+			      <input type="text" class="form-control" name="name" id="name" placeholder="" value="">
+			</div>
+
+			 <div class="row form-row">
+			    <!-- <div class="col-md-6"> -->
+			      <label for="desc">Description</label>
+			      <input type="text" class="form-control" name="desc" id="desc" placeholder="" value="">
+			    <!-- </div> -->
+			 </div>
+
+			<div class="row form-row">
+				<!-- <div class="col-md-6"> -->
+					<label for="file">Choose a file...</label>
+					<input type="file" name="file">
+				<!-- </div> -->
+			</div>
+
+			<div class="row form-row">
+				<div class="col-md-6">
+					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
+						<p>Loading...</p>
+						<div id="loader"></div>
+					</div>
+				</div>
+				<div class="col-md-6" style="text-align: right;">
+					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoader()">Import</a> 
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+
+{% if failed %}
+<div class="loading-error-message">
+	<p class="loading-error-message">
+		Failed to load a hierarchy: uploaded json is not valid!
+	</p>
+</div>
+{% endif %}
+
+
+{% endblock %}
