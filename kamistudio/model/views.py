@@ -1,8 +1,9 @@
 """Views of home blueprint."""
+import os
 import json
 
 from flask import (render_template, Blueprint, request, session, redirect,
-                   url_for)
+                   url_for, send_from_directory, send_file)
 from flask import current_app as app
 
 from regraph import graph_to_d3_json
@@ -129,3 +130,55 @@ def add_nugget_from_session(hierarchy_id, add_agents=True,
         session.pop("nugget_type", None)
 
     return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
+
+
+@model_blueprint.route("/model/<hierarchy_id>/import-json-interactions",
+                       methods=["GET"])
+def import_json_interactions(hierarchy_id):
+    """Handle import of json interactions."""
+    pass
+
+
+@model_blueprint.route("/model/<hierarchy_id>/download", methods=["GET"])
+def download_model(hierarchy_id):
+    print(app.hierarchies[hierarchy_id].attrs.keys())
+    filename = hierarchy_id.replace(" ", "_") + ".json"
+    app.hierarchies[hierarchy_id].export(
+        os.path.join(app.root_path, "uploads/" + filename))
+    print(os.path.join(app.root_path, "uploads"))
+    return send_file(
+        os.path.join(app.root_path, "uploads/" + filename),
+        as_attachment=True,
+        mimetype='application/json',
+        attachment_filename=filename)
+
+
+@model_blueprint.route("/model/<hierarchy_id>/update-ag-node-positioning",
+                       methods=["POST"])
+def update_ag_node_positioning(hierarchy_id):
+    """Retrieve node positioning from post request."""
+    json_data = request.get_json()
+
+    if "node_positioning" in json_data.keys() and\
+       len(json_data["node_positioning"]) > 0:
+        if "node_positioning" in app.hierarchies[hierarchy_id].attrs.keys():
+            position_dict = {
+                k: (v1, v2)
+                for k, v1, v2 in app.hierarchies[hierarchy_id].attrs[
+                    "node_positioning"]
+            }
+        else:
+            position_dict = {}
+        for k, v in json_data["node_positioning"].items():
+            position_dict[k] = (v[0], v[1])
+            # if k == bastard:
+            #     print("Found bastard")
+
+        app.hierarchies[hierarchy_id].update_attrs({
+            "node_positioning":
+                set([(k, v[0], v[1])for k, v in position_dict.items()])
+        })
+
+    # bastard = "O75449_region_AAA _ATPase_IPR003593_241_383_AAA _ATPase"
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
