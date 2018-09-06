@@ -2,25 +2,14 @@
 
 {% block styles %}
   {{ super() }}
-  <link rel="stylesheet"
-        href="{{url_for('static', filename='css/navbar.css')}}">
-    <link rel="stylesheet"
-        href="{{url_for('static', filename='css/sidebar.css')}}">
-    <link rel="stylesheet"
-        href="{{url_for('static', filename='css/loader.css')}}">
-    <link rel="stylesheet"
-        href="{{url_for('static', filename='css/general.css')}}">
-    <link href="{{url_for('static', filename='css/vis-network.min.css')}}" rel="stylesheet" type="text/css" />
-    <link href="{{url_for('static', filename='css/add_interaction_form.css')}}" rel="stylesheet" type="text/css" />
-  <link href="{{url_for('static', filename='css/graph_visualisation.css')}}" rel="stylesheet" type="text/css" />
-
-    <style type="text/css">
-      #mynetwork {
-        width: 1000px;
-        height: 600px;
-        border: 1px solid lightgray;
-      }
-    </style>
+    <link href="{{url_for('static', filename='css/navbar.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/panel.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sidebar.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/loader.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/general.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/forms.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='css/progress_bars.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='css/graph_visualisation.css')}}" rel="stylesheet" type="text/css" />
 {% endblock %}
 
 {% block title %} KAMIStudio {% endblock %}
@@ -29,11 +18,15 @@
 <nav class="navbar navbar-default navbar-static-top">
   <div class="container">
     <div class="row">
-      <div class="col-sm-2"></div>
-      <div class="col-sm-2">
-        <a class="navbar-brand" href="/home"><div class="title-block"><img src="{{url_for('static', filename='img/logo.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio</div></a>
+      <div class="col-sm-2 navbar-col"></div>
+      <div class="col-sm-2 navbar-col">
+        <a class="navbar-brand" href="/home">
+          <p id="titleP">
+              <img src="{{url_for('static', filename='img/logo.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio
+          </p>
+        </a>
       </div>
-      <div class="col-sm-6">
+      <div class="col-sm-6 navbar-col">
         {% block model_navigation %}
         {% endblock %}
       </div>
@@ -81,13 +74,14 @@
 {% block scripts %}
   {{ super() }}
   <script src="https://d3js.org/d3.v4.min.js"></script>
-  <script src="{{ url_for('static', filename='js/importButton.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/modelSelectors.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/loaders.js') }}"></script>
   <script src="{{ url_for('static', filename='js/addInteraction.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/visualiseNugget.js') }}" type="text/javascript"></script>
-  <script src="{{ url_for('static', filename='js/visualiseAG.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/visualiseActionGraph.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/editNugget.js') }}" type="text/javascript"></script>
-  {% block customScripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/entityReferenceFinder.js') }}" type="text/javascript"></script>
+
+  {% block custom_scripts %}{% endblock %}
 
 {% endblock %}
 
