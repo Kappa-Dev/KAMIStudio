@@ -4,6 +4,7 @@ import json
 
 from flask import render_template, Blueprint, redirect, url_for, request
 from flask import current_app as app
+
 from werkzeug.utils import secure_filename
 
 from kami.hierarchy import KamiHierarchy
@@ -30,31 +31,37 @@ def _generate_unique_hie_id(name):
         return new_name
 
 
-@home_blueprint.route("/new_hierarchy", methods=["GET"])
+@home_blueprint.route("/new-model", methods=["GET"])
 def new_hierarchy():
     """New hierarchy handler."""
-    return render_template("new_hierarchy.html")
+    return render_template("new_model.html")
 
 
-@home_blueprint.route("/new_hierarchy", methods=["POST"])
+@home_blueprint.route("/new-model", methods=["POST"])
 def create_new_hierarchy():
     hierarchy = KamiHierarchy()
-    if request.form["hierarchy_name"]:
-        hierarchy.add_attrs({"name": request.form["hierarchy_name"]})
-    hierarchy_id = _generate_unique_hie_id(request.form["hierarchy_name"])
+    if request.form["name"]:
+        hierarchy.add_attrs({"name": request.form["name"]})
+    if request.form["desc"]:
+        hierarchy.add_attrs({"desc": request.form["desc"]})
+    hierarchy_id = _generate_unique_hie_id(request.form["name"])
     app.hierarchies[hierarchy_id] = hierarchy
     return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
 
 
-@home_blueprint.route("/import_hierarchy", methods=['GET', 'POST'])
+@home_blueprint.route("/import-model", methods=['GET', 'POST'])
 def import_hierarchy():
     """Handler of hierarchy import."""
-    if request.method == 'GET':
+    if request.method == "GET":
         failed = request.args.get('failed')
-        return render_template('import_hierarchy.html', failed=failed)
-    elif request.method == 'POST':
+        return render_template('import_model.html', failed=failed)
+    else:
         # check if the post request has the file part
-        h_name = request.form['hierarchy_name']
+        name = request.form['name']
+        desc = None
+        if request.form['desc'] != "":
+            desc = request.form['desc']
+
         if 'file' not in request.files:
             raise ValueError('No file part')
             return redirect(request.url)
@@ -67,24 +74,10 @@ def import_hierarchy():
         if file:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return imported_hierarchy(filename, h_name)
+            return imported_hierarchy(filename, name, desc)
 
 
-def imported_hierarchy(filename, name):
-    """Internal handler of already imported hierarchy."""
-    # try:
-    new_hierarchy = KamiHierarchy.load(
-        os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    # except Exception as e:
-        # print(e)
-        # return redirect(
-            # url_for('home.import_hierarchy', failed=True))
-    hierarchy_id = _generate_unique_hie_id(name)
-    app.hierarchies[hierarchy_id] = new_hierarchy
-    return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
-
-
-@home_blueprint.route("/delete_hierarchies", methods=['GET', 'POST'])
+@home_blueprint.route("/delete-models", methods=['GET', 'POST'])
 def delete_hierarchies():
     if request.method == "GET":
         return("Are you sure?")
@@ -94,3 +87,14 @@ def delete_hierarchies():
             if h in app.hierarchies.keys():
                 del app.hierarchies[h]
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+
+def imported_hierarchy(filename, name, desc=None):
+    """Internal handler of already imported hierarchy."""
+    new_hierarchy = KamiHierarchy.load(
+        os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    if desc is not None:
+        new_hierarchy.attrs["desc"] = desc
+    hierarchy_id = _generate_unique_hie_id(name)
+    app.hierarchies[hierarchy_id] = new_hierarchy
+    return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
