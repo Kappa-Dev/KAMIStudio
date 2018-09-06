@@ -10,11 +10,13 @@
 function singleValueToString(obj, attr_name) {
 	// convert value of an attribute to innerText/innerHtml
 	var value = "";
-	if (attr_name in obj.attrs) {
+
+	if ((obj.attrs) && (attr_name in obj.attrs)) {
 		value = obj.attrs[attr_name].data[0];
 	} else {
 		value = '<p class="faded">not specified</p>';
 	}
+
 	return value;
 }
 
