@@ -40,3 +40,13 @@
 .invalid-feedback {
 	color: #c9302c;
 }
+
+.model-input-form-block {
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    padding: 30px;
+    width: 100%;
+    height: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

@@ -6,6 +6,11 @@
     text-align: center;*/
     /*margin: 0 auto;*/
     font-size: 20pt;
+    height: 100%;
+}
+
+.navabar-col {
+	height: 70px;
 }
 
 .navbar {
@@ -15,4 +20,8 @@
 
 .container {
 	width: 100%;
+}
+
+#titleP {
+	margin: 0 0 0px;
 }

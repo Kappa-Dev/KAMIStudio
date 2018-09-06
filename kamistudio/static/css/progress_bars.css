@@ -1,0 +1,22 @@
+#progressBlock {
+    width: 100%;
+    padding-top: 100px;
+}
+
+#progressBarBlock {
+    width: 70%;
+    margin: 0 auto;
+}
+
+#progressBar {
+    width: 1%;
+    margin: 0 auto;
+    height: 20px;
+    background-color: #337ab7;;
+}
+
+#progressBarMessage {
+	margin: 0 auto;
+	text-align: center;
+	padding-bottom: 10px;
+}

@@ -1,15 +1,11 @@
-/*!
- * Start Bootstrap - Simple Sidebar (https://startbootstrap.com/template-overviews/simple-sidebar)
- * Copyright 2013-2017 Start Bootstrap
- * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-simple-sidebar/blob/master/LICENSE)
- */
-.panel {
-  margin-bottom: 15px;
-  margin-top: 20px;
+
+p {
+	text-decoration: none;
+  	color: #999999;
 }
 
-.panel-button {
-	margin: 10px;
+body {
+	overflow-x: hidden;
 }
 
 .tabs {
@@ -22,26 +18,7 @@
     margin-left: 30px;
 }
 
-
-#hierarchy_name {
-	/*margin-top: 0px;*/
-
-}
-
-p {
-	text-decoration: none;
-  	color: #999999;
-}
-
-body {
-	overflow-x: hidden;
-}
-
 .tab-pane {
-	margin: 20px;
-}
-
-#mynetwork{
 	margin: 20px;
 }
 
@@ -53,11 +30,6 @@ body {
 .all-models-checkbox {
 	float: right;
 	margin-right: 22px;
-}
-
-.panel-button-right {
-	float: right;
-	margin-right: 20px;
 }
 
 p.hidden {
@@ -110,7 +82,6 @@ td.data {
 .nugget-record.nugget-nav-buttons {
     vertical-align: top;
 }
-
 
 .dot {
     height: 15px;
@@ -165,6 +136,10 @@ table.nugget-info-table > tbody > tr > td {
 	border-top: 0px;
 }
 
+.nugget-info-table {
+	table-layout: fixed;
+}
+
 .nugget-info-table-header {
 	float: right;
 	border-right: 1px solid #ddd;
@@ -176,4 +151,54 @@ table.nugget-info-table > tbody > tr > td {
 
 .nugget-info-table-huge-cell {
 	border-left: 1px solid #ddd;
+}
+
+.entity-identification-table {
+	margin-left: 0px;
+	table-layout: initial;
+}
+
+
+.action-graph-view {
+	float: right;
+}
+
+.nuggets-view {
+	float: right;
+}
+
+
+.model-action-buttons {
+	float: right;
+	margin-right: 20px;
+}
+
+a.disabled {
+  /* Make the disabled links grayish*/
+  color: gray;
+  /* And disable the pointer events */
+  pointer-events: none;
+}
+
+
+/*.entityFilterInput:before {
+  position: absolute;
+  content:"\e003";
+  font-family:"Glyphicons Halflings";
+}*/
+
+
+.entity-choice-dropdown {
+    display: none;
+    position: absolute;
+    background-color: #f6f6f6;
+    min-width: 230px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+}
+
+.dropdown-row {
+	margin-left: 5px;
+	margin-right: 5px;
 }
