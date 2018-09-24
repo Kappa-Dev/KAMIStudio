@@ -105,6 +105,7 @@ def preview_nugget(hierarchy_id):
         nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
         nugget_type=nugget_type,
         nugget_meta_typing=json.dumps(nugget.meta_typing),
+        nugget_meta_typing_json=nugget.meta_typing,
         nugget_ag_typing=json.dumps(nugget.ag_typing),
         nugget_template_rel=json.dumps(template_relation),
         nugget_desc=desc,

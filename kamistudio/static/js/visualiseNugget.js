@@ -457,103 +457,18 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
         '<div>\n' + 
         ' <table class="table table-hover info-table">\n' +
         '  <tbody>\n';
-    if (metaTyping[d.id] == "gene") {
-      metaDataHTML +=
-        '    <tr>\n' +
-        '      <td><b>UniProt AC:</b></td>\n' +
-        '      <td id="uniprotidTD"><a href="https://www.uniprot.org/uniprot/' + singleValueToString(d, "uniprotid") +
-        '">' + singleValueToString(d, "uniprotid") + '</a></td>\n' +
-        '    </tr>\n' +
-        '    <tr>\n' +
-        '      <td><b>HGNC Symbol:</b></td>\n' +
-        '      <td id="hgncSymbolTD">' + singleValueToString(d, "hgnc_symbol") + '</td>\n' +
-        '    </tr>\n' +
-        '    <tr>\n' +
-        '      <td><b>Synonyms: </b></td>\n' +
-        '      <td id="synonymsTD">' + singleValueToString(d, "synonyms") + '</td>\n' +
-        '    </tr>\n' +
-        ' </tbody>\n' +
-        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
-        '</div>\n';
-    } else if (metaTyping[d.id] == "region" || metaTyping[d.id] == "site") {
-        metaDataHTML += 
-          '    <tr>\n' +
-          '      <td><b>Name:</b></td>\n' +
-          '      <td id="nameTD">' + singleValueToString(d, "name") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>InterPro ID:</b></td>\n';
-
-        var interProValue = singleValueToString(d, "interproid");
-        if (interProValue[0] != "I") {
-          metaDataHTML += '<td id="interproIdTD">' + interProValue + '</td>\n';
-        } else {
-          metaDataHTML +=
-            '<td id="interproIdTD"><a href="http://www.ebi.ac.uk/interpro/entry/' + singleValueToString(d, "interproid") + '">' + singleValueToString(d, "interproid") + '</a></td>\n';
-        }
-        
-        metaDataHTML +=
-          '    </tr>\n' +
-          ' </tbody>\n' +
-          '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) + 
-          '</div>\n';
-    } else if (metaTyping[d.id] == "residue") {
-      metaDataHTML +=
-          '    <tr>\n' +
-          '      <td><b>Amino Acid:</b></td>\n' +
-          '      <td id="aaTD">' + singleValueToString(d, "aa") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>Test:</b></td>\n' +
-          '      <td id="testTD">' + singleValueToString(d, "test") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
-        '</div>';
-    } else if (metaTyping[d.id] == "state") {
-      metaDataHTML +=
-          '    <tr>\n' +
-          '      <td><b>Name:</b></td>\n' +
-          '      <td id="nameTD">' + singleValueToString(d, "name") + '</td>\n' +
-          '    </tr>\n' +
-          '    <tr>\n' +
-          '      <td><b>Test:</b></td>\n' +
-          '      <td id="testTD">' + singleValueToString(d, "test") + '</td>\n' +
-          '    </tr>\n' +
-          ' </tbody>\n' +
-        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
-        '</div>';
-    } else if (metaTyping[d.id] == "mod") {
-      metaDataHTML +=
-        '    <tr>\n' +
-        '      <td><b>Value:</b></td>\n' +
-        '      <td id="valueTD">' + singleValueToString(d, "value") + '</td>\n' +
-        '    </tr>\n' +
-        '    <tr>\n' +
-        '      <td><b>Rate:</b></td>\n' +
-        '      <td id="rateTD">' + singleValueToString(d, "rate") + '</td>\n' +
-        '    </tr>\n' +
-          '    <tr>\n' +
-        '      <td><b>Description:</b></td>\n' +
-        '      <td id="descTD">' + singleValueToString(d, "desc") + '</td>\n' +
-        '    </tr>\n' +
-        ' </tbody>\n' +
-        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
-        '</div>\n';
-    } else if (metaTyping[d.id] == "bnd") {
-      metaDataHTML += 
-        '    <tr>\n' +
-        '      <td><b>Rate:</b></td>\n' +
-        '      <td id="rateTD">' + singleValueToString(d, "rate") + '</td>\n' +
-        '    </tr>\n' +
-          '    <tr>\n' +
-        '      <td><b>Description:</b></td>\n' +
-        '      <td id="descTD">' + singleValueToString(d, "desc") + '</td>\n' +
-        '    </tr>\n' +
-        ' </tbody>\n' +
-        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) + 
-        '</div>';
+    
+    var data = {};
+    for (key in d.attrs) {
+      data[key] = d.attrs[key].data;
     }
+
+    metaDataHTML +=
+        generateMetaDataTrs(metaTyping[d.id], data) +
+        ' </tbody>\n' +
+        '</table>\n' + generateEditNodeButton(d.id, metaTyping[d.id]) +
+        '</div>\n';
+
 
     var agNodeId = null;
     if (d.id in agTyping) {

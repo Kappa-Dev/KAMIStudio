@@ -31,3 +31,31 @@ def raw_action_graph_json(hierarchy_id, attrs=False):
     data["metaTyping"] = hierarchy.action_graph_typing
     data["nodePosition"] = node_positioning
     return jsonify(data), 200
+
+
+@action_graph_blueprint.route(
+    "/model/<hierarchy_id>/get-ag-elements-by-type/<element_type>")
+def get_ag_node_by_type(hierarchy_id, element_type):
+    """."""
+    data = {"elements": []}
+    ag_nodes = app.hierarchies[hierarchy_id].nodes_of_type(element_type)
+    for n in ag_nodes:
+        element = {"id": n}
+        element["attrs"] = {
+            k: list(v)
+            for k, v in app.hierarchies[hierarchy_id].get_ag_node_data(n).items()
+        }
+        data["elements"].append(element)
+    return jsonify(data, 200)
+
+
+@action_graph_blueprint.route(
+    "/model/<hierarchy_id>/get-ag-element-by-id/<element_id>")
+def get_ag_node_by_id(hierarchy_id, element_id):
+    """."""
+    data = {
+        k: list(v)
+        for k, v in app.hierarchies[hierarchy_id].get_ag_node_data(
+            element_id).items()
+    }
+    return jsonify(data, 200)

@@ -7,18 +7,18 @@
  var INTERPRO_URL_PREFIX = "http://www.ebi.ac.uk/interpro/entry/";
 
 
-function singleValueToString(obj, attr_name) {
-	// convert value of an attribute to innerText/innerHtml
-	var value = "";
+// function singleValueToString(obj, attr_name) {
+// 	// convert value of an attribute to innerText/innerHtml
+// 	var value = "";
 
-	if ((obj.attrs) && (attr_name in obj.attrs)) {
-		value = obj.attrs[attr_name].data[0];
-	} else {
-		value = '<p class="faded">not specified</p>';
-	}
+// 	if ((obj.attrs) && (attr_name in obj.attrs)) {
+// 		value = obj.attrs[attr_name].data[0];
+// 	} else {
+// 		value = '<p class="faded">not specified</p>';
+// 	}
 
-	return value;
-}
+// 	return value;
+// }
 
 function replaceByPrepopulatedDropDown(nodeId, fieldName, valueName) {
 	// replace TD element with `fieldName` by prepopulated text input
@@ -233,5 +233,30 @@ function editEdgeMetaData(element, sourceId, targetId, sourceType, targetType) {
 
 
 function cancelEdgeEditing() {
+
+}
+
+
+
+function showAGNodeMetaData(nodeId, nodeType) {
+
+	var agNodeId = document.getElementById("typingNodeIdOf"+nodeId).innerHTML.trim();
+	$.ajax({
+		    url: "get-ag-element-by-id/" + agNodeId,
+		    type: 'get',
+		    dataType: "json",
+		}).done(function (data) {
+			metaDataHtml =
+				'<div id="typingNodeMetaData">\n' +
+				'	<table class="table table-hover info-table">\n' +
+    			'		<tbody>\n' + generateMetaDataTrs(nodeType, data[0]) +
+    			'		</tbody>\n' +
+				'   </table>\n' +
+				'</div>';
+		    var div = document.getElementById("typingNodeMetaDataOf" + nodeId);
+		    div.append(htmlToElement(metaDataHtml));
+		}).fail(function (e) {
+		    console.log("Failed to fetch AG node meta-data");
+		});
 
 }
