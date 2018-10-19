@@ -99,21 +99,13 @@
               <div class="col-sm-6">
                 <div class="nuggets-view">
                   <a type="button" class="btn btn-default btn-md panel-button nugget-list-view active"><span class="glyphicon glyphicon-list"></span> List view</a>
-                  <a type="button" class="btn btn-default btn-md panel-button nugget-table-view"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
+                  <a type="button" class="btn btn-default btn-md panel-button nugget-table-view" onclick="creatNuggetTable('{{ hierarchy_id }}')"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
                 </div>
               </div>
             </div>
-            <div class="table-responsive">
+            <div id="nuggetsView">
+              <div class="table-responsive">
               <table class="table table-striped table-sm">
-                <!-- <thead>
-                  <tr>
-                    <th>#</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                  <th>Header</th>
-                </tr>
-              </thead> -->
                 <tbody>
                   {% for nugget in hierarchies[hierarchy_id].nuggets() %}
                   <tr>
@@ -127,6 +119,7 @@
                   {% endfor %}
                 </tbody>
               </table>
+            </div>
             </div>
 
 <!--           <ul class="list-group models">
