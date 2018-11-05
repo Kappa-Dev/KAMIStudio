@@ -692,14 +692,14 @@ function addNodeTypeTr(nodeType) {
 // });
 
 
-function addSvgAndVisualizeNugget(element, hierarchy_id, nugget_id) {
+function addSvgAndVisualizeNugget(element, model_id, nugget_id) {
   svgElement = htmlToElement('<tr><td colspan="3"><svg id="nuggetSvg' + nugget_id + '" width="500" height="200"></svg></td></tr>');
   
   var immediateParent = element.parentNode;
   var previousSibling = immediateParent.previousElementSibling.appendChild(svgElement);
 
   // use AJAX to send request for retrieving the nugget data
-  $.get(hierarchy_id + "/raw-nugget/" + nugget_id, function(data, status) {
+  $.get(model_id + "/raw-nugget/" + nugget_id, function(data, status) {
     var svgId = "nuggetSvg" + nugget_id;
     visualiseNugget(JSON.stringify(data["nuggetJson"]),
                     data["nuggetType"],

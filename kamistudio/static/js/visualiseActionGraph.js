@@ -533,10 +533,10 @@ function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallba
 }
 
 
-function getActionGraphAndVisualize(hierarchy_id, workerUrl) {
+function getActionGraphAndVisualize(model_id, workerUrl) {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
-	    url: hierarchy_id + "/raw-action-graph",
+	    url: model_id + "/raw-action-graph",
 	    type: 'get',
 	    dataType: "json",
 		xhr: function () {
@@ -552,7 +552,7 @@ function getActionGraphAndVisualize(hierarchy_id, workerUrl) {
 	    var actionGraph = data["actionGraph"],
 	    	metaTyping = data["metaTyping"],
 	    	nodePos = data["nodePosition"],
-	    	nodePosUpdateUrl = hierarchy_id + "/update-ag-node-positioning";
+	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning";
 
     	visualiseAG(actionGraph, metaTyping, nodePos, workerUrl, nodePosUpdateUrl, null, false, null);
 	}).fail(function (e) {

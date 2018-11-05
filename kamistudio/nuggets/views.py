@@ -8,46 +8,46 @@ from regraph import graph_to_d3_json
 nuggets_blueprint = Blueprint('nuggets', __name__, template_folder='templates')
 
 
-@nuggets_blueprint.route("/model/<hierarchy_id>/nugget/<nugget_id>")
-def nugget_view(hierarchy_id, nugget_id):
+@nuggets_blueprint.route("/model/<model_id>/nugget/<nugget_id>")
+def nugget_view(model_id, nugget_id):
     """Handle nugget view."""
     return("Lets see the nugget")
 
 
-@nuggets_blueprint.route("/model/<hierarchy_id>/raw-nugget/<nugget_id>")
-def raw_nugget_json(hierarchy_id, nugget_id):
-    hierarchy = app.hierarchies[hierarchy_id]
+@nuggets_blueprint.route("/model/<model_id>/raw-nugget/<nugget_id>")
+def raw_nugget_json(model_id, nugget_id):
+    model = app.models[model_id]
 
     data = {}
-    data["nuggetJson"] = graph_to_d3_json(hierarchy.nugget[nugget_id])
-    data["nuggetType"] = hierarchy.get_nugget_type(nugget_id)
+    data["nuggetJson"] = graph_to_d3_json(model.nugget[nugget_id])
+    data["nuggetType"] = model.get_nugget_type(nugget_id)
     data["metaTyping"] = {
-        k: hierarchy.action_graph_typing[v]
-        for k, v in hierarchy.typing[nugget_id]["action_graph"].items()
+        k: model.get_action_graph_typing()[v]
+        for k, v in model.get_nugget_typing(nugget_id).items()
     }
-    data["agTyping"] = hierarchy.typing[nugget_id]["action_graph"]
+    data["agTyping"] = model.get_nugget_typing(nugget_id)
 
     data["templateRelation"] = {}
-    for k, v in hierarchy.get_nugget_template_rel(nugget_id).items():
+    for k, v in model.get_nugget_template_rel(nugget_id).items():
         for vv in v:
             data["templateRelation"][vv] = k
     return jsonify(data), 200
 
 
-@nuggets_blueprint.route("/model/<hierarchy_id>/nugget-table")
-def nugget_table(hierarchy_id):
+@nuggets_blueprint.route("/model/<model_id>/nugget-table")
+def nugget_table(model_id):
     """Generate a nugget table."""
     data = {}
     data["meta_data"] = dict()
     data["pairs"] = []
 
-    hierarchy = app.hierarchies[hierarchy_id]
+    model = app.models[model_id]
 
     # retreive all the genes from the action graph
-    for g in hierarchy.genes():
+    for g in model.genes():
         uniprotid = None
         hgnc_symbol = None
-        node = hierarchy.action_graph.node[g]
+        node = model.get_ag_node(g)
         if "uniprotid" in node:
             uniprotid = list(node["uniprotid"])[0]
         if "hgnc_symbol" in node:
@@ -66,9 +66,9 @@ def nugget_table(hierarchy_id):
             #     data["table"][g2] = dict()
             # data["table"][g2][g1] = []
 
-    for nugget_id in hierarchy.nuggets():
-        nugget = hierarchy.nugget[nugget_id]
-        nugget_typing = hierarchy.typing[nugget_id]["action_graph"]
+    for nugget_id in model.nuggets():
+        nugget = model.nugget[nugget_id]
+        nugget_typing = model.get_nugget_typing(nugget_id)
         mentioned_genes = list()
         for n in nugget.nodes():
             if nugget_typing[n] in data["meta_data"].keys():

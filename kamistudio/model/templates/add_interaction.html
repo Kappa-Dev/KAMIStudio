@@ -17,7 +17,7 @@
 
 <div class="col-md-12 order-md-1">
   <h2 class="mb-6">Interaction type</h2>
-  <form id="interactionForm" novalidate action="{{ url_for('model.add_interaction', hierarchy_id=hierarchy_id) }}" method="post"> 
+  <form id="interactionForm" novalidate action="{{ url_for('model.add_interaction', model_id=model_id) }}" method="post"> 
 
       <div class="mb-3">
         <input type="radio" onchange="switchToMod(this)" name="modorbnd" value="mod" checked> Modification
@@ -911,10 +911,10 @@
       <!-- SUBMITTING BUTTTONS -->
       <div class="row form-row">
         <div class="col-md-6 mb-6">
-          <a type="button" id="cancelInteractionButton" class="btn btn-default btn-lg" href="{{ url_for('model.model_view', hierarchy_id=hierarchy_id) }}">Cancel</a> 
+          <a type="button" id="cancelInteractionButton" class="btn btn-default btn-lg" href="{{ url_for('model.model_view', model_id=model_id) }}">Cancel</a> 
         </div>
         <div class="col-md-6 mb-6" id="buttons" style="text-align: right;">
-          <button type="button" id="previewBuggetButton" class="btn btn-primary btn-lg" onclick="checkAndSubmitForNuggetGeneration(this, '{{ url_for('model.preview_nugget', hierarchy_id=hierarchy_id) }}')">Nugget preview</button>
+          <button type="button" id="previewBuggetButton" class="btn btn-primary btn-lg" onclick="checkAndSubmitForNuggetGeneration(this, '{{ url_for('model.preview_nugget', model_id=model_id) }}')">Nugget preview</button>
           <a type="button" id="submitInteraction" class="btn btn-primary btn-lg" onclick="checkAndSubmit(this)"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>
         </div>
       </div>

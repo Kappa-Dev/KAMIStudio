@@ -109,7 +109,7 @@
                             </div>
                             <div class="col-md-4">
                               <div class="dropdown">
-                                <button class="btn btn-default dropdown-toggle btn-block" onclick="showReferenceEntityCandidates('{{ hierarchy_id }}', '{{node}}', '{{nugget_meta_typing_json[node]}}')" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <button class="btn btn-default dropdown-toggle btn-block" onclick="showReferenceEntityCandidates('{{ model_id }}', '{{node}}', '{{nugget_meta_typing_json[node]}}')" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                                   Change
                                   <span class="caret"></span>
                                 </button>
@@ -140,7 +140,7 @@
   </div>
   
   <div class="row">
-    <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-lg" href="{{ url_for('model.add_nugget_from_session', hierarchy_id=hierarchy_id) }}"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>    
+    <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-lg" href="{{ url_for('model.add_nugget_from_session', model_id=model_id) }}"><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the model</a>    
   </div>
 
 </div>

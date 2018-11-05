@@ -1,4 +1,4 @@
-function showReferenceEntityCandidates(hierarchyId, nodeId, nodeType) {
+function showReferenceEntityCandidates(modelId, nodeId, nodeType) {
 	var dropdown = document.getElementById("entityChoiceDropdown" + nodeId);
 	
 	if (!dropdown.classList.contains("active")) {

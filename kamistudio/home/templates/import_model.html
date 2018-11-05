@@ -10,7 +10,7 @@
 
 {% block tabs %}
 
-<form id="modelImportForm" novalidate="{{ url_for('home.import_hierarchy') }}" method="post" enctype="multipart/form-data">
+<form id="modelImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 			<div class="row form-row">
@@ -50,7 +50,7 @@
 {% if failed %}
 <div class="loading-error-message">
 	<p class="loading-error-message">
-		Failed to load a hierarchy: uploaded json is not valid!
+		Failed to load a model: uploaded json is not valid!
 	</p>
 </div>
 {% endif %}
