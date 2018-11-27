@@ -2,7 +2,7 @@
 import os
 
 from flask import Flask, url_for
-from flask.ext.session import Session
+from flask_session import Session
 from flask_bootstrap import Bootstrap
 
 from kamistudio.home.views import home_blueprint
