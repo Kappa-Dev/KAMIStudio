@@ -10,7 +10,7 @@ from kamistudio.model.views import model_blueprint
 from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
 
-from kami import Model
+from kami import KamiCorpus
 
 
 class KAMIStudio(Flask):
@@ -34,7 +34,7 @@ Session(app)
 # Configure the KAMIStudio server
 app.config.from_pyfile('instance/configs.py')
 app.models = {
-    "Test model": Model()
+    "Test model": KamiCorpus()
 }
 app.new_nugget = None
 app.new_nugget_type = None

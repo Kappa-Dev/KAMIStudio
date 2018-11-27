@@ -30,6 +30,7 @@ setup(name='KAMIStudio',
       install_requires=[
           'indra',
           'flask',
+          'flask-session',
           'flask_bootstrap',
           'flask_cors',
           'flask-uploads',

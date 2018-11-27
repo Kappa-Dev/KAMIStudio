@@ -7,7 +7,7 @@ from flask import current_app as app
 
 from werkzeug.utils import secure_filename
 
-from kami import Model
+from kami import KamiCorpus
 
 home_blueprint = Blueprint('home', __name__, template_folder='templates')
 
@@ -39,7 +39,7 @@ def new_model():
 
 @home_blueprint.route("/new-model", methods=["POST"])
 def create_new_model():
-    model = Model()
+    model = KamiCorpus()
     if request.form["name"]:
         model.add_attrs({"name": request.form["name"]})
     if request.form["desc"]:
@@ -91,7 +91,7 @@ def delete_models():
 
 def imported_model(filename, name, desc=None):
     """Internal handler of already imported model."""
-    new_model = Model.load(
+    new_model = KamiCorpus.load(
         os.path.join(app.config['UPLOAD_FOLDER'], filename))
     if desc is not None:
         new_model.attrs["desc"] = desc
