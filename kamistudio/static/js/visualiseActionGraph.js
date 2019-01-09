@@ -342,7 +342,8 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    node.append("circle")
 	      .attr("r", function(d) { return AG_META_SIZES[metaTyping[d.id]]; })
 	      .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
-	      .attr("stroke-width", 0).attr("stroke", d3.rgb("#B8B8B8"))
+	      .attr("stroke-width", 0)
+	      .attr("stroke", d3.rgb("#B8B8B8"))
 	   	  .on("dblclick", zoomInArea);
 
 	    node.append("title")

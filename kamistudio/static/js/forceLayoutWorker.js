@@ -23,10 +23,12 @@ onmessage = function(event) {
   simulation.force("link").links(links);
   simulation.stop();
 
+  // Posting message with progress of simulations
   for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
     postMessage({type: "tick", progress: i / n});
     simulation.tick();
   }
 
+  // Posting message with computed positions (inside the nodes)
   postMessage({type: "end", nodes: nodes, links: links});
 };
