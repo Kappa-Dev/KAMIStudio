@@ -72,18 +72,16 @@
 {% endblock %}
 
 {% block scripts %}
+
   {{ super() }}
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="{{ url_for('static', filename='js/loaders.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/addInteraction.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/visualiseNugget.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/visualiseActionGraph.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/editNugget.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/entityReferenceFinder.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/metaDataHandlers.js') }}" type="text/javascript"></script>
-  <script src="{{ url_for('static', filename='js/nuggetTableView.js') }}" type="text/javascript"></script>
   {% block custom_scripts %}{% endblock %}
 
 {% endblock %}
-
 

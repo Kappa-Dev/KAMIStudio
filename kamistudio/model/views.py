@@ -54,6 +54,7 @@ def model_view(model_id):
 def add_interaction(model_id, add_agents=True,
                     anatomize=True, apply_semantics=True):
     """Handle interaction addition."""
+    print("Heree")
     if request.method == 'GET':
         return render_template(
             "add_interaction.html",

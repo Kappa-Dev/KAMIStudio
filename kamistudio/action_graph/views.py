@@ -13,7 +13,9 @@ action_graph_blueprint = Blueprint(
 def raw_action_graph_json(model_id, attrs=False):
     """Handle the raw json action graph representation."""
     model = app.models[model_id]
-    ag_attrs = model.get_action_graph_attrs()
+    ag_attrs = dict()
+    if (model.action_graph):
+        ag_attrs = model.get_action_graph_attrs()
 
     # load positions of AG nodes if available
     if "node_positioning" in ag_attrs.keys():

@@ -143,5 +143,7 @@
   <script type="text/javascript">
     getActionGraphAndVisualize('{{ model_id }}', '{{ url_for('static', filename='js/forceLayoutWorker.js') }}');
   </script>
+  <script src="{{ url_for('static', filename='js/nuggetTableView.js') }}" type="text/javascript"></script>
+
 {% endblock %}
 {% endif %}
