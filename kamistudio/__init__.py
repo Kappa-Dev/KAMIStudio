@@ -4,13 +4,17 @@ import os
 from flask import Flask, url_for
 from flask_session import Session
 from flask_bootstrap import Bootstrap
+from flask_pymongo import PyMongo
 
 from kamistudio.home.views import home_blueprint
 from kamistudio.model.views import model_blueprint
+from kamistudio.corpus.views import corpus_blueprint
 from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
 
-from kami import KamiCorpus
+from neo4j.v1 import GraphDatabase
+
+from regraph.neo4j import Neo4jHierarchy
 
 
 class KAMIStudio(Flask):
@@ -28,20 +32,81 @@ Bootstrap(app)
 
 # Session config
 app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
-app.config['SESSION_TYPE'] = 'filesystem'
+# app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
 Session(app)
 
 # Configure the KAMIStudio server
 app.config.from_pyfile('instance/configs.py')
-app.models = {
-    "Test model": KamiCorpus()
-}
+app.mongo = PyMongo(app)
+app.mongo.db = app.mongo.cx["kamistudio"]
+
+
+def init_neo4j_db():
+    app.neo4j_driver = GraphDatabase.driver(
+        app.config["NEO4J_URI"],
+        auth=(app.config["NEO4J_USER"], app.config["NEO4J_PWD"])
+    )
+
+
+def init_mongo_db(add_test=False):
+    """Initialize mongo DB."""
+    if "kami_corpora" not in app.mongo.db.collection_names():
+        app.mongo.db.create_collection("kami_corpora")
+        app.mongo.db.kami_corpora.create_index("id", unique=True)
+
+    if "kami_models" not in app.mongo.db.collection_names():
+        app.mongo.db.create_collection("kami_models")
+        app.mongo.db.kami_models.create_index("id", unique=True)
+
+    if add_test is True:
+        app.mongo.db.kami_corpora.remove({})
+        if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+            app.mongo.db.kami_corpora.insert_one({
+                "id": "test_corpus",
+                "creation_date": "12-12-2018",
+                "last_modified": "14-12-2018",
+                "meta_data": {
+                    "name": "Human PID database",
+                    "desc": "PPIs extracted from Pathway Interaction Database",
+                    "organism": "Homo sapiens (Human)",
+                    "annotation": "Converted to KAMI from NCI PID network, originally represented with BioPax"
+                }
+            })
+        app.mongo.db.kami_models.remove({})
+        if len(list(app.mongo.db.kami_models.find({}))) == 0:
+            app.mongo.db.kami_models.insert_one({
+                "id": "test_model",
+                "creation_date": "13-12-2018",
+                "last_modified": "17-12-2018",
+                "meta_data": {
+                    "name": "Hepatocyte (Human PID)",
+                    "desc": "Instantiation of PID for human hepatocytes",
+                    "organism": "Homo sapiens (Human)",
+                    "origin": {
+                        "corpus_id": "test_corpus",
+                        "definitions": [],
+                        "seed_genes": []
+                    },
+                    "annotation": "",
+                    "kappa_models": []
+                }
+            })
+        if app.neo4j_driver is not None:
+            Neo4jHierarchy.load(
+                "kamistudio/instance/test_kamistudio.json",
+                driver=app.neo4j_driver)
+
+init_neo4j_db()
+init_mongo_db(True)
+
 app.new_nugget = None
 app.new_nugget_type = None
 
 # register the blueprints
 app.register_blueprint(home_blueprint)
 app.register_blueprint(model_blueprint)
+app.register_blueprint(corpus_blueprint)
 app.register_blueprint(action_graph_blueprint)
 app.register_blueprint(nuggets_blueprint)
 
