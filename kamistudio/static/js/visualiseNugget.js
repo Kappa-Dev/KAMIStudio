@@ -3,6 +3,13 @@
  * 
  */
 
+function htmlToElement(html) {
+    var template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
 // global vars defining default visualisation configs for different types of nodes
 var META_SIZES = {
   "gene":35,
