@@ -22,13 +22,18 @@ var META_SIZES = {
 };
 
 var META_COLORS = {
-  "gene":"#FFA19E",
+  // "gene":"#FFA19E",
+   "gene":"#76a6cf",
+  // "gene": "#ed757a",
   "region":"#ffb080",
   "site":"#ffd780",
-  "residue":"#ccb3ff",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
   "state":"#A3DEFF",
-  "mod":"#9DAEFD",
-  "bnd":"#9EFFC5"
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
 };
 
 var META_LABEL_DY = {
