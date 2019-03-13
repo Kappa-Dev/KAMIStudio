@@ -53,3 +53,20 @@
   right: -80px;
   clip: rect(-6px, 90px, 14px, -6px);
 }
+
+.node text {
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+.linkbox {
+    fill : none;
+    stroke: #A9B0B7;
+    stroke-width: 10px;
+    opacity : 0;
+}
+
+svg {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}

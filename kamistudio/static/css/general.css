@@ -1,7 +1,16 @@
+/*@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+@import "https://fonts.googleapis.com/css?family=Comfortaa";
+@import "https://fonts.googleapis.com/css?family=Roboto";*/
+@import "https://fonts.googleapis.com/css?family=Lato";
 
 p {
 	text-decoration: none;
   	color: #999999;
+}
+
+
+body {
+    font-family: 'Lato', sans-serif;
 }
 
 body {
@@ -128,8 +137,9 @@ td.data {
 	margin-left: 10px;
 }
 
-.model-action-brand {
+.model-action-brand, .corpus-action-brand {
 	margin-left: 10px;
+	margin-top: 10px;
 }
 
 table.nugget-info-table > tbody > tr > td {
@@ -160,7 +170,11 @@ table.nugget-info-table > tbody > tr > td {
 
 
 .action-graph-view {
-	float: right;
+	/*float: right;*/
+}
+
+.action-graph-view > a{
+	margin-left: 0px;
 }
 
 .nuggets-view {
@@ -168,9 +182,25 @@ table.nugget-info-table > tbody > tr > td {
 }
 
 
-.model-action-buttons {
+.model-action-buttons, .corpus-action-buttons {
 	float: right;
 	margin-right: 20px;
+}
+
+
+table.info {
+	margin-bottom: 0px;
+}
+
+table.info > tbody > tr > td,
+table.info > tbody > tr > th {
+	border-top: 0px;
+	padding: 3px;
+}
+
+.info-brand {
+	margin-top: 0px;
+	margin-left: 0px;
 }
 
 a.disabled {
@@ -232,3 +262,72 @@ a.disabled {
 .dropdown-row:hover { 
   background-color: #ddd;
 }   
+
+.home-collection {
+	border-radius: 25px;
+/*background: #e5b2b4;*/
+	padding: 20px;
+	border: 1px solid #ccc;
+	margin-bottom: 20px;
+}
+
+h2.collection-brand {
+	display: inline-block;
+	margin-top: 0px;
+}
+
+.collection-buttons {
+	display: inline-block;
+	float: right;
+}
+
+a.instantiation-link {
+	color: #a11117;
+	/*border-color: #8d0e14;*/
+}
+a.instantiation-link:hover {
+	color: #8d0e14;
+	/*border-color: #8d0e14;*/
+}
+
+a.btn.instantiation, button.instantiation {
+	background-color: #a11117;
+	border-color: #8d0e14;
+}
+
+a.btn.instantiation:focus, button.instantiation:focus {
+	background-color: #8d0e14;
+	border-color: #8d0e14;
+}
+
+a.btn.instantiation:hover, button.instantiation:hover {
+	background-color: #8d0e14;
+	border-color: #8d0e14;
+}
+
+.highlighted-item {
+	border-radius: 15px;
+	background: #dae3ec;
+	padding: 20px;
+	margin-bottom: 10px;
+}
+
+
+.highlighted-item.instance {
+	background: #f5e5e6;
+}
+
+.highighted-item-brand {
+	font-weight: bold;
+	font-size: 14pt;
+}
+
+.highlighted-item > p {
+	color: black;
+}
+
+
+#titleP {
+	color: black;
+}
+
