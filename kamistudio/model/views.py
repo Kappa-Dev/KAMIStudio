@@ -9,7 +9,7 @@ from flask import current_app as app
 from regraph import graph_to_d3_json
 
 from kami.exporters.old_kami import ag_to_edge_list
-from kami.aggregation.generators import generate_from_interaction
+from kami.aggregation.generators import generate_nugget
 
 from kamistudio.model.form_parsing import(parse_interaction)
 
@@ -61,7 +61,7 @@ def add_interaction(model_id, add_agents=True,
             model_id=model_id)
     elif request.method == 'POST':
         interaction = parse_interaction(request.form)
-        nugget, nugget_type = generate_from_interaction(
+        nugget, nugget_type = generate_nugget(
             app.models[model_id], interaction)
         app.models[model_id].add_nugget(
             nugget, nugget_type,
@@ -76,7 +76,7 @@ def add_interaction(model_id, add_agents=True,
 def preview_nugget(model_id):
     """Generate nugget, store in the session and redirect to nugget preview."""
     interaction = parse_interaction(request.form)
-    nugget, nugget_type = generate_from_interaction(
+    nugget, nugget_type = generate_nugget(
         app.models[model_id], interaction)
 
     session["nugget"] = nugget
