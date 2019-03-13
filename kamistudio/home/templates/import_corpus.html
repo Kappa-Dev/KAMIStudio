@@ -3,7 +3,7 @@
 {% block panel_buttons %}
   <div class="row">
     <div class="col-md-12">
-      <h1 class="mb-6 model-action-brand">Import model</h1>
+      <h1 class="mb-6 model-action-brand">Import corpus</h1>
     </div>
   </div>
 {% endblock %}
@@ -18,14 +18,12 @@
 			      <input type="text" class="form-control" name="name" id="name" placeholder="" value="">
 			</div>
 
-			 <div class="row form-row">
-			    <!-- <div class="col-md-6"> -->
+			<div class="row form-row">
 			      <label for="desc">Description</label>
-			      <input type="text" class="form-control" name="desc" id="desc" placeholder="" value="">
-			    <!-- </div> -->
-			 </div>
+			      <input type="text" class="form-control" name="desc" id="desc">
+			</div>
 
-			 <div class="row form-row">
+			<div class="row form-row">
 			      <label for="desc">Organism</label>
 			      <input type="text" class="form-control" name="organism" id="organism" placeholder="" value="">
 			</div>
@@ -45,7 +43,7 @@
 					</div>
 				</div>
 				<div class="col-md-6" style="text-align: right;">
-					<a type="button" class="btn btn-primary btn-lg instantiation" name="importForm" onclick="showLoader()">Import</a> 
+					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoader()">Import</a> 
 				</div>
 			</div>
 		</div>
@@ -55,7 +53,7 @@
 {% if failed %}
 <div class="loading-error-message">
 	<p class="loading-error-message">
-		Failed to load a model: uploaded json is not valid!
+		Failed to load a corpus: uploaded json is not valid!
 	</p>
 </div>
 {% endif %}
