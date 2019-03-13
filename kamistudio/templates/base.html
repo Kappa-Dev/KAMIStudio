@@ -19,14 +19,14 @@
   <div class="container">
     <div class="row">
       <div class="col-sm-2 navbar-col"></div>
-      <div class="col-sm-2 navbar-col">
+      <div class="col-sm-4 navbar-col">
         <a class="navbar-brand" href="/home">
           <p id="titleP">
-              <img src="{{url_for('static', filename='img/logo.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio
+              <img src="{{url_for('static', filename='img/logo1.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio
           </p>
         </a>
       </div>
-      <div class="col-sm-6 navbar-col">
+      <div class="col-sm-4 navbar-col">
         {% block model_navigation %}
         {% endblock %}
       </div>
@@ -36,17 +36,6 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Panel -->
-    <div class="row panel">
-      <div class="col-sm-2">
-        {% block home_button %}{% endblock %}
-      </div>
-      <div class="col-sm-8">
-        {% block panel_buttons %}{% endblock %}
-      </div>
-    </div>
-    <!-- end of panel -->
-
     <!-- Workspace -->
     <div class="row workspace"> 
           <!-- Sidebar -->
@@ -58,6 +47,13 @@
 
           <!-- Tabs -->
           <div class="col-sm-8" id="tabs-wrapper">
+            <!-- Panel -->
+              <div class="row panel">
+                <div class="col-sm-12">
+                  {% block panel_buttons %}{% endblock %}
+                </div>
+              </div>
+            <!-- end of panel -->
             <div class="container-fluid tabs">
               {% block tabs %}
               {% endblock %}
