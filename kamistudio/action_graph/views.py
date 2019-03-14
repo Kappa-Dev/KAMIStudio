@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify
 from flask import current_app as app
 
 from kamistudio.corpus.views import get_corpus
+from kamistudio.model.views import get_model
 
 from regraph import graph_to_d3_json
 
@@ -11,28 +12,40 @@ action_graph_blueprint = Blueprint(
     'action_graph', __name__, template_folder='templates')
 
 
-@action_graph_blueprint.route("/corpus/<corpus_id>/raw-action-graph")
-def raw_action_graph_json(corpus_id, attrs=True):
-    """Handle the raw json action graph representation."""
-    corpus = get_corpus(corpus_id)
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+def get_action_graph(knowledge_obj, json_repr, attrs):
     # load positions of AG nodes if available
-    if "node_positioning" in corpus_json.keys():
-        node_positioning = corpus_json["node_positioning"]
+    if "node_positioning" in json_repr.keys():
+        node_positioning = json_repr["node_positioning"]
     else:
         node_positioning = {}
 
     data = {}
 
-    if (corpus.action_graph):
+    if (knowledge_obj.action_graph):
         data["actionGraph"] = graph_to_d3_json(
-            corpus.action_graph, attrs)
+            knowledge_obj.action_graph, attrs)
     else:
         data["actionGraph"] = {"links": [], "nodes": []}
 
-    data["metaTyping"] = corpus.get_action_graph_typing()
+    data["metaTyping"] = knowledge_obj.get_action_graph_typing()
     data["nodePosition"] = node_positioning
     return jsonify(data), 200
+
+
+@action_graph_blueprint.route("/model/<model_id>/raw-action-graph")
+def get_model_action_graph(model_id, attrs=True):
+    """Handle the raw json action graph representation."""
+    model = get_model(model_id)
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    return get_action_graph(model, model_json, attrs)
+
+
+@action_graph_blueprint.route("/corpus/<corpus_id>/raw-action-graph")
+def get_corpus_action_graph(corpus_id, attrs=True):
+    """Handle the raw json action graph representation."""
+    corpus = get_corpus(corpus_id)
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    return get_action_graph(corpus, corpus_json, attrs)
 
 
 @action_graph_blueprint.route(
