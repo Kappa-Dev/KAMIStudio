@@ -134,6 +134,7 @@
             <div class="action-graph-view">
               <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a>
               <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-resize-small"></span> Interaction network</a>
+              <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a>
               <button id="saveLayoutButton" type="button" class="btn btn-primary btn-md panel-button nugget-list-view" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</button>
             </div>
 
@@ -144,7 +145,7 @@
                 </div>
               </div>
             </div>
-            <svg id="actionGraphSvg" style="width: 100%; height: 50%; display: none;"></svg>
+            <svg id="actionGraphSvg" style="width: 100%; height: 600px; display: none;"></svg>
           </div>
           <div class="col-md-3">
             <div id="graphInfoBoxes">
@@ -191,7 +192,7 @@
                 <tbody>
                   {% for nugget in corpus.nuggets() %}
                   <tr>
-                    <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.nugget_view', corpus_id=corpus_id, nugget_id=nugget) }}">{{ nugget }}</a></td>
+                    <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.corpus_nugget_view', corpus_id=corpus_id, nugget_id=nugget) }}">{{ nugget }}</a></td>
                     <td class="nugget-record nugget-desc"><p>{{ nugget_desc[nugget] }}</p></td>
                     <td class="nugget-nav-buttons">
                       <a type="button" id="showNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button" onclick="addSvgAndVisualizeNugget(this,  '{{ corpus_id }}', '{{ nugget }}')"><span class="glyphicon glyphicon-search"></span> Show graph</a>

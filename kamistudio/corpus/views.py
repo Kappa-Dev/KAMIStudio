@@ -19,6 +19,7 @@ corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
 
 
 def get_corpus(corpus_id):
+    """."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     return KamiCorpus(
         corpus_id,
@@ -34,22 +35,6 @@ def get_corpus(corpus_id):
 def corpus_view(corpus_id):
     """View corpus."""
     corpus = get_corpus(corpus_id)
-    if not corpus.empty():
-        edgelist = ag_to_edge_list(corpus)
-        nodelist = set()
-        for u, v in edgelist:
-            nodelist.add(u)
-            nodelist.add(v)
-        nodelist = list(nodelist)
-        nodedict = dict()
-        for i, n in enumerate(nodelist):
-            nodedict[n] = i + 1
-
-        new_nodelist = [(i, l) for l, i in nodedict.items()]
-        new_edgelist = [(nodedict[u], nodedict[v]) for u, v in edgelist]
-    else:
-        new_edgelist = []
-        new_nodelist = []
 
     nugget_desc = {}
     for nugget in corpus.nuggets():
@@ -58,8 +43,6 @@ def corpus_view(corpus_id):
     return render_template("corpus.html",
                            corpus_id=corpus_id,
                            corpus=corpus,
-                           action_graph_edgelist=new_edgelist,
-                           action_graph_nodelist=new_nodelist,
                            nugget_desc=nugget_desc)
 
 

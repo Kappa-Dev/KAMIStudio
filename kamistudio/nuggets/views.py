@@ -11,7 +11,13 @@ nuggets_blueprint = Blueprint('nuggets', __name__, template_folder='templates')
 
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>")
-def nugget_view(corpus_id, nugget_id):
+def corpus_nugget_view(corpus_id, nugget_id):
+    """Handle nugget view."""
+    return("Lets see the nugget")
+
+
+@nuggets_blueprint.route("/model/<model_id>/nugget/<nugget_id>")
+def model_nugget_view(corpus_id, nugget_id):
     """Handle nugget view."""
     return("Lets see the nugget")
 
