@@ -93,9 +93,20 @@ function initializeNodePosition(graph, posDict) {
 
 function visualiseAG(actionGraph, metaTyping, nodePos, 
 					 workerUrl, nodePosUpdateUrl, configs=null,
-                     detailsOnClicks=true, svgId=null, threshold=null) {
+                     detailsOnClicks=true, svgId=null, threshold=null,
+                     instantiated=false) {
 	// Visualise action graph using static precomputed force layout +
 	// previously stored node positions
+
+	var color_scheme;
+	console.log(instantiated);
+	if (instantiated) {
+		color_scheme = INSTANCE_META_COLORS;
+		highlight = INSTANCE_HIGHLIGHT_COLOR;
+	} else {
+		color_scheme = META_COLORS;
+		highlight = HIGHLIGHT_COLOR;
+	}
 
 	initializeCircleRadius(actionGraph, metaTyping);
 	initializeLinkStrengthDistance(actionGraph, metaTyping);
@@ -111,8 +122,6 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
     	width = +svg.attr("width"),
       	height = +svg.attr("height"),
 		active = d3.select(null);
-
-	console.log(width, height);
 
 	// define arrow markers for graph links
 	svg.append("defs").append("marker")
@@ -137,7 +146,8 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 		.attr("orient", "auto")
 		.append("svg:path")
 		.attr("d", "M0,-5L10, 0L0, 5")
-		.attr('fill', '#337ab7');
+		// .attr('fill', '#337ab7');
+		.attr("fill", highlight);
 
 	// initialize legend
 	var legend = null;
@@ -305,7 +315,6 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 				            .attr("viewBox", updatedView)  
 				            .attr("preserveAspectRatio", "xMidYMid meet")  
 				            .call(zoom);
-				        console.log("A: ", d3.zoomIdentity.scale());
 		        	}
 		        } else {
 		        	if ((bx < 0) ||
@@ -317,7 +326,6 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 				            .attr("viewBox", updatedView)  
 				            .attr("preserveAspectRatio", "xMidYMid meet")  
 				            .call(zoom);
-				        console.log("B: ", d3.zoomIdentity.scale());
 				    }
 		        }
 		        
@@ -405,7 +413,7 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    // setup nodes circles
 	    node.append("circle")
 	      .attr("r", function(d) { return AG_META_SIZES[metaTyping[d.id]]; })
-	      .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
+	      .attr("fill", function(d) { return d3.rgb(color_scheme[metaTyping[d.id]]); })
 	      .attr("stroke-width", 0)
 	      .attr("stroke", d3.rgb("#B8B8B8"))
 	   	  .on("dblclick", zoomInArea)
@@ -544,7 +552,7 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    // select current element
 		d3.select(this)
 	      .attr("stroke-width", 2)
-	      .attr("stroke", d3.rgb("#337ab7"));
+	      .attr("stroke", d3.rgb(highlight));
 		displayAttr(d, i);
 	}
 
@@ -558,7 +566,7 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    d3.select(this)
 	      // .attr("stroke-width", 2)
 	      .select(".arrow")
-	      .style("stroke", d3.rgb("#337ab7"))
+	      .style("stroke", d3.rgb(highlight))
 	      .attr("marker-end", "url(#arrow-selected)");
 
 		displayAttr(d, i);
@@ -599,8 +607,8 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 }
 
 
-function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, failCallback,
-							 nodesToUpdate=null) {
+function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, 
+							 failCallback, nodesToUpdate=null) {
 	// POST newly computed node positioning to the server
 	var positions = {};
 	for (var i=0; i < nodes.length; i++) {
@@ -646,7 +654,7 @@ function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallba
 }
 
 
-function getActionGraphAndVisualize(model_id, workerUrl) {
+function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
 	    url: model_id + "/raw-action-graph",
@@ -668,7 +676,8 @@ function getActionGraphAndVisualize(model_id, workerUrl) {
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning";
 
     	visualiseAG(actionGraph, metaTyping, nodePos, 
-    				workerUrl, nodePosUpdateUrl, null, false, null, 100);
+    				workerUrl, nodePosUpdateUrl, null, false, null, 100, 
+    				instantiated);
 	}).fail(function (e) {
 	    console.log("Failed to load action graph");
 	});

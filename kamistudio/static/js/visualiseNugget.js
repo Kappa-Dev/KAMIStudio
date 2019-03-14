@@ -23,8 +23,22 @@ var META_SIZES = {
 
 var META_COLORS = {
   // "gene":"#FFA19E",
-   "gene":"#76a6cf",
+  "gene":"#8db1d1",
   // "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
+
+var INSTANCE_META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene": "#ed757a",
   "region":"#ffb080",
   "site":"#ffd780",
   "residue": "#F68EA0",
@@ -45,6 +59,9 @@ var META_LABEL_DY = {
   "mod":"-2.5em",
   "bnd":"-2.5em"
 }
+
+HIGHLIGHT_COLOR = "#337ab7";
+INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 function initializePositions(width, height, graph, nuggetType, templateRelation) {
   var fixedPositions = {};
