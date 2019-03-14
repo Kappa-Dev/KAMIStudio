@@ -17,31 +17,6 @@ from neo4j.v1 import GraphDatabase
 from regraph.neo4j import Neo4jHierarchy
 
 
-class KAMIStudio(Flask):
-    """Flask server for KAMIStudio."""
-
-    def __init__(self, name, template_folder):
-        """Initialize a KAMIStudio application object."""
-        super().__init__(name)
-
-
-# App initialization
-app = KAMIStudio(__name__,
-                 template_folder="./kamistudio/templates")
-Bootstrap(app)
-
-# Session config
-app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
-# app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
-Session(app)
-
-# Configure the KAMIStudio server
-app.config.from_pyfile('instance/configs.py')
-app.mongo = PyMongo(app)
-app.mongo.db = app.mongo.cx["kamistudio"]
-
-
 def init_neo4j_db():
     app.neo4j_driver = GraphDatabase.driver(
         app.config["NEO4J_URI"],
@@ -83,19 +58,44 @@ def init_mongo_db(add_test=False):
                     "name": "Hepatocyte (Human PID)",
                     "desc": "Instantiation of PID for human hepatocytes",
                     "organism": "Homo sapiens (Human)",
-                    "origin": {
-                        "corpus_id": "test_corpus",
-                        "definitions": [],
-                        "seed_genes": []
-                    },
-                    "annotation": "",
-                    "kappa_models": []
-                }
+                    "annotation": ""
+                },
+                "origin": {
+                    "corpus_id": "test_corpus",
+                    "definitions": [],
+                    "seed_genes": []
+                },
+                "kappa_models": []
             })
         if app.neo4j_driver is not None:
             Neo4jHierarchy.load(
                 "kamistudio/instance/test_kamistudio.json",
                 driver=app.neo4j_driver)
+
+
+class KAMIStudio(Flask):
+    """Flask server for KAMIStudio."""
+
+    def __init__(self, name, template_folder):
+        """Initialize a KAMIStudio application object."""
+        super().__init__(name)
+
+
+# App initialization
+app = KAMIStudio(__name__,
+                 template_folder="./kamistudio/templates")
+Bootstrap(app)
+
+# Session config
+app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
+# app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
+Session(app)
+
+# Configure the KAMIStudio server
+app.config.from_pyfile('instance/configs.py')
+app.mongo = PyMongo(app)
+app.mongo.db = app.mongo.cx["kamistudio"]
 
 init_neo4j_db()
 init_mongo_db(True)
