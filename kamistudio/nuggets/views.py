@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify
 from flask import current_app as app
 
 from kamistudio.corpus.views import get_corpus
+from kamistudio.model.views import get_model
 
 from regraph import graph_to_d3_json
 
@@ -20,6 +21,35 @@ def corpus_nugget_view(corpus_id, nugget_id):
 def model_nugget_view(corpus_id, nugget_id):
     """Handle nugget view."""
     return("Lets see the nugget")
+
+
+def get_nugget(knowledge_obj, nugget_id):
+    data = {}
+    data["nuggetJson"] = graph_to_d3_json(knowledge_obj.nugget[nugget_id])
+    data["nuggetType"] = knowledge_obj.get_nugget_type(nugget_id)
+    data["metaTyping"] = {
+        k: knowledge_obj.get_action_graph_typing()[v]
+        for k, v in knowledge_obj.get_nugget_typing(nugget_id).items()
+    }
+    data["agTyping"] = knowledge_obj.get_nugget_typing(nugget_id)
+
+    data["templateRelation"] = {}
+    for k, v in knowledge_obj.get_nugget_template_rel(nugget_id).items():
+        for vv in v:
+            data["templateRelation"][vv] = k
+    return jsonify(data), 200
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/raw-nugget/<nugget_id>")
+def corpus_nugget_json(corpus_id, nugget_id):
+    corpus = get_corpus(corpus_id)
+    return get_nugget(corpus, nugget_id)
+
+
+@nuggets_blueprint.route("/model/<model_id>/raw-nugget/<nugget_id>")
+def model_nugget_json(model_id, nugget_id):
+    model = get_model(model_id)
+    return get_nugget(model, nugget_id)
 
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/raw-nugget/<nugget_id>")

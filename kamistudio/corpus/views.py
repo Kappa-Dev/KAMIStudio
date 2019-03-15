@@ -19,16 +19,26 @@ corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
 
 
 def get_corpus(corpus_id):
-    """."""
+    """Retreive corpus from the db."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     return KamiCorpus(
         corpus_id,
         annotation=corpus_json["meta_data"],
-        creation_time=corpus_json["creation_date"],
+        creation_time=corpus_json["creation_time"],
         last_modified=corpus_json["last_modified"],
         backend="neo4j",
         driver=app.neo4j_driver
     )
+
+
+def add_new_corpus(corpus_obj):
+    """Add new corpus to the db."""
+    app.mongo.db.kami_corpora.insert_one({
+        "id": corpus_obj._id,
+        "creation_time": corpus_obj.creation_time,
+        "last_modified": corpus_obj.last_modified,
+        "meta_data": corpus_obj.annotation
+    })
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>")

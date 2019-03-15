@@ -19,12 +19,13 @@ model_blueprint = Blueprint('model', __name__, template_folder='templates')
 
 
 def get_model(model_id):
-    """Get a model (esatblish connection with a DB)."""
+    """Retreive corpus from the db."""
     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    print(model_json)
     return KamiModel(
         model_id,
         annotation=model_json["meta_data"],
-        creation_time=model_json["creation_date"],
+        creation_time=model_json["creation_time"],
         last_modified=model_json["last_modified"],
         corpus_id=model_json["origin"]["corpus_id"],
         seed_genes=model_json["origin"]["seed_genes"],
@@ -34,10 +35,27 @@ def get_model(model_id):
     )
 
 
+def add_new_model(model_obj):
+    """Add new model to the db."""
+    app.mongo.db.kami_models.insert_one({
+        "id": model_obj._id,
+        "creation_time": model_obj.creation_time,
+        "last_modified": model_obj.last_modified,
+        "meta_data": model_obj.annotation,
+        "origin": {
+            "corpus_id": model_obj._corpus_id,
+            "definitions": model_obj._definitions,
+            "seed_genes": model_obj._seed_genes,
+        },
+        "kappa_models": []
+    })
+
+
 @model_blueprint.route("/model/<model_id>")
 def model_view(model_id):
     """View model."""
     model = get_model(model_id)
+    corpus = None
     if model._corpus_id is not None:
         corpus = get_corpus(model._corpus_id)
 
@@ -147,7 +165,6 @@ def download_model(model_id):
     filename = model_id.replace(" ", "_") + ".json"
     model.export_json(
         os.path.join(app.root_path, "uploads/" + filename))
-    print(os.path.join(app.root_path, "uploads"))
     return send_file(
         os.path.join(app.root_path, "uploads/" + filename),
         as_attachment=True,
