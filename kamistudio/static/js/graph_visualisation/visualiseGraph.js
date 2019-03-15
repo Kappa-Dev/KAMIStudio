@@ -1,10 +1,101 @@
+function initLinkStrengthDistance(graph, metaTyping, scale=1) {
+	// Initialize link strength depending on node meta-types
+    for (var i=0; i < graph.links.length; i++) {
+	    var d = graph.links[i];
+	    d.strength = 0.02 * scale;
+	    d.distance = 50 * scale;
+	    if (metaTyping[d.target] == "gene") {
+	      if (metaTyping[d.source] == "region") {
+	        d.strength = 0.7 * scale;
+	        d.distance = 10 * scale;
+	      } else if (metaTyping[d.source] == "site") {
+	        d.strength = 0.7 * scale;
+	        d.distance = 15 * scale;
+	      } else if (metaTyping[d.source] == "residue") {
+	        d.strength = 0.7 * scale;
+	        d.distance = 20 * scale;
+	      } 
+	    } else if (metaTyping[d.target] == "region") {
+	      if (metaTyping[d.source] == "site") {
+	        d.strength = 0.6 * scale;
+	        d.distance = 10 * scale;
+	      } else if ((metaTyping[d.source] == "residue")) {
+	        d.strength = 0.6 * scale;
+	        d.distance = 15 * scale;
+	      } 
+	    } else if (metaTyping[d.target] == "site") {
+	      if (metaTyping[d.source] == "residue") {
+	        d.strength = 0.7 * scale;
+	        d.distance = 10 * scale;
+	      } 
+	    } else if (metaTyping[d.target] == "residue") {
+	    	if (metaTyping[d.source] == "state") {
+	    		d.strength = 0.4 * scale;
+	    		d.distance = 5 * scale;
+	    	}
+	    } else if (metaTyping[d.target] == "state") {
+	      if (metaTyping[d.source] == "mod") {
+	        d.strength = 0.15 * scale;
+	      } 
+	    } else if (metaTyping[d.target] == "bnd") {
+	      d.strength = 0.1 * scale;
+	    } else if (metaTyping[d.target] == "mod") {
+	      d.strength = 0.1 * scale;
+	    }
+    	if (metaTyping[d.source] == "state") {
+    		d.strength = 1 * scale;
+    		d.distance = 10 * scale;
+    	}
+  }
+}
 
+
+function initCircleRadius(graph, metaTyping, scheme, scale=1) {
+	// Initialize circle radia depending on node meta-types
+	for (var i=0; i < graph.nodes.length; i++) {
+		graph.nodes[i].radius = scheme[metaTyping[graph.nodes[i].id]] * scale;
+	}
+}
+
+function initNodePosition(graph, posDict, fix=null) {
+	if (fix === null) {
+		fix = [];
+	}
+	for (var i=0; i < graph.nodes.length; i++) {
+		if (graph.nodes[i].id in posDict) {
+			graph.nodes[i].x = posDict[graph.nodes[i].id][0];
+			graph.nodes[i].y = posDict[graph.nodes[i].id][1];
+			if (fix.includes(graph.nodes[i].id)) {
+				graph.nodes[i].fx = graph.nodes[i].x;
+				graph.nodes[i].fy = graph.nodes[i].y;
+			}
+		}
+	}
+}
+
+
+function computeNodeSizes(graph, metaTyping, scheme, scale=1) {
+	var nodeSizes = {};
+	for (var i = 0; i < graph.nodes.length; i++) {
+		nodeSizes[graph.nodes[i].id] = scheme[metaTyping[graph.nodes[i].id]] * scale;
+	}
+	return nodeSizes;
+}
+
+function computeNodeColors(graph, metaTyping, scheme) {
+	var nodeColors = {};
+	for (var i = 0; i < graph.nodes.length; i++) {
+		nodeColors[graph.nodes[i].id] = scheme[
+				metaTyping[graph.nodes[i].id]];
+	}
+	return nodeColors;
+}
 
 
 function findNodesWithNoPosition(graph) {
 	noPositionNodes = [];
 	for (var i=0; i < graph.nodes.length; i++) {
-		if ((!graph.nodes[i].x) && (!graph.nodes[i].y)) {
+		if ((!graph.nodes[i].fx) || (!graph.nodes[i].fy)) {
 			noPositionNodes.push(graph.nodes[i].id);
 		}
 	}
@@ -35,10 +126,11 @@ function visualiseGraph(graph, svgId,
 						nodePosUpdateUrl=null,
                      	onNodeClick=null, 
                      	onEdgeClick=null,
-                     	onNodeDrag=null,
-                     	threshold=null) {
+                     	onNodeDragStarted=null,
+                     	threshold=null,
+                     	zoom=true) {
 
-	console.log(graph);
+	console.log(onNodeDragStarted);
 	// initialise default simulation params
 	var defaultRadius;
 	if ("radius" in simulationConf) {
@@ -75,6 +167,16 @@ function visualiseGraph(graph, svgId,
 		collideStrength = 1.8;
 	}
 
+	var yStrength;
+	if ("y_strength" in simulationConf) {
+		yStrength = simulationConf["y_strength"];
+	} else {
+		yStrength = 0;
+	}
+
+	console.log("Charge : ", chargeStrength);
+	console.log("Collide strength: ", collideStrength);
+	console.log("Y strength: ", yStrength);
 	// array of current components to drag (for group dragging) 
 	var CURRENT_DRAG_COMPONENTS = []; 	
 
@@ -94,7 +196,7 @@ function visualiseGraph(graph, svgId,
 	}
 
 	svg.append("defs").append("marker")
-		.attr("id", "arrow")
+		.attr("id", svgId + "arrow")
 		.attr("viewBox", "0 -5 10 10")
 		.attr("refX", 7)
 		.attr("refY", 0)
@@ -106,7 +208,7 @@ function visualiseGraph(graph, svgId,
 		.attr('fill', edgeStroke);
 
 	svg.append("defs").append("marker")
-		.attr("id", "arrow-selected")
+		.attr("id", svgId + "arrow-selected")
 		.attr("viewBox", "0 -5 10 10")
 		.attr("refX", 7)
 		.attr("refY", 0)
@@ -121,9 +223,11 @@ function visualiseGraph(graph, svgId,
 	var container = svg.append("g")
       				   .attr("class", "everything");
 
-	var zoom = d3.zoom()
-	             .on("zoom", zoomed);
-	svg.call(zoom);
+    if (zoom) {
+		var zoom = d3.zoom()
+		             .on("zoom", zoomed);
+		svg.call(zoom);
+	}
 
 	// layout calculation part
 	var noPositionNodes = findNodesWithNoPosition(graph)
@@ -155,8 +259,7 @@ function visualiseGraph(graph, svgId,
 			} else if ("init_layout_progress" in progressConf) {
 				progressConf["init_layout_progress"]();
 			}
-			console.log(collideStrength, typeof collideStrength);
-			console.log(chargeStrength, typeof chargeStrength);
+
 			// initalize web-worker
 			var worker = new Worker(workerUrl);
 			worker.postMessage({
@@ -165,7 +268,11 @@ function visualiseGraph(graph, svgId,
 			  width: width,
 			  height: height,
 			  collideStrength: collideStrength, 
-			  chargeStrength: chargeStrength
+			  chargeStrength: chargeStrength,
+			  defaultDistance: defaultDistance,
+			  defaultStrength: defaultStrength,
+			  defaultRadius: defaultRadius,
+			  yStrength: yStrength
 			});
 
 			worker.onmessage = function(event) {
@@ -231,94 +338,173 @@ function visualiseGraph(graph, svgId,
 			linkBox = linkSelector.selectAll(".linkbox");
 	    linkBox
 	        .attr("x1", function(d) { 
-	        	// console.log("x1 ", d.source.x);
 	        	return d.source.x; 
 	        })
 	        .attr("y1", function(d) {
-	        	// console.log("y1 ", d.source.y); 
 	        	return d.source.y; 
 	        })
 	        .attr("x2", function(d) { 
-	        	// console.log("x2 ", d.target.x);
-	        	radius = nodeSizes[d.target.id];
+	        	radius = d.target.radius;
 			    diffX = d.target.x - d.source.x;
 			    diffY = d.target.y - d.source.y;
 			    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-			    offsetX = (diffX * radius) / pathLength;
-			    return (d.target.x - offsetX + offsetX * 0.3);
+			    if (pathLength == 0) {
+	              offsetX = 0;
+	            } else {
+			    	offsetX = (diffX * radius) / pathLength;
+			    }
+			 //    if (!(d.target.x- offsetX + offsetX * 0.3)) {
+				//     console.log(pathLength, d.target.x, radius);
+				// }
+			    return (d.target.x- offsetX + offsetX * 0.3);
         	 })
 	        .attr("y2", function(d) {
-	        	// console.log("y2 ", d.target.y, d.target);
-        		radius = nodeSizes[d.target.id];
+        		radius = d.target.radius;
 			    diffX = d.target.x - d.source.x;
 			    diffY = d.target.y - d.source.y;
 			    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-			    offsetY = (diffY * radius) / pathLength;
+			    if (pathLength == 0) {
+	              offsetY = 0;
+	            } else {
+			 	   offsetY = (diffY * radius) / pathLength;
+				}
+			 //    if (!(d.target.y - offsetY + offsetY * 0.3)) {
+				//     console.log(pathLength, d.target.y, radius);
+				// }
 			    return (d.target.y - offsetY + offsetY * 0.3);
 			});
 	    arrow
 	        .attr("x1", function(d) { return d.source.x; })
 	        .attr("y1", function(d) { return d.source.y; })
 	        .attr("x2", function(d) { 
-		        	radius = nodeSizes[d.target.id];
+		        	radius = d.target.radius;
 				    diffX = d.target.x - d.source.x;
 				    diffY = d.target.y - d.source.y;
 				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-				    offsetX = (diffX * radius) / pathLength;
+				    if (pathLength == 0) {
+		              offsetX = 0;
+		            } else {
+				    	offsetX = (diffX * radius) / pathLength;
+				    }
+			    	// if (!(d.target.x- offsetX + offsetX * 0.3)) {
+			    	// 	console.log(pathLength, d.target.x, radius);
+			    	// }
 				    return (d.target.x - offsetX - offsetX * 0.1);
 	        	 })
 	        .attr("y2", function(d) { 
-	        		radius = nodeSizes[d.target.id];
+	        		radius = d.target.radius;
 				    diffX = d.target.x - d.source.x;
 				    diffY = d.target.y - d.source.y;
 				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
-				    offsetY = (diffY * radius) / pathLength;
+				    if (pathLength == 0) {
+		              offsetY = 0;
+		            } else {
+				    	offsetY = (diffY * radius) / pathLength;
+				    }
+				    // if (!(d.target.y - offsetY + offsetY * 0.3)) {
+				    // 	console.log(pathLength, d.target.y, radius);
+				    // }
 				    return (d.target.y - offsetY - offsetY * 0.1);
 				});
 	}
 
+	function fitViewBox() {
+		var boundaries = container.node().getBBox(),
+            bx = boundaries.x,
+            by = boundaries.y,
+            bheight = boundaries.height,
+            bwidth = boundaries.width;
+
+        var currentViewBox = svg.attr("viewBox");
+        if (currentViewBox !== null) {
+        	var split =  currentViewBox.split(" ");
+        	if ((split[0] > bx) ||
+        		(split[1] > by) ||
+        		(split[2] < bwidth) ||
+        		(split[3] < bheight)) {
+        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+		        svg  
+		            .attr("viewBox", updatedView)  
+		            .attr("preserveAspectRatio", "xMidYMid meet")  
+		            .call(zoom);
+        	}
+        } else {
+        	if ((bx < 0) ||
+        		(by < 0) ||
+        		(width < bwidth) ||
+        		(height > bheight)) {
+        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+		        svg  
+		            .attr("viewBox", updatedView)  
+		            .attr("preserveAspectRatio", "xMidYMid meet")  
+		            .call(zoom);
+		    }
+        }
+	}
+
 	function ticked() {
 		// Set positions of nodes and links corresponding to one tick of simulations
-	  	var node = d3.selectAll(".node"),
-	  	    link = d3.selectAll(".link");
+	  	var node = svg.selectAll(".node"),
+	  	    link = svg.selectAll(".link");
 
 	  	translateLinks(link, node);
 
 	    node.attr(
             "transform", 
             function(d) {
-	          	// zoom to fit the bounding box
-	          	var boundaries = container.node().getBBox(),
-		            bx = boundaries.x,
-		            by = boundaries.y,
-		            bheight = boundaries.height,
-		            bwidth = boundaries.width;
+            	if (zoom) {
+            		var epsilon = 10,
+            			offset = 40;
+            		if ((d.x < 0 + d.radius) ||
+            			(d.x > width - d.radius) ||
+            			(d.y < 0 + d.radius) ||
+            			(d.y > height - d.radius)) {
+            			// zoom to fit the bounding box
+				          	var boundaries = container.node().getBBox(),
+					            bx = boundaries.x,
+					            by = boundaries.y,
+					            bheight = boundaries.height,
+					            bwidth = boundaries.width;
 
-		        var currentViewBox = svg.attr("viewBox");
-		        if (currentViewBox !== null) {
-		        	var split =  currentViewBox.split(" ");
-		        	if ((split[0] > bx) ||
-		        		(split[1] > by) ||
-		        		(split[2] < bwidth) ||
-		        		(split[3] < bheight)) {
-		        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-				        svg  
-				            .attr("viewBox", updatedView)  
-				            .attr("preserveAspectRatio", "xMidYMid meet")  
-				            .call(zoom);
-		        	}
-		        } else {
-		        	if ((bx < 0) ||
-		        		(by < 0) ||
-		        		(width < bwidth) ||
-		        		(height > bheight)) {
-		        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-				        svg  
-				            .attr("viewBox", updatedView)  
-				            .attr("preserveAspectRatio", "xMidYMid meet")  
-				            .call(zoom);
-				    }
-		        }
+					        var currentViewBox = svg.attr("viewBox");
+					        if (currentViewBox !== null) {
+					        	var split =  currentViewBox.split(" ");
+					        	if ((split[0] - epsilon > bx) ||
+					        		(split[1] - epsilon > by) ||
+					        		(split[2] + epsilon < bwidth) ||
+					        		(split[3] + epsilon < bheight)) {
+					        		var updatedView = "" + (bx - offset)  +
+					        						  " " + (by - offset) + 
+					        						  " " + (bwidth + offset) + 
+					        						  " " + (bheight + offset);
+							        svg  
+							            .attr("viewBox", updatedView)  
+							            .attr("preserveAspectRatio", "xMidYMid meet")  
+							            .call(zoom);
+					        	}
+					        } else {
+					        	if ((bx + epsilon < 0) ||
+					        		(by + epsilon < 0) ||
+					        		(width < bwidth - epsilon) ||
+					        		(height > bheight - epsilon)) {
+					        		var updatedView = "" + (bx - offset)  +
+					        						  " " + (by - offset) + 
+					        						  " " + (bwidth + offset) + 
+					        						  " " + (bheight + offset);
+					        		svg  
+							            .attr("viewBox", updatedView)  
+							            .attr("preserveAspectRatio", "xMidYMid meet")  
+							            .call(zoom);
+							    }
+					        }
+            		}
+			    } else {
+			    	// do not allow positions out of the bounding box
+			    
+			    	d.x = Math.max(d.radius, Math.min(width - d.radius, d.x));
+			    	d.y = Math.max(d.radius, Math.min(height - d.radius, d.y));
+			    	// console.log(d.x, d.y);
+			    }
 		        
 	            return "translate(" + d.x + "," + d.y + ")"; 
 			}
@@ -329,7 +515,8 @@ function visualiseGraph(graph, svgId,
 		if (simulate) {
 	        // defines forces between nodes and edges
 	        var simulation = d3.forceSimulation()
-	            .force("charge", d3.forceManyBody().strength(chargeStrength))
+	            .force("charge", d3.forceManyBody().strength(
+	            	chargeStrength))
 	            .force("link", 
 	            	d3.forceLink()
 	            	  .id(function(d) { return d.id; })
@@ -341,10 +528,12 @@ function visualiseGraph(graph, svgId,
 	            		}})
 	                  .strength(function(d) { 
 		                	if (d.strength) {
+		                		// console.log("S", d.strength);
 		                		return d.strength; 
 		                	} else {
 		                		return defaultStrength;
 		                	}}))
+	            .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
 	            .force("center", d3.forceCenter(width / 2, height / 2))
 	            .force("collide",d3.forceCollide().strength(collideStrength).radius(
 		          function(d) {
@@ -360,7 +549,10 @@ function visualiseGraph(graph, svgId,
 	            .on("tick", ticked)
 	            .on('end', 
 	            	function() {
-	    				updateNodePositions(nodes, nodePosUpdateUrl)
+	            		// if (zoom) {
+	            		// 	fitViewBox();
+	            		// }
+	    				updateNodePositions(nodes, nodePosUpdateUrl);
 					});
 	        // applies forces on nodes and edges
 	        simulation.nodes(nodes);
@@ -385,7 +577,7 @@ function visualiseGraph(graph, svgId,
 		link.append("line")
 			.attr("class", "arrow")
 			.attr("stroke-width", 2).attr("stroke", d3.rgb(edgeStroke))
-		    .attr("marker-end", "url(#arrow)");
+		    .attr("marker-end", "url(#" + svgId + "arrow)");
 		link.append("line")
 			.attr("class", "linkbox")
 
@@ -413,6 +605,7 @@ function visualiseGraph(graph, svgId,
 
 	    if (!simulate) {
 	       ticked();
+	       fitViewBox();
 	    }
 	}
 
@@ -422,7 +615,7 @@ function visualiseGraph(graph, svgId,
 
 	function dragstarted(d) {
 		d3.event.sourceEvent.stopPropagation();
-		onNodeDragstarted(d);
+		CURRENT_DRAG_COMPONENTS = onNodeDragStarted(d);
 	}
 
 	function dragged(d) {
@@ -448,7 +641,7 @@ function visualiseGraph(graph, svgId,
 
 	    container.selectAll(".components").remove();
     	var components = CURRENT_DRAG_COMPONENTS;
-    	var componentSelector = d3.selectAll(".node")
+    	var componentSelector = svg.selectAll(".node")
 		  .filter(function(e) { return components.includes(e.id); })
 		  .each(function(e) {
     			e.x += d3.event.dx;

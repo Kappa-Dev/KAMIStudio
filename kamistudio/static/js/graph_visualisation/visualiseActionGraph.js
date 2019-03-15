@@ -8,100 +8,38 @@ var AG_META_SIZES = {
   "bnd":15
 };
 
+var META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene":"#8db1d1",
+  // "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
 
-function initLinkStrengthDistance(graph, metaTyping) {
-	// Initialize link strength depending on node meta-types
-    for (var i=0; i < graph.links.length; i++) {
-	    var d = graph.links[i];
-	    d.strength = 0.09;
-	    d.distance = 50;
-	    if (metaTyping[d.target] == "gene") {
-	      if (metaTyping[d.source] == "region") {
-	        d.strength = 0.3;
-	        d.distance = 10;
-	      } else if (metaTyping[d.source] == "site") {
-	        d.strength = 0.25;
-	        d.distance = 15;
-	      } else if (metaTyping[d.source] == "residue") {
-	        d.strength = 0.22;
-	        d.distance = 20;
-	      } 
-	    } else if (metaTyping[d.target] == "region") {
-	      if (metaTyping[d.source] == "site") {
-	        d.strength = 0.25;
-	        d.distance = 10;
-	      } else if ((metaTyping[d.source] == "residue")) {
-	        d.strength = 0.22;
-	        d.distance = 15;
-	      } 
-	    } else if (metaTyping[d.target] == "site") {
-	      if (metaTyping[d.source] == "residue") {
-	        d.strength = 0.22;
-	        d.distance = 10;
-	      } 
-	    } else if (metaTyping[d.target] == "residue") {
-	    	if (metaTyping[d.source] == "state") {
-	    		d.strength = 0.3
-	    		d.distance = 5;
-	    	}
-	    } else if (metaTyping[d.target] == "state") {
-	      if (metaTyping[d.source] == "mod") {
-	        d.strength = 0.15;
-	      } 
-	    } else if (metaTyping[d.target] == "bnd") {
-	      d.strength = 0.1;
-	    } else if (metaTyping[d.target] == "mod") {
-	      d.strength = 0.1;
-	    }
-    	if (metaTyping[d.source] == "state") {
-    		d.strength = 1;
-    		d.distance = 10;
-    	}
-  }
-}
+var INSTANCE_META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
 
 
-function initCircleRadius(graph, metaTyping) {
-	// Initialize circle radia depending on node meta-types
-	for (var i=0; i < graph.nodes.length; i++) {
-		graph.nodes[i].radius = AG_META_SIZES[metaTyping[graph.nodes[i].id]];
-	}
-}
-
-function initNodePosition(graph, posDict) {
-	for (var i=0; i < graph.nodes.length; i++) {
-		if (graph.nodes[i].id in posDict) {
-			graph.nodes[i].fx = posDict[graph.nodes[i].id][0];
-			graph.nodes[i].x = posDict[graph.nodes[i].id][0];
-			graph.nodes[i].fy = posDict[graph.nodes[i].id][1];
-			graph.nodes[i].y = posDict[graph.nodes[i].id][1];
-		}
-	}
-}
-
-
-
-function computeNodeSizes(graph, metaTyping) {
-	var nodeSizes = {};
-	for (var i = 0; i < graph.nodes.length; i++) {
-		nodeSizes[graph.nodes[i].id] = AG_META_SIZES[metaTyping[graph.nodes[i].id]];
-	}
-	return nodeSizes;
-}
-
-function computeNodeColors(graph, metaTyping, instantiated=false) {
-	var nodeSizes = {};
-	for (var i = 0; i < graph.nodes.length; i++) {
-		if (instantiated) {
-			nodeSizes[graph.nodes[i].id] = INSTANCE_META_COLORS[
-				metaTyping[graph.nodes[i].id]];
-		} else {
-			nodeSizes[graph.nodes[i].id] = META_COLORS[
-				metaTyping[graph.nodes[i].id]];
-		}
-	}
-	return nodeSizes;
-}
+HIGHLIGHT_COLOR = "#337ab7";
+INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 
 function displayHiddenSvg() {
@@ -117,7 +55,7 @@ function handleNodeClick(highlight) {
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#arrow)");
+	      .attr("marker-end", "url(#actionGraphSvgarrow)");
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
 	    // select current element
@@ -138,15 +76,27 @@ function handleEdgeClick(highlight) {
 	      .attr("stroke-width", 0);
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#arrow)");
+	      .attr("marker-end", "url(#actionGraphSvgarrow)");
 	    d3.select(this)
 	      // .attr("stroke-width", 2)
 	      .select(".arrow")
 	      .style("stroke", d3.rgb(highlight))
-	      .attr("marker-end", "url(#arrow-selected)");
+	      .attr("marker-end", "url(#actionGraphSvgarrow-selected)");
 	};
 }
 
+function handleDragStarted(graph, metaTyping) {
+	return function(d) {
+		if ((metaTyping[d.id] != "state") &&
+			(metaTyping[d.id] != "bnd") && 
+			(metaTyping[d.id] != "mod")) {
+			return getAllComponents(
+				graph, metaTyping, d.id);
+		} else {
+			return [];
+		}
+	}
+}
 
 function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
   	// use AJAX to send request for retrieving the nugget data
@@ -168,15 +118,24 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 	    	metaTyping = data["metaTyping"],
 	    	nodePos = data["nodePosition"],
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning",
-		    nodeColors = computeNodeColors(actionGraph, metaTyping, instantiated),
-		    nodeSizes = computeNodeSizes(actionGraph, metaTyping);
+	    	nodeSizes = computeNodeSizes(actionGraph, metaTyping, AG_META_SIZES);
 
-		initNodePosition(actionGraph, nodePos);
+	    var nodeColors;
+	    if (instantiated) {
+		    nodeColors = computeNodeColors(
+		    	actionGraph, metaTyping, INSTANCE_META_COLORS);
+		} else {
+			nodeColors = computeNodeColors(
+		    	actionGraph, metaTyping, META_COLORS);
+		}
+		
+		// initNodePosition(actionGraph, nodePos, fix=Object.keys(nodePos));
 		initLinkStrengthDistance(actionGraph, metaTyping);
-		initCircleRadius(actionGraph, metaTyping);
+		initCircleRadius(actionGraph, metaTyping, AG_META_SIZES);
+
 		simulationConf = {
-			"chargeStrength": -300,
-			"collideStrength": 1.8,
+			"charge_strength": -400,
+			"collide_strength": 1.8,
 		}
 
 		progressConf = {
@@ -205,8 +164,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 						nodePosUpdateUrl=nodePosUpdateUrl,
                      	onNodeClick=handleNodeClick(highlight), 
                      	onEdgeClick=handleEdgeClick(highlight),
-                     	onNodeDrag=null,
-                    	threshold=100);
+                     	onNodeDragStarted=handleDragStarted(actionGraph, metaTyping),
+                    	threshold=300);
 	}).fail(function (e) {
 	    console.log("Failed to load action graph");
 	});

@@ -15,6 +15,11 @@ var AG_META_SIZES = {
 };
 
 
+function displayHiddenSvg() {
+	svg.style("display", "initial");
+	document.getElementById("saveLayoutButton").disabled = false;
+}
+
 function initializeLinkStrengthDistance(graph, metaTyping) {
 	// Initialize link strength depending on node meta-types
     for (var i=0; i < graph.links.length; i++) {
