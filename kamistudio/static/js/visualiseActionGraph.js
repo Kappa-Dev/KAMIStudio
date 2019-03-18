@@ -515,7 +515,6 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    translateLinks(
 	    	container.selectAll(".link"),
 	    	container.selectAll(".node"));
-
 	}
 
 	function zoomInArea(d, i) {

@@ -3,6 +3,7 @@
  * 
  */
 
+
 function htmlToElement(html) {
     var template = document.createElement('template');
     html = html.trim(); // Never return a text node of whitespace as the result
@@ -60,8 +61,8 @@ var META_LABEL_DY = {
   "bnd":"-2.5em"
 }
 
-HIGHLIGHT_COLOR = "#337ab7";
-INSTANCE_HIGHLIGHT_COLOR = "#a11117";
+var HIGHLIGHT_COLOR = "#337ab7";
+var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 function initializePositions(width, height, graph, nuggetType, templateRelation) {
   var fixedPositions = {};
