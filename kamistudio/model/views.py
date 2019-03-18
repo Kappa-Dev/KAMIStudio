@@ -7,6 +7,7 @@ from flask import (render_template, Blueprint, request, session, redirect,
 from flask import current_app as app
 
 from regraph import graph_to_d3_json
+from regraph.neo4j import Neo4jHierarchy
 
 from kami.aggregation.generators import generate_nugget
 from kami.data_structures.models import KamiModel
@@ -197,3 +198,21 @@ def update_ag_node_positioning(model_id):
 
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
+
+
+@model_blueprint.route("/model/<model_id>/delete")
+def delete_model(model_id):
+    """Handle removal of the model."""
+    model = get_model(model_id)
+
+    # connect to db
+    h = Neo4jHierarchy(driver=app.neo4j_driver)
+
+    # remove nuggets
+    for n in model.nuggets():
+        h.remove_graph(n)
+    # remove the ag
+    h.remove_graph(model._action_graph_id)
+
+    # drop from mongo db
+    app.mongo.db.kami_models.remove({"id": model_id})

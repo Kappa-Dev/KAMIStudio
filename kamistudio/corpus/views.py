@@ -8,6 +8,7 @@ from flask import (render_template, Blueprint, request, session, redirect,
 from flask import current_app as app
 
 from regraph import graph_to_d3_json
+from regraph.neo4j import Neo4jHierarchy
 
 from kami.exporters.old_kami import ag_to_edge_list
 from kami.aggregation.generators import generate_nugget
@@ -179,3 +180,21 @@ def update_ag_node_positioning(corpus_id):
 
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
+
+
+@corpus_blueprint.route("/corpus/<corpus_id>/delete")
+def delete_corpus(corpus_id):
+    """Handle removal of the corpus."""
+    corpus = get_corpus(corpus_id)
+
+    # connect to db
+    h = Neo4jHierarchy(driver=app.neo4j_driver)
+
+    # remove nuggets
+    for n in corpus.nuggets():
+        h.remove_graph(n)
+    # remove the ag
+    h.remove_graph(corpus._action_graph_id)
+
+    # drop from mongo db
+    app.mongo.db.kami_corpora.remove({"id": corpus_id})
