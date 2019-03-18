@@ -255,56 +255,56 @@ function addSvgAndVisualizeNugget(element, model_id, nugget_id, instantiated=fal
     	metaTyping = data["metaTyping"],
     	agTyping = data["agTyping"],
     	templateRelation = data["templateRelation"],
-    	nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, scale=0.5);
+    	nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
 
     var nodeColors;
     if (instantiated) {
-	    nodeColors = computeNodeColors(
-	    	nuggetGraph, metaTyping, INSTANCE_META_COLORS);
-	} else {
-		nodeColors = computeNodeColors(
-	    	nuggetGraph, metaTyping, META_COLORS);
-	}
-		
-	positions = computeFixedPositions(width, height, nuggetGraph, nuggetType, templateRelation);
-	initNodePosition(
-		nuggetGraph,
-		positions[0],
-		fix=positions[1]);
-	initLinkStrengthDistance(nuggetGraph, metaTyping, scale=0.5);
-	initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, scale=0.5);
+  	    nodeColors = computeNodeColors(
+  	    	nuggetGraph, metaTyping, INSTANCE_META_COLORS);
+  	} else {
+  		nodeColors = computeNodeColors(
+  	    	nuggetGraph, metaTyping, META_COLORS);
+  	}
+  		
+  	var positions = computeFixedPositions(width, height, nuggetGraph, nuggetType, templateRelation);
+  	initNodePosition(
+  		nuggetGraph,
+  		positions[0],
+  		positions[1]);
+  	initLinkStrengthDistance(nuggetGraph, metaTyping, 0.5);
+  	initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
 
-	simulationConf = {
-		"charge_strength": -400,
-		"collide_strength": 2.5,
-		"y_strength": 0.2
-	}
+  	var simulationConf = {
+  		"charge_strength": -400,
+  		"collide_strength": 2.5,
+  		"y_strength": 0.2
+  	}
 
 
     var highlight;
-	if (instantiated) {
-		highlight = INSTANCE_HIGHLIGHT_COLOR;
-	} else {
-		highlight = HIGHLIGHT_COLOR;
-	}
+  	if (instantiated) {
+  		highlight = INSTANCE_HIGHLIGHT_COLOR;
+  	} else {
+  		highlight = HIGHLIGHT_COLOR;
+  	}
 
-    visualiseGraph(nuggetGraph, svgId,
-    				nodeColors, nodeSizes,
-    				edgeStroke=null,
-    				highlightedEdgeStroke=highlight,
-    				simulationConf=simulationConf,
-    				progressConf={},
-    				workerUrl=null,
-    				nodePosUpdateUrl=null,
-    				onNodeClick=handleNuggetNodeClick(highlight, svgId),
-    				onEdgeClick=handleNuggetEdgeClick(highlight, svgId),
-    				onNodeDragstarted=function(d) { return []; },
-    				threshold=100,
-    				zoom=false)
-  });
-  // Remove 'Show graph' button 
-  element.style.display = 'none';
-  document.getElementById("hideNuggetButton" + nugget_id).style.display = "inline-block";
+      visualiseGraph(nuggetGraph, svgId,
+      				nodeColors, nodeSizes,
+      				null,
+      				highlight,
+      				simulationConf,
+      				{},
+      				null,
+      				null,
+      				handleNuggetNodeClick(highlight, svgId),
+      				handleNuggetEdgeClick(highlight, svgId),
+      				function(d) { return []; },
+      				100,
+      				false)
+    });
+    // Remove 'Show graph' button 
+    element.style.display = 'none';
+    document.getElementById("hideNuggetButton" + nugget_id).style.display = "inline-block";
 }
 
 function removeNuggetSvg(element, nugget_id) {

@@ -93,7 +93,7 @@ function computeNodeColors(graph, metaTyping, scheme) {
 
 
 function findNodesWithNoPosition(graph) {
-	noPositionNodes = [];
+	var noPositionNodes = [];
 	for (var i=0; i < graph.nodes.length; i++) {
 		if ((!graph.nodes[i].fx) || (!graph.nodes[i].fy)) {
 			noPositionNodes.push(graph.nodes[i].id);
@@ -128,9 +128,9 @@ function visualiseGraph(graph, svgId,
                      	onEdgeClick=null,
                      	onNodeDragStarted=null,
                      	threshold=null,
-                     	zoom=true) {
+                     	zoom=true,
+                     	saveLayoutButton=null) {
 
-	console.log(onNodeDragStarted);
 	// initialise default simulation params
 	var defaultRadius;
 	if ("radius" in simulationConf) {
@@ -174,9 +174,6 @@ function visualiseGraph(graph, svgId,
 		yStrength = 0;
 	}
 
-	console.log("Charge : ", chargeStrength);
-	console.log("Collide strength: ", collideStrength);
-	console.log("Y strength: ", yStrength);
 	// array of current components to drag (for group dragging) 
 	var CURRENT_DRAG_COMPONENTS = []; 	
 
@@ -344,66 +341,60 @@ function visualiseGraph(graph, svgId,
 	        	return d.source.y; 
 	        })
 	        .attr("x2", function(d) { 
-	        	radius = d.target.radius;
-			    diffX = d.target.x - d.source.x;
-			    diffY = d.target.y - d.source.y;
-			    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+	        	var radius = d.target.radius,
+				    diffX = d.target.x - d.source.x,
+				    diffY = d.target.y - d.source.y,
+				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+			    var offsetX;
 			    if (pathLength == 0) {
 	              offsetX = 0;
 	            } else {
 			    	offsetX = (diffX * radius) / pathLength;
 			    }
-			 //    if (!(d.target.x- offsetX + offsetX * 0.3)) {
-				//     console.log(pathLength, d.target.x, radius);
-				// }
+
 			    return (d.target.x- offsetX + offsetX * 0.3);
         	 })
 	        .attr("y2", function(d) {
-        		radius = d.target.radius;
-			    diffX = d.target.x - d.source.x;
-			    diffY = d.target.y - d.source.y;
-			    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+        		var radius = d.target.radius,
+			    	diffX = d.target.x - d.source.x,
+			    	diffY = d.target.y - d.source.y,
+			    	pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+			    var offsetY;
 			    if (pathLength == 0) {
 	              offsetY = 0;
 	            } else {
 			 	   offsetY = (diffY * radius) / pathLength;
 				}
-			 //    if (!(d.target.y - offsetY + offsetY * 0.3)) {
-				//     console.log(pathLength, d.target.y, radius);
-				// }
+
 			    return (d.target.y - offsetY + offsetY * 0.3);
 			});
 	    arrow
 	        .attr("x1", function(d) { return d.source.x; })
 	        .attr("y1", function(d) { return d.source.y; })
 	        .attr("x2", function(d) { 
-		        	radius = d.target.radius;
-				    diffX = d.target.x - d.source.x;
-				    diffY = d.target.y - d.source.y;
-				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+		        	var radius = d.target.radius,
+					    diffX = d.target.x - d.source.x,
+					    diffY = d.target.y - d.source.y,
+					    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+				    var offsetX;
 				    if (pathLength == 0) {
 		              offsetX = 0;
 		            } else {
 				    	offsetX = (diffX * radius) / pathLength;
 				    }
-			    	// if (!(d.target.x- offsetX + offsetX * 0.3)) {
-			    	// 	console.log(pathLength, d.target.x, radius);
-			    	// }
 				    return (d.target.x - offsetX - offsetX * 0.1);
 	        	 })
 	        .attr("y2", function(d) { 
-	        		radius = d.target.radius;
-				    diffX = d.target.x - d.source.x;
-				    diffY = d.target.y - d.source.y;
-				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+	        		var radius = d.target.radius,
+					    diffX = d.target.x - d.source.x,
+					    diffY = d.target.y - d.source.y,
+					    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+				    var offsetY;
 				    if (pathLength == 0) {
 		              offsetY = 0;
 		            } else {
 				    	offsetY = (diffY * radius) / pathLength;
 				    }
-				    // if (!(d.target.y - offsetY + offsetY * 0.3)) {
-				    // 	console.log(pathLength, d.target.y, radius);
-				    // }
 				    return (d.target.y - offsetY - offsetY * 0.1);
 				});
 	}
@@ -503,7 +494,7 @@ function visualiseGraph(graph, svgId,
 			    
 			    	d.x = Math.max(d.radius, Math.min(width - d.radius, d.x));
 			    	d.y = Math.max(d.radius, Math.min(height - d.radius, d.y));
-			    	// console.log(d.x, d.y);
+
 			    }
 		        
 	            return "translate(" + d.x + "," + d.y + ")"; 
@@ -528,7 +519,6 @@ function visualiseGraph(graph, svgId,
 	            		}})
 	                  .strength(function(d) { 
 		                	if (d.strength) {
-		                		// console.log("S", d.strength);
 		                		return d.strength; 
 		                	} else {
 		                		return defaultStrength;
@@ -607,6 +597,13 @@ function visualiseGraph(graph, svgId,
 	       ticked();
 	       fitViewBox();
 	    }
+
+	    console.log('#' + saveLayoutButton);
+	    d3.select('#' + saveLayoutButton)
+          .on('click', function() {
+          	updateNodePositions(nodes, nodePosUpdateUrl, null, null, null);
+          });
+         console.log(d3.select('#' + saveLayoutButton));
 	}
 
 	function zoomed() {
@@ -692,6 +689,7 @@ function visualiseGraph(graph, svgId,
 function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, 
 							 failCallback, nodesToUpdate=null) {
 	// POST newly computed node positioning to the server
+	console.log("Updating node positions");
 	var positions = {};
 	for (var i=0; i < nodes.length; i++) {
 		if (nodesToUpdate) {

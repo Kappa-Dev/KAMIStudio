@@ -38,8 +38,8 @@ var INSTANCE_META_COLORS = {
 };
 
 
-HIGHLIGHT_COLOR = "#337ab7";
-INSTANCE_HIGHLIGHT_COLOR = "#a11117";
+var HIGHLIGHT_COLOR = "#337ab7";
+var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 
 function displayHiddenSvg() {
@@ -48,10 +48,10 @@ function displayHiddenSvg() {
 }
 
 
-function handleNodeClick(highlight) {
+function handleNodeClick(highlight, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
-	    svg = d3.select("#actionGraphSvg");
+	    var svg = d3.select("#actionGraphSvg");
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
@@ -64,13 +64,25 @@ function handleNodeClick(highlight) {
 	      .attr("stroke", d3.rgb(highlight));
 
 	    // call react func
+	    ReactDOM.render(
+	      [<ElementInfoBox id="graphElement" 
+	      				   elementId={d.id}
+	      				   elementType="node"
+	      				   metaType={metaTyping[d.id]}/>,
+	       <MetaDataBox id="metaData"
+	       				   elementId={d.id}
+	       				   elementType="node"
+	       				   metaType={metaTyping[d.id]}
+	       				   attrs={d.attrs}/>],
+	      document.getElementById('graphInfoBoxes')
+	    );
 	};
 }
 
-function handleEdgeClick(highlight) {
+function handleEdgeClick(highlight, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
-		svg = d3.select("#actionGraphSvg");
+		var svg = d3.select("#actionGraphSvg");
 
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
@@ -82,6 +94,23 @@ function handleEdgeClick(highlight) {
 	      .select(".arrow")
 	      .style("stroke", d3.rgb(highlight))
 	      .attr("marker-end", "url(#actionGraphSvgarrow-selected)");
+	    // call react func
+	    ReactDOM.render(
+	      [<ElementInfoBox id="graphElement"
+	      				   elementType="edge"
+		       			   sourceId={d.source.id}
+		       			   targetId={d.target.id}
+		       			   sourceMetaType={metaTyping[d.source.id]}
+	       				   targetMetaType={metaTyping[d.target.id]}/>,
+	       <MetaDataBox id="metaData"
+	       				sourceId={d.source.id}
+	       				targetId={d.target.id}
+	       				elementType="edge"
+	       				sourceMetaType={metaTyping[d.source.id]}
+	       				targetMetaType={metaTyping[d.target.id]}
+	       				attrs={d.attrs}/>],
+	      document.getElementById('graphInfoBoxes')
+	    );
 	};
 }
 
@@ -129,16 +158,16 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 		    	actionGraph, metaTyping, META_COLORS);
 		}
 		
-		// initNodePosition(actionGraph, nodePos, fix=Object.keys(nodePos));
+		initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
 		initLinkStrengthDistance(actionGraph, metaTyping);
 		initCircleRadius(actionGraph, metaTyping, AG_META_SIZES);
 
-		simulationConf = {
+		var simulationConf = {
 			"charge_strength": -400,
 			"collide_strength": 1.8,
 		}
 
-		progressConf = {
+		var progressConf = {
 			"remove_progress": removeProgressBlock,
 			"init_svg": displayHiddenSvg,
 			"init_layout_progress": initilizeLayoutProgressBar,
@@ -157,15 +186,17 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 					   "actionGraphSvg", 
 						nodeColors, nodeSizes,
 						null,
-						highlightedEdgeStroke=highlight,
-						simulationConf=simulationConf,
-						progressConf=progressConf,
-						workerUrl=workerUrl, 
-						nodePosUpdateUrl=nodePosUpdateUrl,
-                     	onNodeClick=handleNodeClick(highlight), 
-                     	onEdgeClick=handleEdgeClick(highlight),
-                     	onNodeDragStarted=handleDragStarted(actionGraph, metaTyping),
-                    	threshold=300);
+						highlight,
+						simulationConf,
+						progressConf,
+						workerUrl, 
+						nodePosUpdateUrl,
+                     	handleNodeClick(highlight, metaTyping), 
+                     	handleEdgeClick(highlight, metaTyping),
+                     	handleDragStarted(actionGraph, metaTyping),
+                    	300,
+                    	true,
+                    	"saveLayoutButton");
 	}).fail(function (e) {
 	    console.log("Failed to load action graph");
 	});
