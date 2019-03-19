@@ -47,8 +47,48 @@ function displayHiddenSvg() {
 	document.getElementById("saveLayoutButton").disabled = false;
 }
 
+function updateNodeAttrs(highlight, graph, metaTyping, d, i) {
+	return function(attrs) {
+		for (var i=0; i < graph.nodes.length; i++) {
+			if (graph.nodes[i].id === d.id) {
+				// console.log("Updted node: ", graph.nodes[i].attrs);
+				for (var k in attrs) {
+					// modify js graph object 
+					graph.nodes[i].attrs[k].data = [attrs[k]];
+				}
+				// send attr update to the server
 
-function handleNodeClick(highlight, metaTyping) {
+				// render updated boxes
+				handleNodeClick(highlight, graph, metaTyping)(d, i);
+			}
+		}
+		
+	};
+}
+
+function updateEdgeAttrs(highlight, graph, metaTyping, d, i) {
+	return function(attrs) {
+		for (var i=0; i < graph.links.length; i++) {
+			if ((graph.links[i].source.id === d.source.id) &&
+				(graph.links[i].target.id === d.target.id)) {
+				for (var k in attrs) {
+					// modify js graph object 
+					graph.links[i].attrs[k].data = [attrs[k]];
+				}
+				// send attr update to the server
+
+				// render updated boxes
+				handleEdgeClick(highlight, graph, metaTyping)(d, i);
+			}
+		}
+
+		// send attr update to the server
+		
+	};
+}
+
+
+function handleNodeClick(highlight, graph, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
 	    var svg = d3.select("#actionGraphSvg");
@@ -64,22 +104,26 @@ function handleNodeClick(highlight, metaTyping) {
 	      .attr("stroke", d3.rgb(highlight));
 
 	    // call react func
+
 	    ReactDOM.render(
 	      [<ElementInfoBox id="graphElement" 
 	      				   elementId={d.id}
 	      				   elementType="node"
-	      				   metaType={metaTyping[d.id]}/>,
+	      				   metaType={metaTyping[d.id]}
+	      				   editable={false}/>,
 	       <MetaDataBox id="metaData"
 	       				   elementId={d.id}
 	       				   elementType="node"
 	       				   metaType={metaTyping[d.id]}
-	       				   attrs={d.attrs}/>],
+	       				   attrs={d.attrs}
+	       				   editable={true}
+	       				   onDataUpdate={updateNodeAttrs(highlight, graph, metaTyping, d, i)}/>],
 	      document.getElementById('graphInfoBoxes')
 	    );
 	};
 }
 
-function handleEdgeClick(highlight, metaTyping) {
+function handleEdgeClick(highlight, graph, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
 		var svg = d3.select("#actionGraphSvg");
@@ -108,7 +152,9 @@ function handleEdgeClick(highlight, metaTyping) {
 	       				elementType="edge"
 	       				sourceMetaType={metaTyping[d.source.id]}
 	       				targetMetaType={metaTyping[d.target.id]}
-	       				attrs={d.attrs}/>],
+	       				attrs={d.attrs}
+	       				editable={true}
+	       				onDataUpdate={updateEdgeAttrs(highlight, graph, metaTyping, d, i)}/>],
 	      document.getElementById('graphInfoBoxes')
 	    );
 	};
@@ -191,8 +237,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 						progressConf,
 						workerUrl, 
 						nodePosUpdateUrl,
-                     	handleNodeClick(highlight, metaTyping), 
-                     	handleEdgeClick(highlight, metaTyping),
+                     	handleNodeClick(highlight, actionGraph, metaTyping), 
+                     	handleEdgeClick(highlight, actionGraph, metaTyping),
                      	handleDragStarted(actionGraph, metaTyping),
                     	300,
                     	true,

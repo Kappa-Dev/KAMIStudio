@@ -4,13 +4,13 @@ import json
 
 from kami.data_structures.corpora import KamiCorpus
 from flask import (render_template, Blueprint, request, session, redirect,
-                   url_for, send_from_directory, send_file)
+                   url_for, send_file)
 from flask import current_app as app
 
 from regraph import graph_to_d3_json
 from regraph.neo4j import Neo4jHierarchy
 
-from kami.exporters.old_kami import ag_to_edge_list
+from kami.data_structures.annotations import CorpusAnnotation
 from kami.aggregation.generators import generate_nugget
 
 from kamistudio.corpus.form_parsing import(parse_interaction)
@@ -22,14 +22,15 @@ corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
 def get_corpus(corpus_id):
     """Retreive corpus from the db."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    return KamiCorpus(
-        corpus_id,
-        annotation=corpus_json["meta_data"],
-        creation_time=corpus_json["creation_time"],
-        last_modified=corpus_json["last_modified"],
-        backend="neo4j",
-        driver=app.neo4j_driver
-    )
+    if corpus_json:
+        return KamiCorpus(
+            corpus_id,
+            annotation=CorpusAnnotation.from_json(corpus_json["meta_data"]),
+            creation_time=corpus_json["creation_time"],
+            last_modified=corpus_json["last_modified"],
+            backend="neo4j",
+            driver=app.neo4j_driver
+        )
 
 
 def add_new_corpus(corpus_obj):
@@ -46,15 +47,18 @@ def add_new_corpus(corpus_obj):
 def corpus_view(corpus_id):
     """View corpus."""
     corpus = get_corpus(corpus_id)
+    if corpus is not None:
+        nugget_desc = {}
+        for nugget in corpus.nuggets():
+            nugget_desc[nugget] = corpus.get_nugget_desc(nugget)
 
-    nugget_desc = {}
-    for nugget in corpus.nuggets():
-        nugget_desc[nugget] = corpus.get_nugget_desc(nugget)
-
-    return render_template("corpus.html",
-                           corpus_id=corpus_id,
-                           corpus=corpus,
-                           nugget_desc=nugget_desc)
+        return render_template("corpus.html",
+                               corpus_id=corpus_id,
+                               corpus=corpus,
+                               nugget_desc=nugget_desc)
+    else:
+        return render_template("corpus_not_found.html",
+                               corpus_id=corpus_id)
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-interaction",
@@ -144,15 +148,20 @@ def import_json_interactions(corpus_id):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/download", methods=["GET"])
 def download_corpus(corpus_id):
+    """Handle corpus download."""
     filename = corpus_id.replace(" ", "_") + ".json"
     corpus = get_corpus(corpus_id)
-    corpus.export_json(
-        os.path.join(app.root_path, "uploads/" + filename))
-    return send_file(
-        os.path.join(app.root_path, "uploads/" + filename),
-        as_attachment=True,
-        mimetype='application/json',
-        attachment_filename=filename)
+    if corpus:
+        corpus.export_json(
+            os.path.join(app.root_path, "uploads/" + filename))
+        return send_file(
+            os.path.join(app.root_path, "uploads/" + filename),
+            as_attachment=True,
+            mimetype='application/json',
+            attachment_filename=filename)
+    else:
+        return render_template("corpus_not_found.html",
+                               corpus_id=corpus_id)
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/update-ag-node-positioning",

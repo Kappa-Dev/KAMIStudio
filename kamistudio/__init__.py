@@ -1,7 +1,7 @@
 """Root server app."""
 import os
 
-from flask import Flask, url_for
+from flask import Flask, url_for, render_template
 from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
@@ -115,6 +115,12 @@ app.register_blueprint(nuggets_blueprint)
 def override_url_for():
     """Override url_for function with dated url."""
     return dict(url_for=dated_url_for)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle not found page."""
+    return render_template('404.html'), 404
 
 
 def dated_url_for(endpoint, **values):

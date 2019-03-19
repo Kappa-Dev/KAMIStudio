@@ -31,9 +31,9 @@ def index():
         # routine for finding last three models/corpora
         # (todo: think of a less naive implementation)
         last_corpora = list(app.mongo.db.kami_corpora.find().limit(3).sort(
-            "last_modified"))
+            "last_modified", -1))
         last_models = list(app.mongo.db.kami_models.find().limit(3).sort(
-            "last_modified"))
+            "last_modified", -1))
         i = 0
         ci = 0
         mi = 0

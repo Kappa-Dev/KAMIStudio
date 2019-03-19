@@ -22,18 +22,20 @@ model_blueprint = Blueprint('model', __name__, template_folder='templates')
 def get_model(model_id):
     """Retreive corpus from the db."""
     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
-    print(model_json)
-    return KamiModel(
-        model_id,
-        annotation=model_json["meta_data"],
-        creation_time=model_json["creation_time"],
-        last_modified=model_json["last_modified"],
-        corpus_id=model_json["origin"]["corpus_id"],
-        seed_genes=model_json["origin"]["seed_genes"],
-        definitions=model_json["origin"]["definitions"],
-        backend="neo4j",
-        driver=app.neo4j_driver
-    )
+    if model_json:
+        return KamiModel(
+            model_id,
+            annotation=model_json["meta_data"],
+            creation_time=model_json["creation_time"],
+            last_modified=model_json["last_modified"],
+            corpus_id=model_json["origin"]["corpus_id"],
+            seed_genes=model_json["origin"]["seed_genes"],
+            definitions=model_json["origin"]["definitions"],
+            backend="neo4j",
+            driver=app.neo4j_driver
+        )
+    else:
+        return None
 
 
 def add_new_model(model_obj):
@@ -56,19 +58,23 @@ def add_new_model(model_obj):
 def model_view(model_id):
     """View model."""
     model = get_model(model_id)
-    corpus = None
-    if model._corpus_id is not None:
-        corpus = get_corpus(model._corpus_id)
+    if model is not None:
+        corpus = None
+        if model._corpus_id is not None:
+            corpus = get_corpus(model._corpus_id)
 
-    nugget_desc = {}
-    for nugget in model.nuggets():
-        nugget_desc[nugget] = model.get_nugget_desc(nugget)
+        nugget_desc = {}
+        for nugget in model.nuggets():
+            nugget_desc[nugget] = model.get_nugget_desc(nugget)
 
-    return render_template("model.html",
-                           model_id=model_id,
-                           model=model,
-                           corpus=corpus,
-                           nugget_desc=nugget_desc)
+        return render_template("model.html",
+                               model_id=model_id,
+                               model=model,
+                               corpus=corpus,
+                               nugget_desc=nugget_desc)
+    else:
+        return render_template("model_not_found.html",
+                               model_id=model_id)
 
 
 @model_blueprint.route("/model/<model_id>/add-interaction",
