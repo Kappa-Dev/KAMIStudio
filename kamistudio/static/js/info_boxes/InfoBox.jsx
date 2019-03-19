@@ -10,27 +10,86 @@ function singleValueToString(data, attr_name) {
 	return value;
 }
 
+function getSingleValue(data, attr_name) {
+	return attr_name in data ? data[attr_name].data[0] : null;
+}
 
 class EditableBox extends React.Component {
+
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			edited: false,
-			items: props.items 
+			editing: false,
+			updatedData: {}
 		};
+		this.handleEditClick = this.handleEditClick.bind(this);
+		this.handleSaveClick = this.handleSaveClick.bind(this);
+		this.handleCancelClick = this.handleCancelClick.bind(this);
+		this.handleFieldChange = this.handleFieldChange.bind(this);
 	}
 
+	handleEditClick() {
+		let newState = { ...this.state };
+		newState.editing = true;
+		this.setState(newState);
+	}
+
+	handleSaveClick() {
+		if (Object.keys(this.state.updatedData).length > 0) {
+			for (var k in this.state.updatedData) {
+				this.props.data[k] = this.state.updatedData[k];
+			}
+			this.props.onDataUpdate(this.state.updatedData);
+		}
+		this.handleCancelClick();
+	}
+
+	handleCancelClick() {
+		let newState = { ...this.state };
+		newState.editing = false;
+		newState.updatedData = {};
+		this.setState(newState);
+	}
+
+	handleFieldChange = (field) => (event, value, selectedKey) => {
+		var val;
+		if (event) {
+			val = event.target.value;
+		} else {
+			val = value;
+		}
+
+		let newState = { ...this.state };
+		newState.updatedData[field] = val;
+		this.setState(newState);
+	}
 
 	render() {
 		var content;
 		if (this.props.items.length > 0) {
-			var items = this.props.items.map((item, key) =>
-			    <tr>
-				  	<th scope="row">{item[1]}</th>
-				  	<td>{item[2]}</td>
-				</tr>
-			);
+			if (this.state.editing) {
+				var items = this.props.items.map((item, key) =>
+				    <tr>
+					  	<th scope="row">{item[1]}</th>
+					  	<td>
+					  		<input type="text"
+				          		   className="form-control"
+				          		   name={item[1]}
+				          		   id={item[0]}
+				          		   onChange={this.handleFieldChange(item[0])}
+				          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
+				          	</td>
+					</tr>
+				);
+			} else {
+				var items = this.props.items.map((item, key) =>
+				    <tr>
+					  	<th scope="row">{item[1]}</th>
+					  	<td>{item[2]}</td>
+					</tr>
+				);
+			}
 			content =
 				<table className="table table-hover info-table">
 					<tbody>
@@ -44,28 +103,55 @@ class EditableBox extends React.Component {
 				</p>;
 		}
 
-		var editButton = null;
-		if (this.props.items.length > 0) {
-			editButton = 
-				<a href="" 
-				   type="button" 
-				   className="btn btn-default btn-md panel-button editable-box right-button">
-				   	<span class="glyphicon glyphicon-pencil"></span> Edit
-				</a>;
+		var topButton = null;
+		if ((this.props.editable) && (this.props.items.length > 0)) {
+			if (!this.state.editing) {
+				topButton = 
+					<button 
+					   type="button" onClick={this.handleEditClick}
+					   className="btn btn-default btn-sm panel-button editable-box right-button">
+					   	<span class="glyphicon glyphicon-pencil"></span> Edit
+					</button>;
+			}
+		}
+
+		var cancelButton = null;
+		var saveButton = null;
+		if (this.state.editing) {
+			cancelButton = <button 
+				   type="button" onClick={this.handleCancelClick}
+				   className="btn btn-default btn-sm panel-button editable-box right-button">
+				   Cancel
+				</button>;
+			saveButton = 
+				<button 
+				   type="button" onClick={() => this.handleSaveClick()}
+				   className="btn btn-primary btn-sm panel-button editable-box right-button">
+				   Save
+				</button>;
 		}
 
 		return ([
 			<div className="row">
-				<div className="col-md-8">
+				<div className="col-md-7">
 					<h3 class="editable-box">{this.props.name}</h3>
 				</div>
-				<div className="col-md-4">
-					{editButton}
+				<div className="col-md-5">
+					<div style={{"float": "right"}}>
+						{topButton}
+					</div>
 				</div>
 			</div>,
             <div id={this.props.id}>
             	{content}
-            </div>
+            </div>,
+            <div className="row">
+				<div className="col-md-12">
+					<div style={{"float": "right"}}>
+						{[cancelButton, saveButton]}
+					</div>
+				</div>
+			</div>,
         ]);
 	}
 }
@@ -83,20 +169,38 @@ class ElementInfoBox extends React.Component {
 			if (!this.props.elementId) {
 				message = "Click on an element to select";
 			} else {
+				var type;
+				if (this.props.metaType === "gene") {
+					type = "protoform";
+				} else {
+					type = this.props.metaType;
+				}
 				items = [
 					["id", "Node ID", this.props.elementId],
-					["type", "Node Type", [<span className={"dot dot-" + this.props.metaType}></span>, " " + this.props.metaType]]
+					["type", "Node Type", [<span className={"dot dot-" + this.props.metaType}></span>, " " + type]]
 				];
 			}
 		} else {
 			if ((!this.props.sourceId) || (!this.props.targetId)) {
 				message = "Click on an element to select";
 			} else {
+				var sourceType;
+				if (this.props.sourceMetaType === "gene") {
+					sourceType = "protoform";
+				} else {
+					sourceType = this.props.sourceMetaType;
+				}
+				var targetType;
+				if (this.props.targetMetaType === "gene") {
+					targetType = "protoform";
+				} else {
+					targetType = this.props.targetMetaType;
+				}
 				items = [
 					["sourceId", "Source ID", this.props.sourceId],
-					["sourceType", "Source Type", [<span className={"dot dot-" + this.props.sourceMetaType}></span>, " " + this.props.sourceMetaType]],
+					["sourceType", "Source Type",[<span className={"dot dot-" + this.props.sourceMetaType}></span>, " " + sourceType]],
 					["targetId", "Target ID", this.props.targetId],
-					["targetType", "Target Type", [<span className={"dot dot-" + this.props.targetMetaType}></span>, " " + this.props.targetMetaType]]
+					["targetType", "Target Type", [<span className={"dot dot-" + this.props.targetMetaType}></span>, " " + targetType]]
 				];
 			}
 		}
@@ -106,7 +210,9 @@ class ElementInfoBox extends React.Component {
 				id="elementInfo"
 				name="Element"
 				items={items}
-				message={message}/>
+				message={message}
+				data={{}}
+				editable={this.props.editable}/>
 		);
 	}
 }
@@ -119,6 +225,7 @@ class MetaDataBox extends React.Component {
 
 	render() {
 		var items = [];
+		var data = {};
 		var message = "";
 		if (this.props.elementType === "node") {
 			if (!this.props.elementId) {
@@ -140,6 +247,10 @@ class MetaDataBox extends React.Component {
 						["hgnc_symbol", "HGNC Symbol", hgnc],
 						["synonyms", "Synonyms", synonyms]
 					];
+					data["uniprotid"] = getSingleValue(this.props.attrs, "uniprotid");
+					data["hgnc_symbol"] = getSingleValue(this.props.attrs, "hgnc_symbol");
+					data["synonyms"] = getSingleValue(this.props.attrs, "synonyms");
+
 				} else if ((this.props.metaType === "region") || (this.props.metaType === "site")) {
 					var name = singleValueToString(this.props.attrs, "name"),
 						interproValue = singleValueToString(this.props.attrs, "interproid");
@@ -158,6 +269,8 @@ class MetaDataBox extends React.Component {
 						["name", "Name", name],
 						["interproid", "InterPro ID", interpro]
 					];
+					data["interproid"] = getSingleValue(this.props.attrs, "interproid");
+					data["name"] = getSingleValue(this.props.attrs, "name");
 				} else if (this.props.metaType === "residue") {
 					var aa = singleValueToString(this.props.attrs, "aa"),
 						test = singleValueToString(this.props.attrs, "test");
@@ -165,6 +278,8 @@ class MetaDataBox extends React.Component {
 						["aa", "Amino Acid", aa],
 						["test", "Test", String(test)]
 					];
+					data["aa"] = getSingleValue(this.props.attrs, "aa");
+					data["test"] = getSingleValue(this.props.attrs, "test");
 				} else if (this.props.metaType === "state") {
 					var name = singleValueToString(this.props.attrs, "name"),
 						test = singleValueToString(this.props.attrs, "test");
@@ -172,6 +287,8 @@ class MetaDataBox extends React.Component {
 						["name", "Name", name],
 						["test", "Test", String(test)]
 					];
+					data["name"] = getSingleValue(this.props.attrs, "name");
+					data["test"] = getSingleValue(this.props.attrs, "test");
 				} else if (this.props.metaType === "mod") {
 					var value = singleValueToString(this.props.attrs, "value"),
 						rate = singleValueToString(this.props.attrs, "rate");
@@ -179,11 +296,14 @@ class MetaDataBox extends React.Component {
 						["value", "Value", value],
 						["rate", "Rate", rate],
 					];
+					data["value"] = getSingleValue(this.props.attrs, "value");
+					data["rate"] = getSingleValue(this.props.attrs, "rate");
 				} else if (this.props.metaType === "bnd") {
 					var rate = singleValueToString(this.props.attrs, "rate");
 					items = [
-						["rate", "Rate", rate],
+						["rate", "Rate", rate, rate],
 					];
+					data["rate"] = getSingleValue(this.props.attrs, "rate");
 				} else {
 					message = "No meta-data available";
 				}
@@ -204,11 +324,15 @@ class MetaDataBox extends React.Component {
 						["end", "End", end],
 						["order", "Order", order]
 					];
+					data["start"] = getSingleValue(this.props.attrs, "start");
+					data["end"] = getSingleValue(this.props.attrs, "end");
+					data["order"] = getSingleValue(this.props.attrs, "order");
 				} else if (this.props.sourceMetaType === "residue")  {
 					var loc = singleValueToString(this.props.attrs, "loc");
 					items = [
 						["loc", "Location", loc]
 					];
+					data["loc"] = getSingleValue(this.props.attrs, "loc");
 				} else {
 					message = "Not available for this element"
 				}
@@ -220,7 +344,10 @@ class MetaDataBox extends React.Component {
 			<EditableBox id="metaData"
 						 name="Meta-data"
 						 items={items}
-						 message={message} />
+						 message={message}
+						 editable={this.props.editable}
+						 data={data} 
+						 onDataUpdate={this.props.onDataUpdate}/>
 		);
 	}
 }
