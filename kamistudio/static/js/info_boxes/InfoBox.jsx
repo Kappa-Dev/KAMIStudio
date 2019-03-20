@@ -439,6 +439,8 @@ class ModelDataBox extends React.Component {
 		}
 
 		if (this.props.seedGenes) {
+			console.log(this.props.seedGenes);
+			console.log(JSON.parse(this.props.seedGenes));
 			seedGenes =
 				<th scope="row" colspan="2">
 					<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Seed genes ({JSON.parse(this.props.seedGenes).length})</th>;
@@ -447,6 +449,8 @@ class ModelDataBox extends React.Component {
         }
 
         if (this.props.definitions) {
+			console.log(this.props.definitions);
+			console.log(JSON.parse(this.props.definitions));
 			proteinDefinitions = 
 				<th scope="row" colspan="2"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Definitions ({JSON.parse(this.props.definitions).length})</th>;
         } else {

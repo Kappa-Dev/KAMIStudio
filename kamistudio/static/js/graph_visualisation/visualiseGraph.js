@@ -444,7 +444,7 @@ function visualiseGraph(graph, svgId,
             "transform", 
             function(d) {
             	if (zoom) {
-            		var epsilon = 10,
+            		var epsilon = 20,
             			offset = 40;
             		if ((d.x < 0 + d.radius) ||
             			(d.x > width - d.radius) ||

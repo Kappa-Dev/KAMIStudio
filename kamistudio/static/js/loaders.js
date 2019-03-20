@@ -22,20 +22,26 @@ function updateAGLoadingProgress(ratio) {
 }
 
 
-function initilizeLayoutProgressBar() {
+function initilizeLayoutProgressBar(instatiated) {
 	document.getElementById("progressMessage").innerHTML =
 		"Computing force layout for the graph...";
 	var progressBlock = document.getElementById("progressBlock"),
 		loadingBlock = document.getElementById("loadingBlock");
 
 	loadingBlock.parentNode.removeChild(loadingBlock);
+	var barId =  "progressBar";
+	var suffix = "";
+	if (instatiated) {
+		suffix = " instantiated";
+	}
+
 	var progressBar = htmlToElement(
 		'<div id="progressBarBlock">' +
-	    '    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">' +
+	    '    <div id="' + barId + '" class="progress-bar'+ suffix + '" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">' +
 	    '    </div>' +
 		'</div>\n');
 	progressBlock.appendChild(progressBar);
-	document.getElementById("progressBar").style.width = "1%";
+	document.getElementById(barId).style.width = "1%";
 }
 
 

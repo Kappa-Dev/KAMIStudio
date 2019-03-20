@@ -16,6 +16,10 @@
     background-color: #337ab7;;
 }
 
+#progressBar.instantiated {
+    background-color: #8d0e14;;
+}
+
 #progressMessage {
 	margin: 0 auto;
 	text-align: center;

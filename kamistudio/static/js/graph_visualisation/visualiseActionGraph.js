@@ -275,7 +275,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 		    	actionGraph, metaTyping, META_COLORS);
 		}
 		
-		initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
+		// initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
 		initLinkStrengthDistance(actionGraph, metaTyping);
 		initCircleRadius(actionGraph, metaTyping, AG_META_SIZES);
 
@@ -287,7 +287,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 		var progressConf = {
 			"remove_progress": removeProgressBlock,
 			"init_svg": displayHiddenSvg,
-			"init_layout_progress": initilizeLayoutProgressBar,
+			"init_layout_progress": () => initilizeLayoutProgressBar(instantiated),
 			"init_update_progress": initializePositionUpdateProgressBar,
 			"ag_loading_progress": updateAGLoadingProgress
 		}
