@@ -71,8 +71,13 @@ def model_view(model_id):
     model = get_model(model_id)
     if model is not None:
         corpus = None
+
+        corpus_name = None
+
         if model._corpus_id is not None:
-            corpus = get_corpus(model._corpus_id)
+            corpus = app.mongo.db.kami_corpora.find_one({"id": model._corpus_id})
+            if corpus:
+                corpus_name = corpus["meta_data"]["name"]
 
         nugget_desc = {}
         for nugget in model.nuggets():
@@ -81,7 +86,8 @@ def model_view(model_id):
         return render_template("model.html",
                                model_id=model_id,
                                model=model,
-                               corpus=corpus,
+                               corpus_id=model._corpus_id,
+                               corpus_name=corpus_name,
                                nugget_desc=nugget_desc)
     else:
         return render_template("model_not_found.html",

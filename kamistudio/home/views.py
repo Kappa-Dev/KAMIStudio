@@ -69,8 +69,7 @@ def _generate_unique_corpus_id(name):
     existing_corpora = [
         el["id"] for el in app.mongo.db.kami_corpora.find(
             {}, {"id": 1, "_id": 0})]
-    print("existing_corpora", existing_corpora)
-
+    print(existing_corpora)
     if name not in existing_corpora:
         return name
     else:
@@ -83,17 +82,18 @@ def _generate_unique_corpus_id(name):
 
 
 def _generate_unique_model_id(name):
-    existing_models = list(
-        app.mongo.db.kami_models.find({}, {"id": 1, "_id": 0}))
-
+    existing_models = [
+        el["id"] for el in app.mongo.db.kami_models.find(
+            {}, {"id": 1, "_id": 0})]
+    print(existing_models)
     if name not in existing_models:
         return name
     else:
         i = 1
-        new_name = name + "(%s)" % str(i)
+        new_name = name + "_{}".format(i)
         while new_name in existing_models:
             i += 1
-            new_name = name + "(%s)" % str(i)
+            new_name = name + "_{}".format(i)
         return new_name
 
 
@@ -251,31 +251,42 @@ def imported_corpus(filename, annotation):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             json_data["corpus_id"] = corpus_id
-
-            corpus = KamiCorpus.from_json(
-                corpus_id,
-                json_data,
-                annotation,
-                creation_time=creation_time,
-                last_modified=last_modified,
-                backend="neo4j",
-                driver=app.neo4j_driver)
-            add_new_corpus(corpus)
+            try:
+                corpus = KamiCorpus.from_json(
+                    corpus_id,
+                    json_data,
+                    annotation,
+                    creation_time=creation_time,
+                    last_modified=last_modified,
+                    backend="neo4j",
+                    driver=app.neo4j_driver)
+                add_new_corpus(corpus)
+            except:
+                return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
 def imported_model(filename, annotation):
     """Internal handler of already imported model."""
     model_id = _generate_unique_model_id("model")
+    print(model_id)
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
-    model = KamiModel.load_json(
-        model_id,
-        os.path.join(app.config['UPLOAD_FOLDER'], filename),
-        annotation,
-        creation_time=creation_time,
-        last_modified=last_modified,
-        backend="neo4j",
-        driver=app.neo4j_driver)
-    add_new_model(model)
+    path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.isfile(path_to_file):
+        with open(path_to_file, "r+") as f:
+            json_data = json.loads(f.read())
+            json_data["model_id"] = model_id
+            try:
+                model = KamiModel.load_json(
+                    model_id,
+                    os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                    annotation,
+                    creation_time=creation_time,
+                    last_modified=last_modified,
+                    backend="neo4j",
+                    driver=app.neo4j_driver)
+                add_new_model(model)
+            except:
+                return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))

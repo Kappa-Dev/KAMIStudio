@@ -174,7 +174,7 @@
                   <div class="col-sm-6">
                     <div class="nuggets-view">
                       <a type="button" class="btn btn-default btn-md panel-button nugget-list-view active"><span class="glyphicon glyphicon-list"></span> List view</a>
-                      <a type="button" class="btn btn-default btn-md panel-button nugget-table-view" onclick="creatNuggetTable('{{ corpus_id }}')"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
+                      <a type="button" class="btn btn-default btn-md panel-button nugget-table-view" onclick="creatNuggetTable('{{ model_id }}')"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
                     </div>
                   </div>
                 </div>
@@ -184,7 +184,7 @@
                       <tbody>
                         {% for nugget in model.nuggets() %}
                         <tr>
-                          <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.corpus_nugget_view', corpus_id=corpus_id, nugget_id=nugget) }}" class="instantiation-link">{{ nugget }}</a></td>
+                          <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.model_nugget_view', model_id=model_id, nugget_id=nugget) }}" class="instantiation-link">{{ nugget }}</a></td>
                           <td class="nugget-record nugget-desc"><p>{{ nugget_desc[nugget] }}</p></td>
                           <td class="nugget-nav-buttons">
                             <a type="button" id="showNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button instantiation" onclick="addSvgAndVisualizeNugget(this,  '{{ model_id }}', '{{ nugget }}', true)"><span class="glyphicon glyphicon-zoom-in"></span> View</a>
@@ -246,11 +246,17 @@
           organism='{{model.annotation.organism}}'
           creation_time='{{model.creation_time}}'
           last_modified='{{model.last_modified}}'
-          corpusId='{{corpus._id}}'
-          corpusName='{{corpus.annotation.name}}'
-          corpusUrl='{{url_for('corpus.corpus_view', corpus_id=corpus._id)}}'
+    {% if corpus_id %}
+          corpusId='{{corpus_id}}'
+          corpusName='{{corpus_name}}'
+          corpusUrl='{{url_for('corpus.corpus_view', corpus_id=corpus_id)}}'
+    {% endif %}
+    {% if model._seed_genes %}
           seedGenes='{{ model._seed_genes }}'
+    {% endif %}
+    {% if model._definitions %}
           definitions='{{ model._definitions }}'
+    {% endif %}
          />],
       document.getElementById('modelData')
     );
