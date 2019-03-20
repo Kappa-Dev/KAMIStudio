@@ -47,7 +47,47 @@ function displayHiddenSvg() {
 	document.getElementById("saveLayoutButton").disabled = false;
 }
 
-function updateNodeAttrs(highlight, graph, metaTyping, d, i) {
+
+function sendUpdateNodeAttrs(model_id, nodeId, attrs, successCallback) {
+	$.ajax({
+	    url:  model_id + "/update-node-attrs",
+	    type: 'post',
+	    data: JSON.stringify({
+	    	"id": nodeId,
+	    	"attrs": attrs
+	    }),
+	    dataType: 'json',
+    	contentType: 'application/json',
+	}).done(function () {
+		// if (successCallback) successCallback();
+	}).fail(function (xhr, status, error) {
+		console.log("Failed to update new node positions");
+		console.log(error);
+		// if (failCallback) failCallback();
+	});
+}
+
+function sendUpdateEdgeAttrs(model_id, sourceId, targetId, attrs) {
+	$.ajax({
+	    url:  model_id + "/update-edge-attrs",
+	    type: 'post',
+	    data: JSON.stringify({
+	    	"source": sourceId,
+	    	"target": targetId,
+	    	"attrs": attrs
+	    }),
+	    dataType: 'json',
+    	contentType: 'application/json',
+	}).done(function () {
+		// if (successCallback) successCallback();
+	}).fail(function (xhr, status, error) {
+		console.log("Failed to update new node positions");
+		console.log(error);
+		// if (failCallback) failCallback();
+	});
+}
+
+function updateNodeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
 	return function(attrs) {
 		for (var i=0; i < graph.nodes.length; i++) {
 			if (graph.nodes[i].id === d.id) {
@@ -56,29 +96,37 @@ function updateNodeAttrs(highlight, graph, metaTyping, d, i) {
 					// modify js graph object 
 					graph.nodes[i].attrs[k].data = [attrs[k]];
 				}
+				// re-render info-boxes
+				handleNodeClick(model_id, instantiated, graph, metaTyping)(d, i); 
 				// send attr update to the server
-
-				// render updated boxes
-				handleNodeClick(highlight, graph, metaTyping)(d, i);
+				sendUpdateNodeAttrs(
+					model_id, d.id, graph.nodes[i].attrs);
 			}
 		}
 		
 	};
 }
 
-function updateEdgeAttrs(highlight, graph, metaTyping, d, i) {
+function updateEdgeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
 	return function(attrs) {
 		for (var i=0; i < graph.links.length; i++) {
 			if ((graph.links[i].source.id === d.source.id) &&
 				(graph.links[i].target.id === d.target.id)) {
 				for (var k in attrs) {
 					// modify js graph object 
-					graph.links[i].attrs[k].data = [attrs[k]];
+					if (k in graph.links[i].attrs) {
+						graph.links[i].attrs[k].data = [attrs[k]];
+					} else {
+						graph.links[i].attrs[k] = {
+							data: [attrs[k]],
+							type: "FiniteSet"
+						};
+					}
+					
 				}
-				// send attr update to the server
-
-				// render updated boxes
-				handleEdgeClick(highlight, graph, metaTyping)(d, i);
+				// re-render updated boxes
+				handleEdgeClick(model_id, instantiated, graph, metaTyping)(d, i);
+				sendUpdateEdgeAttrs(model_id, d.source.id, d.target.id, graph.links[i].attrs);
 			}
 		}
 
@@ -88,10 +136,17 @@ function updateEdgeAttrs(highlight, graph, metaTyping, d, i) {
 }
 
 
-function handleNodeClick(highlight, graph, metaTyping) {
+function handleNodeClick(model_id, instantiated, graph, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
 	    var svg = d3.select("#actionGraphSvg");
+
+	    var highlight;
+		if (instantiated) {
+			highlight = INSTANCE_HIGHLIGHT_COLOR;
+		} else {
+			highlight = HIGHLIGHT_COLOR;
+		}
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
@@ -110,23 +165,33 @@ function handleNodeClick(highlight, graph, metaTyping) {
 	      				   elementId={d.id}
 	      				   elementType="node"
 	      				   metaType={metaTyping[d.id]}
-	      				   editable={false}/>,
+	      				   editable={false}
+	      				   instantiated={instantiated}/>,
 	       <MetaDataBox id="metaData"
 	       				   elementId={d.id}
 	       				   elementType="node"
 	       				   metaType={metaTyping[d.id]}
 	       				   attrs={d.attrs}
 	       				   editable={true}
-	       				   onDataUpdate={updateNodeAttrs(highlight, graph, metaTyping, d, i)}/>],
+	       				   instantiated={instantiated}
+	       				   onDataUpdate={updateNodeAttrs(
+	       				   		model_id, instantiated, graph, metaTyping, d, i)}/>],
 	      document.getElementById('graphInfoBoxes')
 	    );
 	};
 }
 
-function handleEdgeClick(highlight, graph, metaTyping) {
+function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
 	return function(d, i) {
 		// deselect all the selected elements
 		var svg = d3.select("#actionGraphSvg");
+
+		var highlight;
+		if (instantiated) {
+			highlight = INSTANCE_HIGHLIGHT_COLOR;
+		} else {
+			highlight = HIGHLIGHT_COLOR;
+		}
 
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
@@ -145,7 +210,9 @@ function handleEdgeClick(highlight, graph, metaTyping) {
 		       			   sourceId={d.source.id}
 		       			   targetId={d.target.id}
 		       			   sourceMetaType={metaTyping[d.source.id]}
-	       				   targetMetaType={metaTyping[d.target.id]}/>,
+	       				   targetMetaType={metaTyping[d.target.id]}
+	       				   editable={false}
+	       				   instantiated={instantiated}/>,
 	       <MetaDataBox id="metaData"
 	       				sourceId={d.source.id}
 	       				targetId={d.target.id}
@@ -154,7 +221,9 @@ function handleEdgeClick(highlight, graph, metaTyping) {
 	       				targetMetaType={metaTyping[d.target.id]}
 	       				attrs={d.attrs}
 	       				editable={true}
-	       				onDataUpdate={updateEdgeAttrs(highlight, graph, metaTyping, d, i)}/>],
+	       				instantiated={instantiated}
+	       				onDataUpdate={updateEdgeAttrs(
+	       					model_id, instantiated, graph, metaTyping, d, i)}/>],
 	      document.getElementById('graphInfoBoxes')
 	    );
 	};
@@ -194,6 +263,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 	    	nodePos = data["nodePosition"],
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning",
 	    	nodeSizes = computeNodeSizes(actionGraph, metaTyping, AG_META_SIZES);
+
+	    console.log(actionGraph);
 
 	    var nodeColors;
 	    if (instantiated) {
@@ -237,8 +308,10 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 						progressConf,
 						workerUrl, 
 						nodePosUpdateUrl,
-                     	handleNodeClick(highlight, actionGraph, metaTyping), 
-                     	handleEdgeClick(highlight, actionGraph, metaTyping),
+                     	handleNodeClick(
+                     		model_id, instantiated, actionGraph, metaTyping), 
+                     	handleEdgeClick(
+                     		model_id, instantiated, actionGraph, metaTyping),
                      	handleDragStarted(actionGraph, metaTyping),
                     	300,
                     	true,

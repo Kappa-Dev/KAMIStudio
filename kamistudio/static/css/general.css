@@ -356,3 +356,9 @@ a.btn.instantiation:hover, button.instantiation:hover {
 #nuggetsViewTable > table > tbody > tr > th {
 	border-top: 0px;
 }
+
+table.no-borders > tbody > tr > th,
+table.no-borders > tbody > tr > td {
+	border-top: 0px;
+	padding: 3px;
+}

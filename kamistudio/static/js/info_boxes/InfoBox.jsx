@@ -90,12 +90,19 @@ class EditableBox extends React.Component {
 					</tr>
 				);
 			}
+			var borderFlag = "";
+			if (this.props.noBorders) {
+				borderFlag = " no-borders";
+			}
+
 			content =
-				<table className="table table-hover info-table">
-					<tbody>
-						{items}
-					</tbody>
-				</table>;
+				<div class="table-responsive">
+					<table className={"table table info-table" + borderFlag}>
+						<tbody>
+							{items}
+						</tbody>
+					</table>
+				</div>;
 		} else {
 			content = 
 				<p id={this.props.id + "noSelectedElements"}>
@@ -170,37 +177,65 @@ class ElementInfoBox extends React.Component {
 				message = "Click on an element to select";
 			} else {
 				var type;
-				if (this.props.metaType === "gene") {
-					type = "protoform";
+				var suffix = "";
+				if (this.props.instantiated) {
+					if (this.props.metaType === "gene") {
+						type = "protein";
+						suffix += "-instance";
+					} else {
+						type = this.props.metaType;
+					}
 				} else {
-					type = this.props.metaType;
+					if (this.props.metaType === "gene") {
+						type = "protoform";
+					} else {
+						type = this.props.metaType;
+					}
 				}
 				items = [
 					["id", "Node ID", this.props.elementId],
-					["type", "Node Type", [<span className={"dot dot-" + this.props.metaType}></span>, " " + type]]
+					["type", "Node Type", [<span className={"dot dot-" + this.props.metaType + suffix}></span>, " " + type]]
 				];
 			}
 		} else {
 			if ((!this.props.sourceId) || (!this.props.targetId)) {
 				message = "Click on an element to select";
 			} else {
-				var sourceType;
-				if (this.props.sourceMetaType === "gene") {
-					sourceType = "protoform";
+				var sourceType,
+					sourceSuffix = "",
+					targetSuffix = "";
+				if (this.props.instantiated) {
+					if (this.props.sourceMetaType === "gene") {
+						sourceType = "protein";
+						sourceSuffix += "-instance";
+					} else {
+						sourceType = this.props.sourceMetaType;
+					}
+					var targetType;
+					if (this.props.targetMetaType === "gene") {
+						targetType = "protein";
+						targetSuffix += "-instance";
+					} else {
+						targetType = this.props.targetMetaType;
+					}
 				} else {
-					sourceType = this.props.sourceMetaType;
-				}
-				var targetType;
-				if (this.props.targetMetaType === "gene") {
-					targetType = "protoform";
-				} else {
-					targetType = this.props.targetMetaType;
+					if (this.props.sourceMetaType === "gene") {
+						sourceType = "protoform";
+					} else {
+						sourceType = this.props.sourceMetaType;
+					}
+					var targetType;
+					if (this.props.targetMetaType === "gene") {
+						targetType = "protoform";
+					} else {
+						targetType = this.props.targetMetaType;
+					}
 				}
 				items = [
 					["sourceId", "Source ID", this.props.sourceId],
-					["sourceType", "Source Type",[<span className={"dot dot-" + this.props.sourceMetaType}></span>, " " + sourceType]],
+					["sourceType", "Source Type",[<span className={"dot dot-" + this.props.sourceMetaType + sourceSuffix}></span>, " " + sourceType]],
 					["targetId", "Target ID", this.props.targetId],
-					["targetType", "Target Type", [<span className={"dot dot-" + this.props.targetMetaType}></span>, " " + targetType]]
+					["targetType", "Target Type", [<span className={"dot dot-" + this.props.targetMetaType + targetSuffix}></span>, " " + targetType]]
 				];
 			}
 		}
@@ -347,7 +382,110 @@ class MetaDataBox extends React.Component {
 						 message={message}
 						 editable={this.props.editable}
 						 data={data} 
-						 onDataUpdate={this.props.onDataUpdate}/>
+						 onDataUpdate={this.props.onDataUpdate}
+						 instantiated={this.props.instantiated}/>
 		);
+	}
+}
+
+
+class KBMetaDataBox extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		var items = [
+			["name", "Name", this.props.kbName ? this.props.kbName : <p className="faded">not specified</p>],
+			["desc", "Desciption", this.props.desc ? this.props.desc : <p className="faded">not specified</p>],
+			["organism", "Organism", this.props.organism ? this.props.organism : <p className="faded">not specified</p>],
+			["creation_time", "Created", this.props.creation_time],
+			["last_modified", "Last modified", this.props.last_modified]
+		];
+		var data = {
+			"name": this.props.kbName,
+			"desc": this.props.desc,
+			"organism": this.props.organism,
+		}
+
+		return (
+			<EditableBox id={this.props.id}
+						 name={this.props.name}
+						 items={items}
+						 editable={true}
+						 onDataUpdate={this.props.onDataUpdate}
+						 data={data}
+						 noBorders={true}/>);
+	}
+}
+
+class ModelDataBox extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+
+		var originCorpus, seedGenes, proteinDefinitions;
+		if (this.props.corpusId) {
+			originCorpus = 
+				<b>
+					<a class="instantiation-link" href={this.props.corpusUrl}>
+						{this.props.corpusName}
+					</a>
+				</b>;
+		} else {
+		    originCorpus = <p>No corpus associated</p>;
+		}
+
+		if (this.props.seedGenes) {
+			seedGenes =
+				<th scope="row" colspan="2">
+					<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Seed genes ({JSON.parse(this.props.seedGenes).length})</th>;
+        } else {
+            seedGenes = <th scope="row" colspan="2"><p>No seed genes</p></th>;
+        }
+
+        if (this.props.definitions) {
+			proteinDefinitions = 
+				<th scope="row" colspan="2"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Definitions ({JSON.parse(this.props.definitions).length})</th>;
+        } else {
+        	proteinDefinitions = <th scope="row" colspan="2"><p>No protein definitions</p></th>;
+        }
+
+		return ([
+			<KBMetaDataBox
+				id="modelMetaData"
+				name="Meta-data"
+				editable={true}
+				onDataUpdate={this.props.onDataUpdate}
+				kbName={this.props.kbName}
+				desc={this.props.desc}
+				organism={this.props.organism}
+				creation_time={this.props.creation_time}
+				last_modified={this.props.last_modified} />,
+			<hr className="sidebar-model-sep"/>,
+			<h3 className="info-brand">Origin</h3>,
+		    <div className="table-responsive">
+		      <table className="table table info-table no-borders">
+		        <tbody>
+		          <tr>
+		            <th scope="row">Corpus </th>
+		            <td>
+		              {originCorpus}
+		            </td>
+		          </tr>
+		          <tr>
+            	 	{seedGenes}
+          		  </tr>
+		          <tr>
+		            {proteinDefinitions}
+		          </tr>
+		        </tbody>
+		      </table> 
+    		</div> 
+
+		]);
+				
 	}
 }
