@@ -43,6 +43,7 @@
           </div>
         </div>
         <!-- <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a> -->
+        {% if corpora|length > 0 %}
           <div class="table-responsive">
             <table class="table">
             <thead>
@@ -53,7 +54,6 @@
                 <th scope="col">Last modified</th>
               </tr>
             </thead>
-            {% if corpora|length > 0 %}
               <tbody>
                 {% for corpus in corpora %}
                 <tr>
@@ -68,11 +68,11 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            {% else %}
-              <p>No corpora</p>
-            {% endif %}
           </table>
         </div>
+        {% else %}
+          <p>No corpora</p>
+        {% endif %}
       </div>
     </div>
        
@@ -90,6 +90,7 @@
           </div>
         </div>
         <!-- <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a> -->
+        {% if models|length > 0 %}
           <div class="table-responsive">
             <table class="table">
             <thead>
@@ -100,7 +101,6 @@
                 <th scope="col">Last modified</th>
               </tr>
             </thead>
-            {% if models|length > 0 %}
               <tbody>
                 {% for model in models %}
                 <tr>
@@ -115,11 +115,11 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            {% else %}
-              <p>No models</p>
-            {% endif %}
           </table>
         </div>
+        {% else %}
+          <p>No models</p>
+        {% endif %}
       </div>
     </div>
   </div>
