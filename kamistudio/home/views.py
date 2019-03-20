@@ -204,10 +204,14 @@ def import_model():
         return render_template('import_model.html', failed=failed)
     else:
         # check if the post request has the file part
-        name = request.form['name']
-        desc = None
-        if request.form['desc'] != "":
-            desc = request.form['desc']
+        annotation = {}
+        if request.form["name"]:
+            annotation["name"] = request.form["name"]
+        if request.form["desc"]:
+            annotation["desc"] = request.form["desc"]
+        if request.form["organism"]:
+            annotation["organism"] = request.form["organism"]
+        # TODO: handle annotation
 
         if 'file' not in request.files:
             raise ValueError('No file part')
@@ -221,7 +225,7 @@ def import_model():
         if file:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return imported_model(filename, name, desc)
+            return imported_model(filename, annotation)
 
 
 @home_blueprint.route("/delete-models", methods=['GET', 'POST'])

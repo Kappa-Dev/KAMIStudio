@@ -1,6 +1,7 @@
 """Views of home blueprint."""
-import os
+import datetime
 import json
+import os
 
 from kami.data_structures.corpora import KamiCorpus
 from flask import (render_template, Blueprint, request, session, redirect,
@@ -31,6 +32,16 @@ def get_corpus(corpus_id):
             backend="neo4j",
             driver=app.neo4j_driver
         )
+
+
+def updateLastModified(corpus_id):
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    corpus_json["last_modified"] = datetime.datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S")
+    app.mongo.db.kami_corpora.update_one(
+        {"_id": corpus_json["_id"]},
+        {"$set": corpus_json},
+        upsert=False)
 
 
 def add_new_corpus(corpus_obj):
@@ -186,7 +197,7 @@ def update_ag_node_positioning(corpus_id):
         app.mongo.db.kami_corpora.update(
             {'id': corpus_id},
             {'$set': {'node_positioning': position_dict}})
-
+    updateLastModified(corpus_id)
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
 
@@ -196,14 +207,64 @@ def delete_corpus(corpus_id):
     """Handle removal of the corpus."""
     corpus = get_corpus(corpus_id)
 
-    # connect to db
-    h = Neo4jHierarchy(driver=app.neo4j_driver)
+    if corpus is not None:
+        # connect to db
+        h = Neo4jHierarchy(driver=app.neo4j_driver)
+        # remove nuggets
+        for n in corpus.nuggets():
+            h.remove_graph(n)
+        # remove the ag
+        h.remove_graph(corpus._action_graph_id)
+        # drop from mongo db
+        app.mongo.db.kami_corpora.remove({"id": corpus_id})
+        return redirect(url_for("home.index"))
+    else:
+        return render_template("corpus_not_found.html", corpus_id=corpus_id)
 
-    # remove nuggets
-    for n in corpus.nuggets():
-        h.remove_graph(n)
-    # remove the ag
-    h.remove_graph(corpus._action_graph_id)
 
-    # drop from mongo db
-    app.mongo.db.kami_corpora.remove({"id": corpus_id})
+@corpus_blueprint.route("/corpus/<corpus_id>/update-node-attrs",
+                        methods=["POST"])
+def update_node_attrs(corpus_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    node_id = json_data["id"]
+    node_attrs = json_data["attrs"]
+    print(node_attrs)
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+        if node_id in corpus.action_graph.nodes():
+            try:
+                corpus.action_graph.set_node_attrs_from_json(node_id, node_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(corpus_id)
+            except:
+                pass
+    return response
+
+
+@corpus_blueprint.route("/corpus/<corpus_id>/update-edge-attrs",
+                        methods=["POST"])
+def update_edge_attrs(corpus_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    source = json_data["source"]
+    target = json_data["target"]
+    edge_attrs = json_data["attrs"]
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+        if (source, target) in corpus.action_graph.edges():
+            try:
+                corpus.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(corpus_id)
+            except:
+                pass
+    return response

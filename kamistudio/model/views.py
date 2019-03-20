@@ -1,4 +1,5 @@
 """Views of home blueprint."""
+import datetime
 import os
 import json
 
@@ -38,6 +39,16 @@ def get_model(model_id):
         return None
 
 
+def updateLastModified(model_id):
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    model_json["last_modified"] = datetime.datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S")
+    app.mongo.db.kami_models.update_one(
+        {"_id": model_json["_id"]},
+        {"$set": model_json},
+        upsert=False)
+
+
 def add_new_model(model_obj):
     """Add new model to the db."""
     app.mongo.db.kami_models.insert_one({
@@ -75,6 +86,39 @@ def model_view(model_id):
     else:
         return render_template("model_not_found.html",
                                model_id=model_id)
+
+
+@model_blueprint.route("/model/<model_id>/download", methods=["GET"])
+def download_model(model_id):
+    """Handle model download."""
+    model = get_model(model_id)
+    filename = model_id.replace(" ", "_") + ".json"
+    model.export_json(
+        os.path.join(app.root_path, "uploads/" + filename))
+    return send_file(
+        os.path.join(app.root_path, "uploads/" + filename),
+        as_attachment=True,
+        mimetype='application/json',
+        attachment_filename=filename)
+
+
+@model_blueprint.route("/model/<model_id>/delete")
+def delete_model(model_id):
+    """Handle removal of the model."""
+    model = get_model(model_id)
+    if model is not None:
+        # connect to db
+        h = Neo4jHierarchy(driver=app.neo4j_driver)
+        # remove nuggets
+        for n in model.nuggets():
+            h.remove_graph(n)
+        # remove the ag
+        h.remove_graph(model._action_graph_id)
+        # drop from mongo db
+        app.mongo.db.kami_models.remove({"id": model_id})
+        return redirect(url_for("home.index"))
+    else:
+        return render_template("model_not_found.html", model_id=model_id)
 
 
 @model_blueprint.route("/model/<model_id>/add-interaction",
@@ -165,20 +209,6 @@ def import_json_interactions(model_id):
     pass
 
 
-@model_blueprint.route("/model/<model_id>/download", methods=["GET"])
-def download_model(model_id):
-    """Handle model download."""
-    model = get_model(model_id)
-    filename = model_id.replace(" ", "_") + ".json"
-    model.export_json(
-        os.path.join(app.root_path, "uploads/" + filename))
-    return send_file(
-        os.path.join(app.root_path, "uploads/" + filename),
-        as_attachment=True,
-        mimetype='application/json',
-        attachment_filename=filename)
-
-
 @model_blueprint.route("/model/<model_id>/update-ag-node-positioning",
                        methods=["POST"])
 def update_ag_node_positioning(model_id):
@@ -201,24 +231,55 @@ def update_ag_node_positioning(model_id):
         app.mongo.db.kami_models.update(
             {'id': model_id},
             {'$set': {'node_positioning': position_dict}})
-
+    updateLastModified(model_id)
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
 
 
-@model_blueprint.route("/model/<model_id>/delete")
-def delete_model(model_id):
-    """Handle removal of the model."""
+@model_blueprint.route("/model/<model_id>/update-node-attrs",
+                       methods=["POST"])
+def update_node_attrs(model_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    node_id = json_data["id"]
+    node_attrs = json_data["attrs"]
+    print(node_attrs)
     model = get_model(model_id)
 
-    # connect to db
-    h = Neo4jHierarchy(driver=app.neo4j_driver)
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if model is not None:
+        if node_id in model.action_graph.nodes():
+            try:
+                model.action_graph.set_node_attrs_from_json(node_id, node_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(model_id)
+            except:
+                pass
+    return response
 
-    # remove nuggets
-    for n in model.nuggets():
-        h.remove_graph(n)
-    # remove the ag
-    h.remove_graph(model._action_graph_id)
 
-    # drop from mongo db
-    app.mongo.db.kami_models.remove({"id": model_id})
+@model_blueprint.route("/model/<model_id>/update-edge-attrs",
+                       methods=["POST"])
+def update_edge_attrs(model_id):
+    """Handle update of edge attrs."""
+    json_data = request.get_json()
+    source = json_data["source"]
+    target = json_data["target"]
+    edge_attrs = json_data["attrs"]
+    print(edge_attrs)
+    model = get_model(model_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if model is not None:
+        if (source, target) in model.action_graph.edges():
+            try:
+                model.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(model_id)
+            except:
+                pass
+    return response
