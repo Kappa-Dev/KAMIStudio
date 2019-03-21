@@ -35,7 +35,7 @@ def init_mongo_db(add_test=False):
         app.mongo.db.kami_models.create_index("id", unique=True)
 
     if add_test is True:
-        app.mongo.db.kami_corpora.remove({})
+        # app.mongo.db.kami_corpora.remove({})
         if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
             app.mongo.db.kami_corpora.insert_one({
                 "id": "test_corpus",
@@ -48,7 +48,7 @@ def init_mongo_db(add_test=False):
                     "annotation": "Converted to KAMI from NCI PID network, originally represented with BioPax"
                 }
             })
-        app.mongo.db.kami_models.remove({})
+        # app.mongo.db.kami_models.remove({})
         if len(list(app.mongo.db.kami_models.find({}))) == 0:
             app.mongo.db.kami_models.insert_one({
                 "id": "test_model",
@@ -67,10 +67,10 @@ def init_mongo_db(add_test=False):
                 },
                 "kappa_models": []
             })
-        if app.neo4j_driver is not None:
-            Neo4jHierarchy.load(
-                "kamistudio/instance/test_kamistudio.json",
-                driver=app.neo4j_driver)
+        # if app.neo4j_driver is not None:
+        #     Neo4jHierarchy.load(
+        #         "kamistudio/instance/test_kamistudio.json",
+        #         driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):

@@ -44,13 +44,13 @@ def updateLastModified(corpus_id):
         upsert=False)
 
 
-def add_new_corpus(corpus_obj):
+def add_new_corpus(corpus_id, creation_time, last_modified, annotation):
     """Add new corpus to the db."""
     app.mongo.db.kami_corpora.insert_one({
-        "id": corpus_obj._id,
-        "creation_time": corpus_obj.creation_time,
-        "last_modified": corpus_obj.last_modified,
-        "meta_data": corpus_obj.annotation
+        "id": corpus_id,
+        "creation_time": creation_time,
+        "last_modified": last_modified,
+        "meta_data": annotation
     })
 
 
@@ -154,7 +154,9 @@ def add_nugget_from_session(corpus_id, add_agents=True,
                         methods=["GET"])
 def import_json_interactions(corpus_id):
     """Handle import of json interactions."""
-    pass
+    with open('data/sh2_pY_interactions.json', 'w') as f:
+        json.dump(json_rep, f)
+    return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/download", methods=["GET"])

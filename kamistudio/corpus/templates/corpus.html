@@ -9,7 +9,7 @@
   <div class="col-md-8">
     <div class="corpus-action-buttons">
         <a href="{{ url_for('corpus.add_interaction', corpus_id=corpus_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
-        <a href="{{ url_for('corpus.import_json_interactions', corpus_id=corpus_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+        <button type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-import" value="Choose Files!"></span> Import interactions</button>
         <a href="{{ url_for('corpus.download_corpus', corpus_id=corpus_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export JSON</a>
         <a href="{{ url_for('corpus.delete_corpus', corpus_id=corpus_id) }}" type="button" class="btn btn-primary btn-md panel-button"><span class="glyphicon glyphicon-remove"></span> Delete</a>
     </div>

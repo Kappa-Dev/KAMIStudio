@@ -243,7 +243,6 @@ def delete_models():
 def imported_corpus(filename, annotation):
     """Internal handler of already imported model."""
     corpus_id = _generate_unique_corpus_id("corpus")
-    print(corpus_id)
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -252,6 +251,7 @@ def imported_corpus(filename, annotation):
             json_data = json.loads(f.read())
             json_data["corpus_id"] = corpus_id
             try:
+                add_new_corpus(corpus_id, creation_time, last_modified, annotation)
                 corpus = KamiCorpus.from_json(
                     corpus_id,
                     json_data,
@@ -260,7 +260,6 @@ def imported_corpus(filename, annotation):
                     last_modified=last_modified,
                     backend="neo4j",
                     driver=app.neo4j_driver)
-                add_new_corpus(corpus)
             except:
                 return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
@@ -278,6 +277,7 @@ def imported_model(filename, annotation):
             json_data = json.loads(f.read())
             json_data["model_id"] = model_id
             try:
+                add_new_model(model)
                 model = KamiModel.load_json(
                     model_id,
                     os.path.join(app.config['UPLOAD_FOLDER'], filename),
@@ -286,7 +286,6 @@ def imported_model(filename, annotation):
                     last_modified=last_modified,
                     backend="neo4j",
                     driver=app.neo4j_driver)
-                add_new_model(model)
             except:
                 return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))

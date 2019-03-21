@@ -275,7 +275,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 		    	actionGraph, metaTyping, META_COLORS);
 		}
 		
-		// initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
+		initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
 		initLinkStrengthDistance(actionGraph, metaTyping);
 		initCircleRadius(actionGraph, metaTyping, AG_META_SIZES);
 

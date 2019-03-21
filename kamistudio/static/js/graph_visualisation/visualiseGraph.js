@@ -444,12 +444,12 @@ function visualiseGraph(graph, svgId,
             "transform", 
             function(d) {
             	if (zoom) {
-            		var epsilon = 20,
+            		var epsilon = 10,
             			offset = 40;
-            		if ((d.x < 0 + d.radius) ||
-            			(d.x > width - d.radius) ||
-            			(d.y < 0 + d.radius) ||
-            			(d.y > height - d.radius)) {
+            		if ((d.x < 0 + d.radius - epsilon) ||
+            			(d.x > width - d.radius + epsilon) ||
+            			(d.y < 0 + d.radius - epsilon) ||
+            			(d.y > height - d.radius + epsilon)) {
             			// zoom to fit the bounding box
 				          	var boundaries = container.node().getBBox(),
 					            bx = boundaries.x,
@@ -458,6 +458,7 @@ function visualiseGraph(graph, svgId,
 					            bwidth = boundaries.width;
 
 					        var currentViewBox = svg.attr("viewBox");
+
 					        if (currentViewBox !== null) {
 					        	var split =  currentViewBox.split(" ");
 					        	if ((split[0] - epsilon > bx) ||
