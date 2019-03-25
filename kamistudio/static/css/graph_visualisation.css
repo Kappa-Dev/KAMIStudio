@@ -66,6 +66,13 @@
     opacity : 0;
 }
 
+.nodebox {
+  fill : none;
+  stroke: #A9B0B7;
+  stroke-width: 6px;
+  opacity : 0;
+}
+
 svg {
   border: 1px solid #ddd;
   border-radius: 10px;

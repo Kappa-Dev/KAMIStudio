@@ -18,7 +18,9 @@ function showLoader() {
 
 
 function updateAGLoadingProgress(ratio) {
-	document.getElementById('progressBar').style.width = ratio * 100 + "%";
+	if (document.getElementById('progressBar')) {
+		document.getElementById('progressBar').style.width = ratio * 100 + "%";
+	}
 }
 
 
@@ -52,6 +54,8 @@ function initializePositionUpdateProgressBar() {
 }
 
 function removeProgressBlock() {
-	var progressBlock = document.getElementById("progressBlock");
+	if (document.getElementById("progressBlock")) {
+		var progressBlock = document.getElementById("progressBlock");
+	}
 	progressBlock.parentNode.removeChild(progressBlock);
 }

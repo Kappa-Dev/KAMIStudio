@@ -88,7 +88,7 @@ function sendUpdateEdgeAttrs(model_id, sourceId, targetId, attrs) {
 }
 
 function updateNodeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
-	return function(attrs) {
+	return function(attrs, oldAttrs) {
 		for (var i=0; i < graph.nodes.length; i++) {
 			if (graph.nodes[i].id === d.id) {
 				// console.log("Updted node: ", graph.nodes[i].attrs);
@@ -108,7 +108,7 @@ function updateNodeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
 }
 
 function updateEdgeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
-	return function(attrs) {
+	return function(attrs, oldAttrs) {
 		for (var i=0; i < graph.links.length; i++) {
 			if ((graph.links[i].source.id === d.source.id) &&
 				(graph.links[i].target.id === d.target.id)) {

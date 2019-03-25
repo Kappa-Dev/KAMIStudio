@@ -30,7 +30,7 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	      } 
 	    } else if (metaTyping[d.target] == "residue") {
 	    	if (metaTyping[d.source] == "state") {
-	    		d.strength = 0.4 * scale;
+	    		d.strength = 1 * scale;
 	    		d.distance = 5 * scale;
 	    	}
 	    } else if (metaTyping[d.target] == "state") {
@@ -38,9 +38,17 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	        d.strength = 0.15 * scale;
 	      } 
 	    } else if (metaTyping[d.target] == "bnd") {
-	      d.strength = 0.1 * scale;
+	    	if (metaTyping[d.source] == "region") {
+		      d.strength = 0.4 * scale;
+		    } else {
+		    	d.strength = 0.1 * scale;
+		    }
 	    } else if (metaTyping[d.target] == "mod") {
-	      d.strength = 0.1 * scale;
+	    	if (metaTyping[d.source] == "region") {
+		      d.strength = 0.4 * scale;
+		    } else {
+		    	d.strength = 0.1 * scale;
+		    }
 	    }
     	if (metaTyping[d.source] == "state") {
     		d.strength = 1 * scale;
@@ -579,7 +587,14 @@ function visualiseGraph(graph, svgId,
 		      .attr("class", "node")
 		      .call(d3.drag()
 		          .on("start", dragstarted)
-		          .on("drag", dragged));
+		          .on("drag", dragged))
+		      .on("mouseover", 
+	        	function(){ 
+	        		d3.select(this).select(".nodebox").style("opacity", 0.4)
+	        	})
+	        	.on("mouseout", function(){
+	    			d3.select(this).select(".nodebox").style("opacity", 0)
+	    		});
 
 	    // setup nodes circles
 	    node.append("circle")
@@ -590,6 +605,10 @@ function visualiseGraph(graph, svgId,
 	      .attr("stroke", edgeStroke)
 	   	  .on("dblclick", zoomInArea)
 	   	  .on("click", onNodeClick);
+
+	   	node.append("circle")
+	   		.attr("class", "nodebox")
+	      	.attr("r", function(d) { return nodeSizes[d.id] + 3; });
 
 	   	node.append("title")
 	      .text(function(d) { return d.id; });
