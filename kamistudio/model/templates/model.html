@@ -19,92 +19,9 @@
 {% endblock %}
 
 {% block sidebar_items %}
-<h2 class="mb-6 model-action-brand">Model overview</h2>
-<div class="highlighted-item instance" id="modelData">
-    <!-- <h3 class="info-brand">Meta-data</h3>
-    <div class="table-responsive">
-      <table class="table info">
-        <tbody>
-          <tr>
-            <th scope="row">Name</th>
-            <td>{{ model.annotation.name }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Description</th>
-            <td>{{ model.annotation.desc }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Organism</th>
-            <td>{{ model.annotation.organism }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Created</th>
-            <td>{{ model.creation_time }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Last modified</th>
-            <td>{{ model.last_modified }}</td>
-          </tr>
-        </tbody>
-      </table> 
-    </div> -->
-    
-    <!-- <hr class="sidebar-model-sep"/> -->
-
-    <!-- <h3 class="info-brand">Origin</h3>
-    <div class="table-responsive">
-      <table class="table info">
-        <tbody>
-          <tr>
-            <th scope="row">Corpus </th>
-            <td>
-              {% if corpus %}
-                <b><a class="instantiation-link" href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a></b>
-              {% else %}
-                <p>No corpus associated</p>
-              {% endif %}
-            </td>
-          </tr>
-          <tr>
-            {% if model._seed_genes %}
-              <th scope="row" colspan="2"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Seed genes ({{ model._seed_genes|length }})</th>
-            {% else %}
-              <th scope="row" colspan="2"><p>No seed genes</p></th>
-            {% endif %}
-          </tr>
-          <tr>
-            {% if model._definitions %}
-              <th scope="row" colspan="2"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Definitions ({{ model._definitions|length }})</th>
-            {% else %}
-              <th scope="row" colspan="2"><p>No protein definitions</p></th>
-            {% endif %}
-          </tr>
-        </tbody>
-      </table> 
-    </div> -->
-    
-    <!-- <hr class="sidebar-model-sep"/> -->
-
-<!--     <h3 class="info-brand">Interactions</h3>
-    <div class="table-responsive">
-      <table class="table info">
-        <tbody>
-          <tr>
-            <th scope="row"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Proteins ({{ model.proteins()|length }})</th>
-          </tr>
-          <tr>
-            <th scope="row"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Modifications ({{ model.modifications()|length}})</th>
-          </tr>
-          <tr>
-            <th scope="row"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Bindings ({{ model.modifications()|length}})</th>
-          </tr>
-        </tbody>
-      </table> 
-    </div> -->
-
-</div>
-
-
+  <h2 class="mb-6 model-action-brand">Model overview</h2>
+  <div class="highlighted-item instance" id="modelData">
+  </div>
 {% endblock %}
 
 {% block tabs %}
@@ -139,7 +56,7 @@
               </div>
 
               <div id="progressBlock">
-                <div id="progressMessage">Retrieving action graph from the database... It make take a moment.</div>
+                <div id="progressMessage">Retrieving action graph from the database... It may take a moment.</div>
                 <div id="loadingBlock" class="loading-elements center-block">
                   <div id="loaderModel"></div>
                 </div>
@@ -234,30 +151,45 @@
     getActionGraphAndVisualize('{{ model_id }}', '{{ url_for('static', filename='js/graph_visualisation/forceLayoutWorker.js')}}', true);
   </script>
   <script type="text/babel">
+
+    if (document.getElementById('graphInfoBoxes')) {
+      ReactDOM.render(
+        [
+          <ElementInfoBox id="graphElement" items={[]}/>,
+          <MetaDataBox id="metaData" items={[]}/>
+        ],
+        document.getElementById('graphInfoBoxes')
+      );
+    }
     ReactDOM.render(
-      [<ElementInfoBox id="graphElement" items={[]}/>,
-       <MetaDataBox id="metaData" items={[]}/>],
-      document.getElementById('graphInfoBoxes')
-    );
-    ReactDOM.render(
-      [<ModelDataBox 
-          kbName='{{model.annotation.name}}'
-          desc='{{model.annotation.desc}}'
-          organism='{{model.annotation.organism}}'
-          creation_time='{{model.creation_time}}'
-          last_modified='{{model.last_modified}}'
-    {% if corpus_id %}
-          corpusId='{{corpus_id}}'
-          corpusName='{{corpus_name}}'
-          corpusUrl='{{url_for('corpus.corpus_view', corpus_id=corpus_id)}}'
-    {% endif %}
-    {% if model._seed_genes %}
-          seedGenes='{{ model._seed_genes }}'
-    {% endif %}
-    {% if model._definitions %}
-          definitions='{{ model._definitions }}'
-    {% endif %}
-         />],
+      <ModelDataBox 
+          {% if model.annotation.name %}
+                kbName='{{model.annotation.name}}'
+          {% endif %}
+          {% if model.annotation.desc %}
+                desc='{{model.annotation.desc}}'
+          {% endif %}
+          {% if model.annotation.organism %}
+                organism='{{model.annotation.organism}}'
+          {% endif %}
+                creation_time='{{model.creation_time}}'
+                last_modified='{{model.last_modified}}'
+          {% if corpus_id %}
+                corpusId='{{corpus_id}}'
+                corpusName='{{corpus_name}}'
+                corpusUrl='{{url_for('corpus.corpus_view', corpus_id=corpus_id)}}'
+          {% endif %}
+          {% if model._seed_genes %}
+                seedGenes='{{ model._seed_genes }}'
+          {% endif %}
+          {% if model._definitions %}
+                definitions='{{ model._definitions }}'
+          {% endif %}
+          onDataUpdate={handleModelUpdate('{{ model._id }}')}
+          proteins='{{ proteins }}' 
+          bindings='{{ bindings }}'
+          modifications='{{ modifications }}'
+         />,
       document.getElementById('modelData')
     );
   </script>

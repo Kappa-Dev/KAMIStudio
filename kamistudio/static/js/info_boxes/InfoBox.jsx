@@ -8,11 +8,11 @@ function singleValueToString(data, attr_name) {
 	}
 
 	return value;
-}
+};
 
 function getSingleValue(data, attr_name) {
 	return attr_name in data ? data[attr_name].data[0] : null;
-}
+};
 
 class EditableBox extends React.Component {
 
@@ -40,7 +40,7 @@ class EditableBox extends React.Component {
 			for (var k in this.state.updatedData) {
 				this.props.data[k] = this.state.updatedData[k];
 			}
-			this.props.onDataUpdate(this.state.updatedData);
+			this.props.onDataUpdate(this.state.updatedData, this.props.data);
 		}
 		this.handleCancelClick();
 	}
@@ -69,18 +69,26 @@ class EditableBox extends React.Component {
 		var content;
 		if (this.props.items.length > 0) {
 			if (this.state.editing) {
-				var items = this.props.items.map((item, key) =>
-				    <tr>
-					  	<th scope="row">{item[1]}</th>
-					  	<td>
-					  		<input type="text"
-				          		   className="form-control"
-				          		   name={item[1]}
-				          		   id={item[0]}
-				          		   onChange={this.handleFieldChange(item[0])}
-				          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
-				          	</td>
-					</tr>
+
+				var items = this.props.items.map(
+					(item, key) =>
+					    !this.props.protected.includes(item[0]) ?
+						    <tr>
+							  	<th scope="row">{item[1]}</th>
+							  	<td>
+							  		<input type="text"
+						          		   className="form-control"
+						          		   name={item[1]}
+						          		   id={item[0]}
+						          		   onChange={this.handleFieldChange(item[0])}
+						          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
+						          	</td>
+							</tr>
+							:
+							<tr>
+							  	<th scope="row">{item[1]}</th>
+							  	<td>{item[2]}</td>
+							</tr>
 				);
 			} else {
 				var items = this.props.items.map((item, key) =>
@@ -96,7 +104,7 @@ class EditableBox extends React.Component {
 			}
 
 			content =
-				<div class="table-responsive">
+				<div className="table-responsive">
 					<table className={"table table info-table" + borderFlag}>
 						<tbody>
 							{items}
@@ -117,7 +125,7 @@ class EditableBox extends React.Component {
 					<button 
 					   type="button" onClick={this.handleEditClick}
 					   className="btn btn-default btn-sm panel-button editable-box right-button">
-					   	<span class="glyphicon glyphicon-pencil"></span> Edit
+					   	<span className="glyphicon glyphicon-pencil"></span> Edit
 					</button>;
 			}
 		}
@@ -141,7 +149,7 @@ class EditableBox extends React.Component {
 		return ([
 			<div className="row">
 				<div className="col-md-7">
-					<h3 class="editable-box">{this.props.name}</h3>
+					<h3 className="editable-box">{this.props.name}</h3>
 				</div>
 				<div className="col-md-5">
 					<div style={{"float": "right"}}>
@@ -381,6 +389,7 @@ class MetaDataBox extends React.Component {
 						 items={items}
 						 message={message}
 						 editable={this.props.editable}
+						 protected={[]}
 						 data={data} 
 						 onDataUpdate={this.props.onDataUpdate}
 						 instantiated={this.props.instantiated}/>
@@ -406,6 +415,8 @@ class KBMetaDataBox extends React.Component {
 			"name": this.props.kbName,
 			"desc": this.props.desc,
 			"organism": this.props.organism,
+			"creation_time": this.props.creation_time,
+			"last_modified": this.props.last_modified
 		}
 
 		return (
@@ -415,9 +426,57 @@ class KBMetaDataBox extends React.Component {
 						 editable={true}
 						 onDataUpdate={this.props.onDataUpdate}
 						 data={data}
-						 noBorders={true}/>);
+						 noBorders={true}
+						 protected={this.props.protected}
+						 instantiated={this.props.instantiated}
+						 onDataUpdate={this.props.onDataUpdate}/>);
 	}
 }
+
+class DropDownRow extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+
+
+	render() {
+		var content = null;
+		if (typeof this.props.items !== 'undefined') {
+			content =
+				<tr><span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span>{" " + this.props.name + " (" + Object.keys(this.props.items).length + ")"}</tr>;
+		}
+		return (content);
+	}
+}
+
+class InteractionsDataBox extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		var geneItems = this.props.genes ? JSON.parse(this.props.genes) : undefined,
+			proteinItems = this.props.proteins ? JSON.parse(this.props.proteins) : undefined,
+			modItems = this.props.modifications ? JSON.parse(this.props.modifications) : undefined,
+			bndItems = this.props.bindings ? JSON.parse(this.props.bindings): undefined;
+		
+		return ([
+			<h3 className="info-brand">Interactions</h3>,
+    		<div className="table-responsive">
+      			<table className="table info">
+       				<tbody>
+       					<DropDownRow name="Genes" items={geneItems}/>
+       					<DropDownRow name="Proteins" items={proteinItems}/>
+			          	<DropDownRow name="Modification mechanisms" items={modItems}/>
+			          	<DropDownRow name="Bindings mechanisms" items={bndItems}/>
+			        </tbody>
+			    </table> 
+			</div>
+		]);
+	}
+}
+
 
 class ModelDataBox extends React.Component {
 	constructor(props) {
@@ -425,12 +484,11 @@ class ModelDataBox extends React.Component {
 	}
 
 	render() {
-
-		var originCorpus, seedGenes, proteinDefinitions;
+		var originCorpus;
 		if (this.props.corpusId) {
 			originCorpus = 
 				<b>
-					<a class="instantiation-link" href={this.props.corpusUrl}>
+					<a className="instantiation-link" href={this.props.corpusUrl}>
 						{this.props.corpusName}
 					</a>
 				</b>;
@@ -438,36 +496,23 @@ class ModelDataBox extends React.Component {
 		    originCorpus = <p>No corpus associated</p>;
 		}
 
-		if (this.props.seedGenes) {
-			console.log(this.props.seedGenes);
-			console.log(JSON.parse(this.props.seedGenes));
-			seedGenes =
-				<th scope="row" colspan="2">
-					<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Seed genes ({JSON.parse(this.props.seedGenes).length})</th>;
-        } else {
-            seedGenes = <th scope="row" colspan="2"><p>No seed genes</p></th>;
-        }
-
-        if (this.props.definitions) {
-			console.log(this.props.definitions);
-			console.log(JSON.parse(this.props.definitions));
-			proteinDefinitions = 
-				<th scope="row" colspan="2"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Definitions ({JSON.parse(this.props.definitions).length})</th>;
-        } else {
-        	proteinDefinitions = <th scope="row" colspan="2"><p>No protein definitions</p></th>;
-        }
-
+		var seedGenes = this.props.seedGenes ? JSON.parse(this.props.seedGenes) : {},
+			definitions = this.props.definitions ? JSON.parse(this.props.definitions) : {};
 		return ([
-			<KBMetaDataBox
-				id="modelMetaData"
-				name="Meta-data"
-				editable={true}
-				onDataUpdate={this.props.onDataUpdate}
-				kbName={this.props.kbName}
-				desc={this.props.desc}
-				organism={this.props.organism}
-				creation_time={this.props.creation_time}
-				last_modified={this.props.last_modified} />,
+			<div id="modelMetaData">
+				<KBMetaDataBox
+					id="modelMetaData"
+					name="Meta-data"
+					editable={true}
+					kbName={this.props.kbName}
+					desc={this.props.desc}
+					organism={this.props.organism}
+					creation_time={this.props.creation_time}
+					last_modified={this.props.last_modified}
+					protected={["creation_time", "last_modified"]}
+					instantiated={true}
+					onDataUpdate={this.props.onDataUpdate}/>
+			</div>,
 			<hr className="sidebar-model-sep"/>,
 			<h3 className="info-brand">Origin</h3>,
 		    <div className="table-responsive">
@@ -479,17 +524,53 @@ class ModelDataBox extends React.Component {
 		              {originCorpus}
 		            </td>
 		          </tr>
-		          <tr>
-            	 	{seedGenes}
-          		  </tr>
-		          <tr>
-		            {proteinDefinitions}
-		          </tr>
+		          <DropDownRow name="Seed genes" items={seedGenes} />
+		          <DropDownRow name="Definitions" items={definitions} />
 		        </tbody>
 		      </table> 
-    		</div> 
-
+    		</div>,
+    		<hr className="sidebar-corpus-sep"/>,
+   			<InteractionsDataBox
+   				proteins={this.props.proteins}
+   				modifications={this.props.modifications}
+   				bindings={this.props.bindings}/>
 		]);
 				
+	}
+}
+
+class CorpusDataBox extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		var genes, modifications, bindings;
+		genes = 
+			<th scope="row">
+				<span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Genes ({ this.props.nGenes })
+			</th>;
+		modifications = <th scope="row"><span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Modifications ({ this.props.nModifications })</th>;
+		bindings = <th scope="row"><span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span> Bindings ({ this.props.nBindings })</th>;
+		return([
+			<div id="modelMetaData">
+				<KBMetaDataBox
+					id="corpusMetaData"
+					name="Meta-data"
+					editable={true}
+					kbName={this.props.kbName}
+					desc={this.props.desc}
+					organism={this.props.organism}
+					creation_time={this.props.creation_time}
+					last_modified={this.props.last_modified}
+					protected={["creation_time", "last_modified"]}
+					onDataUpdate={this.props.onDataUpdate}/>
+			</div>,
+			<hr className="sidebar-corpus-sep"/>,
+   			<InteractionsDataBox
+   				genes={this.props.genes}
+   				modifications={this.props.modifications}
+   				bindings={this.props.bindings}/>
+		]);
 	}
 }
