@@ -8,7 +8,7 @@ onmessage = function(event) {
       height = event.data.height;
 
   var simulation = d3.forceSimulation()
-      .force("charge", d3.forceManyBody().strength(-40))
+      .force("charge", d3.forceManyBody().strength(-150))
       .force("link",
              d3.forceLink()
                   .id(function(d) { return d.id; })

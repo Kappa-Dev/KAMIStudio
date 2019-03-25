@@ -14,84 +14,11 @@ var AG_META_SIZES = {
   "bnd":15
 };
 
-function id(d) {
-  return d.id;
+
+function displayHiddenSvg() {
+	svg.style("display", "initial");
+	document.getElementById("saveLayoutButton").disabled = false;
 }
-
-
-function find(nodeById, nodeId) {
-  var node = nodeById.get(nodeId);
-  if (!node) throw new Error("missing: " + nodeId);
-  return node;
-}
-
-function isConnected(edgeList, sourceId, targetId) {
-	for (var i=0; i < edgeList.length; i++) {
-		if ((edgeList[i][0] == sourceId) && (edgeList[i][1] == targetId)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-
-function predecessors(graph, edgeList, nodeId) {
-	var ps = [];
-	for (var i=0; i < graph.nodes.length; i++) {
-		var d = graph.nodes[i];
-		if (isConnected(edgeList, d.id, nodeId)) {
-			ps.push(d.id);
-		}
-	}
-	return ps;
-}
-
-
-function filterNotComponents(typing, allPredecessors) {
-	var result = [];
-	for (var i=0; i < allPredecessors.length; i++) {
-		if ((typing[allPredecessors[i]] != "bnd") && (typing[allPredecessors[i]] != "mod")) {
-			result.push(allPredecessors[i]);
-		}
-	}
-	return result;
-}
-
-
-function getAllComponents(graph, typing, draggedNodeId) {
-    // Dragging of subcomponents of a node
-    var components = [];
-
-    var edgeList = [];
-	for (var i=0; i < graph.links.length; i++) {
-		edgeList.push(
-			[graph.links[i].source.id,
-			 graph.links[i].target.id]);
-	}
-
-	var allPredecessors = predecessors(graph, edgeList, draggedNodeId),
-		nextComponentPredecessors = filterNotComponents(typing, allPredecessors),
-		visited = nextComponentPredecessors.concat();
-
-	components = components.concat(nextComponentPredecessors);
-	while (nextComponentPredecessors.length > 0) {
-		var newNextComponentPredecessors = [];
-		for (var i=0; i < nextComponentPredecessors.length; i++) {
-			var currentNode = nextComponentPredecessors[i],
-				nodePredecessors = filterNotComponents(
-					typing, predecessors(graph, edgeList, currentNode));
-			for (var j=0; j < nodePredecessors.length; j++) {
-				if (!visited.includes(nodePredecessors[j])) {
-					newNextComponentPredecessors.push(nodePredecessors[j]);
-					components.push(nodePredecessors[j]);
-				}
-			}
-		}
-		nextComponentPredecessors = newNextComponentPredecessors.concat();
-	}
-	return components;
-}
-
 
 function initializeLinkStrengthDistance(graph, metaTyping) {
 	// Initialize link strength depending on node meta-types
@@ -152,12 +79,9 @@ function initializeCircleRadius(graph, metaTyping) {
 	}
 }
 
-function initializeNodePosition(graph, pos) {
+function initializeNodePosition(graph, posDict) {
 	noPositionNodes = [];
-	posDict = {};
-	for (var i=0; i < pos.length; i++) {
-		posDict[pos[i][0]] = [pos[i][1], pos[i][2]];
-	}
+	// posDict = {};
 	for (var i=0; i < graph.nodes.length; i++) {
 		if (graph.nodes[i].id in posDict) {
 			graph.nodes[i].fx = posDict[graph.nodes[i].id][0];
@@ -174,9 +98,20 @@ function initializeNodePosition(graph, pos) {
 
 function visualiseAG(actionGraph, metaTyping, nodePos, 
 					 workerUrl, nodePosUpdateUrl, configs=null,
-                     detailsOnClicks=true, svgId=null) {
+                     detailsOnClicks=true, svgId=null, threshold=null,
+                     instantiated=false) {
 	// Visualise action graph using static precomputed force layout +
 	// previously stored node positions
+
+	var color_scheme;
+	console.log(instantiated);
+	if (instantiated) {
+		color_scheme = INSTANCE_META_COLORS;
+		highlight = INSTANCE_HIGHLIGHT_COLOR;
+	} else {
+		color_scheme = META_COLORS;
+		highlight = HIGHLIGHT_COLOR;
+	}
 
 	initializeCircleRadius(actionGraph, metaTyping);
 	initializeLinkStrengthDistance(actionGraph, metaTyping);
@@ -209,51 +144,71 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	svg.append("defs").append("marker")
 		.attr("id", "arrow-selected")
 		.attr("viewBox", "0 -5 10 10")
-		.attr("refX", 8)
+		.attr("refX", 7)
 		.attr("refY", 0)
 		.attr("markerWidth", 3.5)
 		.attr("markerHeight", 3.5)
 		.attr("orient", "auto")
 		.append("svg:path")
 		.attr("d", "M0,-5L10, 0L0, 5")
-		.attr('fill', '#337ab7');
+		// .attr('fill', '#337ab7');
+		.attr("fill", highlight);
 
-	var g = svg.append("g")
-      .attr("class", "everything");
+	// initialize legend
+	var legend = null;
+
+	var container = svg.append("g")
+      		   .attr("class", "everything");
 
 	var zoom = d3.zoom()
-	    // .scaleExtent([1, 8])
-	    .on("zoom", zoomed);
-
+	             .on("zoom", zoomed);
 	svg.call(zoom);
 
+
 	if (noPositionNodes.length != 0) {
-		if (noPositionNodes.length == actionGraph.nodes.length) {
-			initilizeLayoutProgressBar();
+		if ((threshold !== null) && (actionGraph.nodes.length <= threshold))  {
+			// remove progress block
+			removeProgressBlock();
+
+			var nodeById = d3.map(actionGraph.nodes, id);
+			
+			for (var i=0; i < actionGraph.links.length; i++) {
+				if (typeof actionGraph.links[i].source !== "object")
+					actionGraph.links[i].source = find(nodeById, actionGraph.links[i].source);
+				if (typeof actionGraph.links[i].target !== "object") 
+					actionGraph.links[i].target = find(nodeById, actionGraph.links[i].target);
+			}
+			document.getElementById("actionGraphSvg").style.display = "initial";
+			document.getElementById("saveLayoutButton").disabled = false;
+			draw(actionGraph.nodes, actionGraph.links, true);
 		} else {
-			initializePositionUpdateProgressBar();
+			// Don't use web-workers if the graph is small enough
+			if (noPositionNodes.length == actionGraph.nodes.length) {
+				initilizeLayoutProgressBar();
+			} else {
+				initializePositionUpdateProgressBar();
+			}
+			var worker = new Worker(workerUrl);
+			worker.postMessage({
+			  nodes: actionGraph.nodes,
+			  links: actionGraph.links,
+			  width: width,
+			  height: height,
+			});
+
+			worker.onmessage = function(event) {
+			  switch (event.data.type) {
+			    case "tick": return updateAGLoadingProgress(event.data.progress);
+			    case "end": return ended(event.data);
+			  }
+			};
 		}
 
-		var worker = new Worker(workerUrl);
-		worker.postMessage({
-		  nodes: actionGraph.nodes,
-		  links: actionGraph.links,
-		  width: width,
-		  height: height,
-		});
-
-		worker.onmessage = function(event) {
-		  switch (event.data.type) {
-		    case "tick": return ticked(event.data);
-		    case "end": return ended(event.data);
-		  }
-		};
 	} else {
 		// remove progress block
 		removeProgressBlock();
 
 		var nodeById = d3.map(actionGraph.nodes, id);
-		var linkBySourceTargetId = d3.map(actionGraph.links, );
 
 		for (var i=0; i < actionGraph.links.length; i++) {
 			if (typeof actionGraph.links[i].source !== "object")
@@ -262,13 +217,14 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 				actionGraph.links[i].target = find(nodeById, actionGraph.links[i].target);
 		}
 		document.getElementById("actionGraphSvg").style.display = "initial";
-		document.getElementById("saveLayoutButtonBlock").style.display = "initial";
-		draw(actionGraph.nodes, actionGraph.links);
+		document.getElementById("saveLayoutButton").disabled = false;
+		draw(actionGraph.nodes, actionGraph.links, false);
 	}
 
 	function translateLinks(linkSelector, nodeSelector) {
-
-	    linkSelector
+		var arrow = linkSelector.selectAll(".arrow"),
+			linkBox = linkSelector.selectAll(".linkbox");
+	    linkBox
 	        .attr("x1", function(d) { return d.source.x; })
 	        .attr("y1", function(d) { return d.source.y; })
 	        .attr("x2", function(d) { 
@@ -277,7 +233,7 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 				    diffY = d.target.y - d.source.y;
 				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
 				    offsetX = (diffX * radius) / pathLength;
-				    return (d.target.x - offsetX - offsetX * 0.05);
+				    return (d.target.x - offsetX + offsetX * 0.3);
 	        	 })
 	        .attr("y2", function(d) { 
 	        		radius = AG_META_SIZES[metaTyping[d.target.id]];
@@ -285,12 +241,27 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 				    diffY = d.target.y - d.source.y;
 				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
 				    offsetY = (diffY * radius) / pathLength;
-				    return (d.target.y - offsetY - offsetY * 0.05);
+				    return (d.target.y - offsetY + offsetY * 0.3);
 				});
-	}
-
-	function ticked(data) {
-	  updateAGLoadingProgress(data.progress);
+	    arrow
+	        .attr("x1", function(d) { return d.source.x; })
+	        .attr("y1", function(d) { return d.source.y; })
+	        .attr("x2", function(d) { 
+		        	radius = AG_META_SIZES[metaTyping[d.target.id]];
+				    diffX = d.target.x - d.source.x;
+				    diffY = d.target.y - d.source.y;
+				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+				    offsetX = (diffX * radius) / pathLength;
+				    return (d.target.x - offsetX - offsetX * 0.1);
+	        	 })
+	        .attr("y2", function(d) { 
+	        		radius = AG_META_SIZES[metaTyping[d.target.id]];
+				    diffX = d.target.x - d.source.x;
+				    diffY = d.target.y - d.source.y;
+				    pathLength = Math.sqrt((diffX * diffX) + (diffY * diffY));
+				    offsetY = (diffY * radius) / pathLength;
+				    return (d.target.y - offsetY - offsetY * 0.1);
+				});
 	}
 
 	function ended(data) {
@@ -320,17 +291,123 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 			function() { removeProgressAndDraw(data.nodes, data.links) })
 	}
 
-	function draw(nodes, links) {
+	function ticked() {
+		// Set positions of nodes and links corresponding to one tick of simulations
+	  	var node = d3.selectAll(".node"),
+	  	    link = d3.selectAll(".link");
+
+	  	translateLinks(link, node);
+
+	    node.attr(
+            "transform", 
+            function(d) {
+	          	// zoom to fit the bounding box
+	          	var boundaries = container.node().getBBox(),
+		            bx = boundaries.x,
+		            by = boundaries.y,
+		            bheight = boundaries.height,
+		            bwidth = boundaries.width;
+
+		        var currentViewBox = svg.attr("viewBox");
+		        if (currentViewBox !== null) {
+		        	var split =  currentViewBox.split(" ");
+		        	if ((split[0] > bx) ||
+		        		(split[1] > by) ||
+		        		(split[2] < bwidth) ||
+		        		(split[3] < bheight)) {
+		        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+				        svg  
+				            .attr("viewBox", updatedView)  
+				            .attr("preserveAspectRatio", "xMidYMid meet")  
+				            .call(zoom);
+		        	}
+		        } else {
+		        	if ((bx < 0) ||
+		        		(by < 0) ||
+		        		(width < bwidth) ||
+		        		(height > bheight)) {
+		        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+				        svg  
+				            .attr("viewBox", updatedView)  
+				            .attr("preserveAspectRatio", "xMidYMid meet")  
+				            .call(zoom);
+				    }
+		        }
+		        
+	            return "translate(" + d.x + "," + d.y + ")"; 
+			}
+		);
+	}
+
+	function draw(nodes, links, simulate) {
+		if (simulate) {
+	        // defines forces between nodes and edges
+	        var simulation = d3.forceSimulation()
+	            .force("charge", d3.forceManyBody().strength(-400))
+	            .force("link", d3.forceLink()
+	            	.id(function(d) { return d.id; })
+	            	.distance(function(d) {return d.distance; }))
+	            .force("center", d3.forceCenter(width / 2, height / 2))
+	            .force("collide",d3.forceCollide().strength(1.8).radius(
+		          function(d) {return d.radius})
+		        )
+	            .force("cx", d3.forceX(width / 2))
+	            .force("cy", d3.forceY(height / 2))
+	            .on("tick", ticked)
+	            .on('end', 
+	            	function() {
+	    				updateNodePositions(nodes, nodePosUpdateUrl)
+					});
+	        // applies forces on nodes and edges
+	        simulation.nodes(nodes);
+	        simulation.force("link").links(links);
+	    }
+
 		// Draw a graph
-		var link = g.selectAll(".link")
-		    .data(links)
-		    .enter().append("line")
-		    .attr("class", "link")
-		      .attr("stroke-width", 2).attr("stroke", d3.rgb("#B8B8B8"))
-		      .attr("marker-end", "url(#arrow)");
+
+		var link = container
+			.selectAll(".link")
+			.data(links)
+			.enter().append("g")
+			.attr("class", "link")
+			.on("click", handleEdgeClick)
+	        .on("mouseover", 
+	        	function(){ 
+	        		d3.select(this).select(".linkbox").style("opacity", 0.4) 
+	        	})
+        	.on("mouseout", function(){
+        			d3.select(this).select(".linkbox").style("opacity", 0) 
+        		});
+
+		link.append("line")
+			.attr("class", "arrow")
+			.attr("stroke-width", 2).attr("stroke", d3.rgb("#B8B8B8"))
+		    .attr("marker-end", "url(#arrow)");
+		link.append("line")
+			.attr("class", "linkbox")
+
+		// var link = container.selectAll(".link")
+		//     .data(links)
+		//     .enter().append("line")
+		//     .attr("class", "link")
+		//       .attr("stroke-width", 2).attr("stroke", d3.rgb("#B8B8B8"))
+		//       .attr("marker-end", "url(#arrow)");
+
+		// var linkBox = container.selectAll(".linkbox")
+	 //        .data(links)
+	 //        .enter().append("line")
+	 //          .attr("class", "linkbox")
+	 //        .on("click", handleEdgeClick)
+	 //        .on("mouseover", 
+	 //        	function(){ 
+	 //        		d3.select(this).style("opacity", 0.4) 
+	 //        	})
+  //       	.on("mouseout", function(){
+  //       			d3.select(this).style("opacity", 0) 
+  //       		});
 
 	    // define nodes of the graph
-	    var node = g.selectAll(".node")
+	    var node = container.selectAll(".node")
 		      .data(nodes)
 		      .enter().append("g")
 		      .attr("class", "node")
@@ -341,13 +418,18 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    // setup nodes circles
 	    node.append("circle")
 	      .attr("r", function(d) { return AG_META_SIZES[metaTyping[d.id]]; })
-	      .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
+	      .attr("fill", function(d) { return d3.rgb(color_scheme[metaTyping[d.id]]); })
 	      .attr("stroke-width", 0)
 	      .attr("stroke", d3.rgb("#B8B8B8"))
-	   	  .on("dblclick", zoomInArea);
+	   	  .on("dblclick", zoomInArea)
+	   	  .on("click", handleNodeClick);
 
-	    node.append("title")
+	   	node.append("title")
 	      .text(function(d) { return d.id; });
+
+	    if (!simulate) {
+	       ticked();
+	    }
 
 	   	// node.filter(function(d) { return metaTyping[d.id] == "gene"; })
 	   	// 	.append("text")
@@ -365,25 +447,6 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 		   //      }
 		   //      return text});
 
-	    translateLinks(link, node);
-
-	    node.attr(
-          "transform", function(d) {
-          // zoom to fit the bounding box
-          var boundaries = g.node().getBBox(),
-              bx = boundaries.x,
-              by = boundaries.y,
-              bheight = boundaries.height,
-              bwidth = boundaries.width;
-          var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-          svg  
-            .attr("viewBox", updatedView)  
-            .attr("preserveAspectRatio", "xMidYMid meet")  
-            .call(zoom);
-            return "translate(" + d.x + "," + d.y + ")"; 
-
-        });
-
         d3.select('#saveLayoutButton')
           .on('click', function() {
           	updateNodePositions(nodes, nodePosUpdateUrl, null, null, null);
@@ -394,24 +457,27 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 		// remove progress block
 		removeProgressBlock();
 		document.getElementById("actionGraphSvg").style.display = "initial";
-		document.getElementById("saveLayoutButtonBlock").style.display = "initial";
-		draw(nodes, links);
+		document.getElementById("saveLayoutButton").disabled = false;
+		draw(nodes, links, false);
 	}
 
 	function zoomed() {
-	    g.attr("transform", d3.event.transform); // updated for d3 v4
+	    container.attr("transform", d3.event.transform); // updated for d3 v4
 	}
 
 	function dragstarted(d) {
 		d3.event.sourceEvent.stopPropagation();
-		if ((metaTyping[d.id] != "state") && (metaTyping[d.id] != "bnd") && (metaTyping[d.id] != "mod")) {
-			CURRENT_DRAG_COMPONENTS = getAllComponents(actionGraph, metaTyping, d.id);
+		if ((metaTyping[d.id] != "state") &&
+			(metaTyping[d.id] != "bnd") && 
+			(metaTyping[d.id] != "mod")) {
+			CURRENT_DRAG_COMPONENTS = getAllComponents(
+				actionGraph, metaTyping, d.id);
 		}
 	}
 
 	function dragged(d) {
 		var radius = AG_META_SIZES[metaTyping[d.id]];
-	    var boundaries = g.node().getBBox(),
+	    var boundaries = container.node().getBBox(),
             bx_min = boundaries.x,
             by_min = boundaries.y,
             by_max = by_min + boundaries.height,
@@ -427,30 +493,28 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 	    // }
 
 	    var draggedNode = d3.select(this);
-	    draggedNode.attr("transform", "translate(" + d.x + "," + d.y + ")"); 
+	    draggedNode.attr(
+	    	"transform", "translate(" + d.x + "," + d.y + ")"); 
 
-	    if ((metaTyping[d.id] != "state") && (metaTyping[d.id] != "bnd") && (metaTyping[d.id] != "mod")) {
-	    	g.selectAll(".components").remove();
+	    if ((metaTyping[d.id] != "state") &&
+	    	(metaTyping[d.id] != "bnd") &&
+	    	(metaTyping[d.id] != "mod")) {
+	    	container.selectAll(".components").remove();
 	    	var components = CURRENT_DRAG_COMPONENTS;
 	    	var componentSelector = d3.selectAll(".node")
 			  .filter(function(e) { return components.includes(e.id); })
 			  .each(function(e) {
-			  	  // if (d3.event.x >= bx_min + radius && d3.event.x <= bx_max - radius) {
 	    			e.x += d3.event.dx;
-	    		  // }
-	    		  // if (d3.event.y >= by_min + radius && d3.event.y <= by_max - radius) {
 				   	e.y += d3.event.dy;
-				  // }
-			  	  // e.x += d3.event.dx;
-			     //  e.y += d3.event.dy;
 			   })
 			  .attr("transform", 
 				function(e) { return "translate(" + e.x + "," + e.y + ")"; }); 
 	    }
 
 	    // dragging of a node itself
-	    translateLinks(g.selectAll(".link"), g.selectAll(".node"));
-
+	    translateLinks(
+	    	container.selectAll(".link"),
+	    	container.selectAll(".node"));
 	}
 
 	function zoomInArea(d, i) {
@@ -482,18 +546,78 @@ function visualiseAG(actionGraph, metaTyping, nodePos,
 		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
 		}
 
+	function handleNodeClick(d, i) {
+		// deselect all the selected elements
+	    container.selectAll(".arrow")
+	      .style("stroke", d3.rgb("#B8B8B8"))
+	      .attr("marker-end", "url(#arrow)");
+	    container.selectAll("circle")
+	      .attr("stroke-width", 0);
+	    // select current element
+		d3.select(this)
+	      .attr("stroke-width", 2)
+	      .attr("stroke", d3.rgb(highlight));
+		displayAttr(d, i);
+	}
+
+	function handleEdgeClick(d, i) {
+		// deselect all the selected elements
+	    container.selectAll("circle")
+	      .attr("stroke-width", 0);
+	    container.selectAll(".arrow")
+	      .style("stroke", d3.rgb("#B8B8B8"))
+	      .attr("marker-end", "url(#arrow)");
+	    d3.select(this)
+	      // .attr("stroke-width", 2)
+	      .select(".arrow")
+	      .style("stroke", d3.rgb(highlight))
+	      .attr("marker-end", "url(#arrow-selected)");
+
+		displayAttr(d, i);
+	}
+
+	function displayAttr(d, i) {
+		console.log(d.attrs);
+		if (legend === null) {
+			// // create legend
+			// legend = svg.append("g")
+			// 	.attr("class", "legend");
+			// var currentViewBox = svg.attr("viewBox"),
+			// 	x = 0,
+			// 	y = 0;
+			// if (currentViewBox !== null) {
+			// 	var split = currentViewBox.split(" ");
+			// 	x = split[0];
+			// 	y = split[1]; 
+			// }
+			// var legendBox = legend.append("rect")
+   //    		   			.attr("class", "legend")
+   //    		   			.attr("rx", 6)
+			// 		    .attr("ry", 6)
+			// 		    .attr("x", -12.5)
+			// 		    .attr("y", -12.5)
+			// 		    .attr("width", 100)
+			// 		    .attr("height", 100)
+			// 		    .style("fill", "none")
+			// 		    .style("stroke", "#337ab7");
+			// var legendItems = legend.append("g")
+			// 	.attr("class", "legend-items");
+			// legendItems.append("text")
+			// 	.text("Element info");
+		} else {
+			// legend.text(getNodeAttributes(d.attrs));
+		}
+	}
 }
 
 
-function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, failCallback,
-							 nodesToUpdate=null) {
+function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, 
+							 failCallback, nodesToUpdate=null) {
 	// POST newly computed node positioning to the server
 	var positions = {};
 	for (var i=0; i < nodes.length; i++) {
 		if (nodesToUpdate) {
 			if (nodesToUpdate.includes(nodes[i].id)) {
-				console.log("Updating selected nodes");
-				console.log(nodesToUpdate);
 				positions[nodes[i].id] = [nodes[i].x, nodes[i].y];
 			}
 		} else {
@@ -534,7 +658,7 @@ function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallba
 }
 
 
-function getActionGraphAndVisualize(model_id, workerUrl) {
+function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
 	    url: model_id + "/raw-action-graph",
@@ -555,7 +679,9 @@ function getActionGraphAndVisualize(model_id, workerUrl) {
 	    	nodePos = data["nodePosition"],
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning";
 
-    	visualiseAG(actionGraph, metaTyping, nodePos, workerUrl, nodePosUpdateUrl, null, false, null);
+    	visualiseAG(actionGraph, metaTyping, nodePos, 
+    				workerUrl, nodePosUpdateUrl, null, false, null, 100, 
+    				instantiated);
 	}).fail(function (e) {
 	    console.log("Failed to load action graph");
 	});

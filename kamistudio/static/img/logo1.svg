@@ -9,13 +9,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="500mm"
-   height="500mm"
-   viewBox="0 0 500 500"
+   width="492.88092mm"
+   height="492.88092mm"
+   viewBox="0 0 492.88092 492.88092"
    version="1.1"
    id="svg4524"
    inkscape:version="0.92.4 (33fec40, 2019-01-16)"
-   sodipodi:docname="logo.svg">
+   sodipodi:docname="logo1.svg">
   <defs
      id="defs4518" />
   <sodipodi:namedview
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.175"
-     inkscape:cx="1381.901"
-     inkscape:cy="779.33143"
+     inkscape:zoom="0.0875"
+     inkscape:cx="2407.3695"
+     inkscape:cy="2285.0985"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -37,31 +37,45 @@
      inkscape:window-height="1025"
      inkscape:window-x="67"
      inkscape:window-y="27"
-     inkscape:window-maximized="1">
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
     <sodipodi:guide
-       position="195.79167,259.29166"
+       position="192.23869,255.43628"
        orientation="0,1"
        id="guide5083"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="250.97619,366.6369"
+       position="247.42321,362.78152"
        orientation="1,0"
        id="guide5085"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="368.14881,278.19047"
+       position="364.59583,274.33509"
        orientation="0,1"
        id="guide5122"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="138.33928,325.05952"
+       position="134.7863,321.20414"
        orientation="1,0"
        id="guide5124"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="368.14881,278.19047"
+       position="364.59583,274.33509"
        orientation="1,0"
        id="guide5126"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="247.42321,255.43628"
+       orientation="0,1"
+       id="guide1580"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="-26.003618,255.43628"
+       orientation="0,1"
+       id="guide1582"
        inkscape:locked="false" />
   </sodipodi:namedview>
   <metadata
@@ -72,7 +86,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -80,7 +94,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,203)">
+     transform="translate(-3.5529785,199.73629)">
     <circle
        style="opacity:1;fill:#286090;fill-opacity:0;stroke-width:0.26458332"
        id="path5069"
@@ -95,7 +109,7 @@
        rx="129.26785"
        ry="143.63095" />
     <circle
-       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.3984026"
+       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.3984026"
        id="path5077"
        cx="249.99344"
        cy="46.704166"
@@ -107,37 +121,37 @@
        cy="47.913692"
        r="185.5863" />
     <circle
-       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.19528769"
+       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19528769"
        id="path5087"
        cx="255.96544"
        cy="-68.65416"
        r="70.303574" />
     <circle
-       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.19528769"
+       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19528769"
        id="path5087-3"
        cx="141.36308"
        cy="9.7381058"
        r="70.303574" />
     <circle
-       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.19528769"
+       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19528769"
        id="path5087-6"
        cx="366.6369"
        cy="15.785714"
        r="70.303574" />
     <circle
-       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.19528769"
+       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19528769"
        id="path5087-7"
        cx="182.8649"
        cy="142.78571"
        r="70.303574" />
     <circle
-       style="opacity:1;fill:#337ab7;fill-opacity:1;stroke-width:0.19528769"
+       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19528769"
        id="path5087-5"
        cx="320.07025"
        cy="146.56548"
        r="70.303574" />
     <circle
-       style="opacity:1;fill:#a11117;fill-opacity:1;stroke-width:0.19317129"
+       style="opacity:1;fill:#286090;fill-opacity:1;stroke-width:0.19317129"
        id="path5128"
        cx="255.15509"
        cy="46.731396"
