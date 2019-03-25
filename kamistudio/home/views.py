@@ -21,45 +21,54 @@ home_blueprint = Blueprint('home', __name__, template_folder='templates')
 @home_blueprint.route('/home')
 def index():
     """Handler of index page."""
+    if app.neo4j_driver is None:
+        return render_template(
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
+    if app.mongo.db is None:
+        return render_template(
+            "mongo_connection_failure.html",
+            uri=app.config["MONGO_URI"])
+
     corpora = []
     models = []
     recent = [None, None, None]
-    if app.mongo.db is not None:
-        corpora = list(app.mongo.db.kami_corpora.find({}))
-        models = list(app.mongo.db.kami_models.find({}))
+    corpora = list(app.mongo.db.kami_corpora.find({}))
+    models = list(app.mongo.db.kami_models.find({}))
 
-        # routine for finding last three models/corpora
-        # (todo: think of a less naive implementation)
-        last_corpora = list(app.mongo.db.kami_corpora.find().limit(3).sort(
-            "last_modified", -1))
-        last_models = list(app.mongo.db.kami_models.find().limit(3).sort(
-            "last_modified", -1))
-        i = 0
-        ci = 0
-        mi = 0
-        while i < 3:
-            c = None
-            m = None
-            if ci <= len(last_corpora) - 1:
-                c = last_corpora[ci]["last_modified"]
-            if mi <= len(last_models) - 1:
-                m = last_models[mi]["last_modified"]
-            if c is not None:
-                if m is not None:
-                    if c > m:
-                        recent[i] = (last_corpora[ci], "corpus")
-                        ci += 1
-                    else:
-                        recent[i] = (last_models[mi], "model")
-                        mi += 1
-                else:
+    # routine for finding last three models/corpora
+    # (todo: think of a less naive implementation)
+    last_corpora = list(app.mongo.db.kami_corpora.find().limit(3).sort(
+        "last_modified", -1))
+    last_models = list(app.mongo.db.kami_models.find().limit(3).sort(
+        "last_modified", -1))
+    i = 0
+    ci = 0
+    mi = 0
+    while i < 3:
+        c = None
+        m = None
+        if ci <= len(last_corpora) - 1:
+            c = last_corpora[ci]["last_modified"]
+        if mi <= len(last_models) - 1:
+            m = last_models[mi]["last_modified"]
+        if c is not None:
+            if m is not None:
+                if c > m:
                     recent[i] = (last_corpora[ci], "corpus")
                     ci += 1
-            else:
-                if m is not None:
+                else:
                     recent[i] = (last_models[mi], "model")
                     mi += 1
-            i += 1
+            else:
+                recent[i] = (last_corpora[ci], "corpus")
+                ci += 1
+        else:
+            if m is not None:
+                recent[i] = (last_models[mi], "model")
+                mi += 1
+        i += 1
 
     return render_template(
         "index.html", corpora=corpora, models=models, recent=recent)
@@ -250,18 +259,18 @@ def imported_corpus(filename, annotation):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             json_data["corpus_id"] = corpus_id
-            try:
-                add_new_corpus(corpus_id, creation_time, last_modified, annotation)
-                corpus = KamiCorpus.from_json(
-                    corpus_id,
-                    json_data,
-                    annotation,
-                    creation_time=creation_time,
-                    last_modified=last_modified,
-                    backend="neo4j",
-                    driver=app.neo4j_driver)
-            except:
-                return render_template("500.html")
+            # try:
+            add_new_corpus(corpus_id, creation_time, last_modified, annotation)
+            corpus = KamiCorpus.from_json(
+                corpus_id,
+                json_data,
+                annotation,
+                creation_time=creation_time,
+                last_modified=last_modified,
+                backend="neo4j",
+                driver=app.neo4j_driver)
+            # except:
+                # return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
@@ -276,16 +285,16 @@ def imported_model(filename, annotation):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             json_data["model_id"] = model_id
-            try:
-                add_new_model(model)
-                model = KamiModel.load_json(
-                    model_id,
-                    os.path.join(app.config['UPLOAD_FOLDER'], filename),
-                    annotation,
-                    creation_time=creation_time,
-                    last_modified=last_modified,
-                    backend="neo4j",
-                    driver=app.neo4j_driver)
-            except:
-                return render_template("500.html")
+            # try:
+            add_new_model(model_id, creation_time, last_modified, annotation)
+            model = KamiModel.load_json(
+                model_id,
+                os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                annotation,
+                creation_time=creation_time,
+                last_modified=last_modified,
+                backend="neo4j",
+                driver=app.neo4j_driver)
+            # except:
+            #     return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))

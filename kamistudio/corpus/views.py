@@ -23,7 +23,7 @@ corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
 def get_corpus(corpus_id):
     """Retreive corpus from the db."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    if corpus_json:
+    if corpus_json and app.neo4j_driver:
         return KamiCorpus(
             corpus_id,
             annotation=CorpusAnnotation.from_json(corpus_json["meta_data"]),
@@ -57,16 +57,43 @@ def add_new_corpus(corpus_id, creation_time, last_modified, annotation):
 @corpus_blueprint.route("/corpus/<corpus_id>")
 def corpus_view(corpus_id):
     """View corpus."""
+    if app.neo4j_driver is None:
+        return render_template(
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
+    if app.mongo.db is None:
+        return render_template(
+            "mongo_connection_failure.html",
+            uri=app.config["MONGO_URI"])
+
+
     corpus = get_corpus(corpus_id)
+
     if corpus is not None:
         nugget_desc = {}
         for nugget in corpus.nuggets():
             nugget_desc[nugget] = corpus.get_nugget_desc(nugget)
 
+        genes = {}
+        for g in corpus.genes():
+            genes[g] = corpus.get_gene_data(g)
+
+        modifications = {}
+        # for m in corpus.modifications():
+        #     modifications[m] = corpus.get_modification_data(m)
+
+        bindings = {}
+        # for b in corpus.bindings():
+        #     bindings[b] = corpus.get_binding_data(b)
+
         return render_template("corpus.html",
                                corpus_id=corpus_id,
                                corpus=corpus,
-                               nugget_desc=nugget_desc)
+                               nugget_desc=nugget_desc,
+                               genes=json.dumps(genes),
+                               bindings=json.dumps(bindings),
+                               modifications=json.dumps(modifications))
     else:
         return render_template("corpus_not_found.html",
                                corpus_id=corpus_id)
@@ -269,4 +296,25 @@ def update_edge_attrs(corpus_id):
                 updateLastModified(corpus_id)
             except:
                 pass
+    return response
+
+
+@corpus_blueprint.route("/corpus/<corpus_id>/update-meta-data",
+                        methods=["POST"])
+def update_meta_data(corpus_id):
+    """Handle update of edge attrs."""
+    json_data = request.get_json()
+
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    for k in json_data.keys():
+        corpus_json["meta_data"][k] = json_data[k]
+
+    app.mongo.db.kami_corpora.update_one(
+        {"_id": corpus_json["_id"]},
+        {"$set": corpus_json},
+        upsert=False)
+
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
     return response

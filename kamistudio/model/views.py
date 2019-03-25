@@ -23,15 +23,24 @@ model_blueprint = Blueprint('model', __name__, template_folder='templates')
 def get_model(model_id):
     """Retreive corpus from the db."""
     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
-    if model_json:
+    if model_json and app.neo4j_driver:
+        corpus_id = None
+        if "corpus_id" in model_json["origin"].keys():
+            corpus_id = model_json["origin"]["corpus_id"]
+        seed_genes = None
+        if "seed_genes" in model_json["origin"].keys():
+            seed_genes = model_json["origin"]["seed_genes"]
+        definitions = None
+        if "definitions" in model_json["origin"].keys():
+            definitions = model_json["origin"]["definitions"]
         return KamiModel(
             model_id,
             annotation=model_json["meta_data"],
             creation_time=model_json["creation_time"],
             last_modified=model_json["last_modified"],
-            corpus_id=model_json["origin"]["corpus_id"],
-            seed_genes=model_json["origin"]["seed_genes"],
-            definitions=model_json["origin"]["definitions"],
+            corpus_id=corpus_id,
+            seed_genes=seed_genes,
+            definitions=definitions,
             backend="neo4j",
             driver=app.neo4j_driver
         )
@@ -49,25 +58,36 @@ def updateLastModified(model_id):
         upsert=False)
 
 
-def add_new_model(model_obj):
+def add_new_model(model_id, creation_time, last_modified, annotation,
+                  corpus_id=None, seed_genes=None, definitions=None):
     """Add new model to the db."""
-    app.mongo.db.kami_models.insert_one({
-        "id": model_obj._id,
-        "creation_time": model_obj.creation_time,
-        "last_modified": model_obj.last_modified,
-        "meta_data": model_obj.annotation,
-        "origin": {
-            "corpus_id": model_obj._corpus_id,
-            "definitions": model_obj._definitions,
-            "seed_genes": model_obj._seed_genes,
-        },
-        "kappa_models": []
-    })
+    json_data = {
+        "id": model_id,
+        "creation_time": creation_time,
+        "last_modified": last_modified,
+        "meta_data": annotation,
+        "origin": {},
+        "kappa_model": []
+    }
+    # if corpus_id:
+    json_data["origin"]["corpus_id"] = corpus_id
+    # if seed_genes:
+    json_data["origin"]["seed_genes"] = seed_genes
+    # if definitions:
+    json_data["origin"]["definitions"] = definitions
+
+    app.mongo.db.kami_models.insert_one(json_data)
 
 
 @model_blueprint.route("/model/<model_id>")
 def model_view(model_id):
     """View model."""
+    if app.neo4j_driver is None:
+        return render_template(
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
+
     model = get_model(model_id)
     if model is not None:
         corpus = None
@@ -79,6 +99,18 @@ def model_view(model_id):
             if corpus:
                 corpus_name = corpus["meta_data"]["name"]
 
+        proteins = {}
+        for p in model.proteins():
+            proteins[p] = model.get_gene_data(p)
+
+        modifications = {}
+        for m in model.modifications():
+            modifications[m] = model.get_modification_data(m)
+
+        bindings = {}
+        for b in model.bindings():
+            bindings[b] = model.get_binding_data(b)
+
         nugget_desc = {}
         for nugget in model.nuggets():
             nugget_desc[nugget] = model.get_nugget_desc(nugget)
@@ -88,7 +120,10 @@ def model_view(model_id):
                                model=model,
                                corpus_id=model._corpus_id,
                                corpus_name=corpus_name,
-                               nugget_desc=nugget_desc)
+                               nugget_desc=nugget_desc,
+                               proteins=json.dumps(proteins),
+                               modifications=json.dumps(modifications),
+                               bindings=json.dumps(bindings))
     else:
         return render_template("model_not_found.html",
                                model_id=model_id)
@@ -288,4 +323,25 @@ def update_edge_attrs(model_id):
                 updateLastModified(model_id)
             except:
                 pass
+    return response
+
+
+@model_blueprint.route("/model/<model_id>/update-meta-data",
+                       methods=["POST"])
+def update_meta_data(model_id):
+    """Handle update of edge attrs."""
+    json_data = request.get_json()
+
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    for k in json_data.keys():
+        model_json["meta_data"][k] = json_data[k]
+
+    app.mongo.db.kami_models.update_one(
+        {"_id": model_json["_id"]},
+        {"$set": model_json},
+        upsert=False)
+
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
     return response
