@@ -1,4 +1,5 @@
 """Views of home blueprint."""
+import datetime
 import os
 import json
 
@@ -7,146 +8,134 @@ from flask import (render_template, Blueprint, request, session, redirect,
 from flask import current_app as app
 
 from regraph import graph_to_d3_json
+from regraph.neo4j import Neo4jHierarchy
 
-from kami.export.old_kami import ag_to_edge_list
-from kami.aggregation.generators import generate_from_interaction
+from kami.aggregation.generators import generate_nugget
+from kami.data_structures.models import KamiModel
+from kami.exporters.old_kami import ag_to_edge_list
 
 from kamistudio.model.form_parsing import(parse_interaction)
-
+from kamistudio.corpus.views import get_corpus
 
 model_blueprint = Blueprint('model', __name__, template_folder='templates')
 
 
-@model_blueprint.route("/model/<hierarchy_id>")
-def model_view(hierarchy_id):
-    """View model."""
-    if not app.hierarchies[hierarchy_id].empty():
-        edgelist = ag_to_edge_list(app.hierarchies[hierarchy_id])
-        nodelist = set()
-        for u, v in edgelist:
-            nodelist.add(u)
-            nodelist.add(v)
-        nodelist = list(nodelist)
-        nodedict = dict()
-        for i, n in enumerate(nodelist):
-            nodedict[n] = i + 1
-
-        new_nodelist = [(i, l) for l, i in nodedict.items()]
-        new_edgelist = [(nodedict[u], nodedict[v]) for u, v in edgelist]
+def get_model(model_id):
+    """Retreive corpus from the db."""
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    if model_json and app.neo4j_driver:
+        corpus_id = None
+        if "corpus_id" in model_json["origin"].keys():
+            corpus_id = model_json["origin"]["corpus_id"]
+        seed_genes = None
+        if "seed_genes" in model_json["origin"].keys():
+            seed_genes = model_json["origin"]["seed_genes"]
+        definitions = None
+        if "definitions" in model_json["origin"].keys():
+            definitions = model_json["origin"]["definitions"]
+        return KamiModel(
+            model_id,
+            annotation=model_json["meta_data"],
+            creation_time=model_json["creation_time"],
+            last_modified=model_json["last_modified"],
+            corpus_id=corpus_id,
+            seed_genes=seed_genes,
+            definitions=definitions,
+            backend="neo4j",
+            driver=app.neo4j_driver
+        )
     else:
-        new_edgelist = []
-        new_nodelist = []
-
-    nugget_desc = {}
-    for nugget in app.hierarchies[hierarchy_id].nuggets():
-        if 'desc' in app.hierarchies[hierarchy_id].node[nugget].attrs.keys():
-            if type(app.hierarchies[hierarchy_id].node[nugget].attrs['desc']) == str:
-                nugget_desc[nugget] = app.hierarchies[hierarchy_id].node[nugget].attrs['desc']
-            else:
-                nugget_desc[nugget] = list(
-                    app.hierarchies[hierarchy_id].node[nugget].attrs['desc'])[0]
-        else:
-            nugget_desc[nugget] = ""
-
-    return render_template("model.html",
-                           hierarchy_id=hierarchy_id,
-                           hierarchies=app.hierarchies,
-                           action_graph_edgelist=new_edgelist,
-                           action_graph_nodelist=new_nodelist,
-                           nugget_desc=nugget_desc)
+        return None
 
 
-@model_blueprint.route("/model/<hierarchy_id>/add-interaction",
-                       methods=["GET", "POST"])
-def add_interaction(hierarchy_id, add_agents=True,
-                    anatomize=True, apply_semantics=True):
-    """Handle interaction addition."""
-    if request.method == 'GET':
+def updateLastModified(model_id):
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    model_json["last_modified"] = datetime.datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S")
+    app.mongo.db.kami_models.update_one(
+        {"_id": model_json["_id"]},
+        {"$set": model_json},
+        upsert=False)
+
+
+def add_new_model(model_id, creation_time, last_modified, annotation,
+                  corpus_id=None, seed_genes=None, definitions=None):
+    """Add new model to the db."""
+    json_data = {
+        "id": model_id,
+        "creation_time": creation_time,
+        "last_modified": last_modified,
+        "meta_data": annotation,
+        "origin": {},
+        "kappa_model": []
+    }
+    # if corpus_id:
+    json_data["origin"]["corpus_id"] = corpus_id
+    # if seed_genes:
+    json_data["origin"]["seed_genes"] = seed_genes
+    # if definitions:
+    json_data["origin"]["definitions"] = definitions
+
+    app.mongo.db.kami_models.insert_one(json_data)
+
+
+@model_blueprint.route("/model/<model_id>")
+def model_view(model_id):
+    """View model."""
+    if app.neo4j_driver is None:
         return render_template(
-            "add_interaction.html",
-            hierarchy_id=hierarchy_id)
-    elif request.method == 'POST':
-        interaction = parse_interaction(request.form)
-        nugget, nugget_type = generate_from_interaction(
-            app.hierarchies[hierarchy_id], interaction)
-        app.hierarchies[hierarchy_id].add_nugget(
-            nugget, nugget_type,
-            add_agents=add_agents,
-            anatomize=anatomize,
-            apply_semantics=apply_semantics)
-        return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
+
+    model = get_model(model_id)
+    if model is not None:
+        corpus = None
+
+        corpus_name = None
+
+        if model._corpus_id is not None:
+            corpus = app.mongo.db.kami_corpora.find_one({"id": model._corpus_id})
+            if corpus:
+                corpus_name = corpus["meta_data"]["name"]
+
+        proteins = {}
+        for p in model.proteins():
+            proteins[p] = model.get_gene_data(p)
+
+        modifications = {}
+        for m in model.modifications():
+            modifications[m] = model.get_modification_data(m)
+
+        bindings = {}
+        for b in model.bindings():
+            bindings[b] = model.get_binding_data(b)
+
+        nugget_desc = {}
+        for nugget in model.nuggets():
+            nugget_desc[nugget] = model.get_nugget_desc(nugget)
+
+        return render_template("model.html",
+                               model_id=model_id,
+                               model=model,
+                               corpus_id=model._corpus_id,
+                               corpus_name=corpus_name,
+                               nugget_desc=nugget_desc,
+                               proteins=json.dumps(proteins),
+                               modifications=json.dumps(modifications),
+                               bindings=json.dumps(bindings))
+    else:
+        return render_template("model_not_found.html",
+                               model_id=model_id)
 
 
-@model_blueprint.route("/model/<hierarchy_id>/nugget-preview",
-                       methods=["POST"])
-def preview_nugget(hierarchy_id):
-    """Generate nugget, store in the session and redirect to nugget preview."""
-    interaction = parse_interaction(request.form)
-    nugget, nugget_type = generate_from_interaction(
-        app.hierarchies[hierarchy_id], interaction)
-
-    session["nugget"] = nugget
-    session["nugget_type"] = nugget_type
-    session.modified = True
-
-    template_relation = {}
-    for k, v in nugget.template_rel.items():
-        for vv in v:
-            template_relation[vv] = k
-
-    desc = interaction.desc
-    rate = interaction.rate
-
-    return render_template(
-        "nugget_preview.html",
-        new_nugget=True,
-        hierarchy_id=hierarchy_id,
-        hierarchies=app.hierarchies,
-        nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
-        nugget_type=nugget_type,
-        nugget_meta_typing=json.dumps(nugget.meta_typing),
-        nugget_meta_typing_json=nugget.meta_typing,
-        nugget_ag_typing=json.dumps(nugget.ag_typing),
-        nugget_template_rel=json.dumps(template_relation),
-        nugget_desc=desc,
-        nugget_rate=rate,
-        nugget_nodes=nugget.graph.nodes(),
-        nugget_ag_typing_dict=nugget.ag_typing)
-
-
-@model_blueprint.route("/model/<hierarchy_id>/add-generated-nugget",
-                       methods=["GET"])
-def add_nugget_from_session(hierarchy_id, add_agents=True,
-                            anatomize=True, apply_semantics=True):
-    """Add nugget stored in session to the model."""
-    app.hierarchies[hierarchy_id].add_nugget(
-        session["nugget"], session["nugget_type"],
-        add_agents=add_agents,
-        anatomize=anatomize,
-        apply_semantics=apply_semantics)
-
-    if "nugget" in session.keys():
-        session.pop("nugget", None)
-    if "nugget_type" in session.keys():
-        session.pop("nugget_type", None)
-
-    return redirect(url_for('model.model_view', hierarchy_id=hierarchy_id))
-
-
-@model_blueprint.route("/model/<hierarchy_id>/import-json-interactions",
-                       methods=["GET"])
-def import_json_interactions(hierarchy_id):
-    """Handle import of json interactions."""
-    pass
-
-
-@model_blueprint.route("/model/<hierarchy_id>/download", methods=["GET"])
-def download_model(hierarchy_id):
-    print(app.hierarchies[hierarchy_id].attrs.keys())
-    filename = hierarchy_id.replace(" ", "_") + ".json"
-    app.hierarchies[hierarchy_id].export(
+@model_blueprint.route("/model/<model_id>/download", methods=["GET"])
+def download_model(model_id):
+    """Handle model download."""
+    model = get_model(model_id)
+    filename = model_id.replace(" ", "_") + ".json"
+    model.export_json(
         os.path.join(app.root_path, "uploads/" + filename))
-    print(os.path.join(app.root_path, "uploads"))
     return send_file(
         os.path.join(app.root_path, "uploads/" + filename),
         as_attachment=True,
@@ -154,32 +143,205 @@ def download_model(hierarchy_id):
         attachment_filename=filename)
 
 
-@model_blueprint.route("/model/<hierarchy_id>/update-ag-node-positioning",
+@model_blueprint.route("/model/<model_id>/delete")
+def delete_model(model_id):
+    """Handle removal of the model."""
+    model = get_model(model_id)
+    if model is not None:
+        # connect to db
+        h = Neo4jHierarchy(driver=app.neo4j_driver)
+        # remove nuggets
+        for n in model.nuggets():
+            h.remove_graph(n)
+        # remove the ag
+        h.remove_graph(model._action_graph_id)
+        # drop from mongo db
+        app.mongo.db.kami_models.remove({"id": model_id})
+        return redirect(url_for("home.index"))
+    else:
+        return render_template("model_not_found.html", model_id=model_id)
+
+
+@model_blueprint.route("/model/<model_id>/add-interaction",
+                       methods=["GET", "POST"])
+def add_interaction(model_id, add_agents=True,
+                    anatomize=True, apply_semantics=True):
+    """Handle interaction addition."""
+    pass
+    # model = get_model(model_id)
+    # if request.method == 'GET':
+    #     return render_template(
+    #         "add_interaction.html",
+    #         model_id=model_id)
+    # elif request.method == 'POST':
+    #     interaction = parse_interaction(request.form)
+    #     nugget, nugget_type = generate_nugget(
+    #         model, interaction)
+    #     model.add_nugget(
+    #         nugget, nugget_type,
+    #         add_agents=add_agents,
+    #         anatomize=anatomize,
+    #         apply_semantics=apply_semantics)
+    #     return redirect(url_for('model.model_view', model_id=model_id))
+
+
+# @model_blueprint.route("/model/<model_id>/nugget-preview",
+#                        methods=["POST"])
+# def preview_nugget(model_id):
+#     """Generate nugget, store in the session and redirect to nugget preview."""
+#     model = get_model(model_id)
+#     interaction = parse_interaction(request.form)
+#     nugget, nugget_type = generate_nugget(
+#         model, interaction)
+
+#     session["nugget"] = nugget
+#     session["nugget_type"] = nugget_type
+#     session.modified = True
+
+#     template_relation = {}
+#     for k, v in nugget.template_rel.items():
+#         for vv in v:
+#             template_relation[vv] = k
+
+#     desc = interaction.desc
+#     rate = interaction.rate
+
+#     return render_template(
+#         "nugget_preview.html",
+#         new_nugget=True,
+#         model_id=model_id,
+#         models=app.models,
+#         nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
+#         nugget_type=nugget_type,
+#         nugget_meta_typing=json.dumps(nugget.meta_typing),
+#         nugget_meta_typing_json=nugget.meta_typing,
+#         nugget_ag_typing=json.dumps(nugget.ag_typing),
+#         nugget_template_rel=json.dumps(template_relation),
+#         nugget_desc=desc,
+#         nugget_rate=rate,
+#         nugget_nodes=nugget.graph.nodes(),
+#         nugget_ag_typing_dict=nugget.ag_typing)
+
+
+# @model_blueprint.route("/model/<model_id>/add-generated-nugget",
+#                        methods=["GET"])
+# def add_nugget_from_session(model_id, add_agents=True,
+#                             anatomize=True, apply_semantics=True):
+#     """Add nugget stored in session to the model."""
+#     model = get_model(model_id)
+#     model.add_nugget(
+#         session["nugget"], session["nugget_type"],
+#         add_agents=add_agents,
+#         anatomize=anatomize,
+#         apply_semantics=apply_semantics)
+
+#     if "nugget" in session.keys():
+#         session.pop("nugget", None)
+#     if "nugget_type" in session.keys():
+#         session.pop("nugget_type", None)
+
+#     return redirect(url_for('model.model_view', model_id=model_id))
+
+
+@model_blueprint.route("/model/<model_id>/import-json-interactions",
+                       methods=["GET"])
+def import_json_interactions(model_id):
+    """Handle import of json interactions."""
+    pass
+
+
+@model_blueprint.route("/model/<model_id>/update-ag-node-positioning",
                        methods=["POST"])
-def update_ag_node_positioning(hierarchy_id):
+def update_ag_node_positioning(model_id):
     """Retrieve node positioning from post request."""
     json_data = request.get_json()
+    # corpus = get_corpus(corpus_id)
 
     if "node_positioning" in json_data.keys() and\
        len(json_data["node_positioning"]) > 0:
-        if "node_positioning" in app.hierarchies[hierarchy_id].attrs.keys():
-            position_dict = {
-                k: (v1, v2)
-                for k, v1, v2 in app.hierarchies[hierarchy_id].attrs[
-                    "node_positioning"]
-            }
+        attrs = app.mongo.db.kami_models.find_one({"id": model_id})
+        if "node_positioning" in attrs.keys():
+            position_dict = attrs["node_positioning"]
         else:
             position_dict = {}
+
+        # update positions from json data in the request
         for k, v in json_data["node_positioning"].items():
-            position_dict[k] = (v[0], v[1])
-            # if k == bastard:
-            #     print("Found bastard")
+            position_dict[k] = [v[0], v[1]]
 
-        app.hierarchies[hierarchy_id].update_attrs({
-            "node_positioning":
-                set([(k, v[0], v[1])for k, v in position_dict.items()])
-        })
+        app.mongo.db.kami_models.update(
+            {'id': model_id},
+            {'$set': {'node_positioning': position_dict}})
+    updateLastModified(model_id)
+    return json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
 
-    # bastard = "O75449_region_AAA _ATPase_IPR003593_241_383_AAA _ATPase"
 
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+@model_blueprint.route("/model/<model_id>/update-node-attrs",
+                       methods=["POST"])
+def update_node_attrs(model_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    node_id = json_data["id"]
+    node_attrs = json_data["attrs"]
+    print(node_attrs)
+    model = get_model(model_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if model is not None:
+        if node_id in model.action_graph.nodes():
+            try:
+                model.action_graph.set_node_attrs_from_json(node_id, node_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(model_id)
+            except:
+                pass
+    return response
+
+
+@model_blueprint.route("/model/<model_id>/update-edge-attrs",
+                       methods=["POST"])
+def update_edge_attrs(model_id):
+    """Handle update of edge attrs."""
+    json_data = request.get_json()
+    source = json_data["source"]
+    target = json_data["target"]
+    edge_attrs = json_data["attrs"]
+    print(edge_attrs)
+    model = get_model(model_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if model is not None:
+        if (source, target) in model.action_graph.edges():
+            try:
+                model.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                updateLastModified(model_id)
+            except:
+                pass
+    return response
+
+
+@model_blueprint.route("/model/<model_id>/update-meta-data",
+                       methods=["POST"])
+def update_meta_data(model_id):
+    """Handle update of edge attrs."""
+    json_data = request.get_json()
+
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    for k in json_data.keys():
+        model_json["meta_data"][k] = json_data[k]
+
+    app.mongo.db.kami_models.update_one(
+        {"_id": model_json["_id"]},
+        {"$set": model_json},
+        upsert=False)
+
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
+    return response

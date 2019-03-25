@@ -8,7 +8,7 @@ onmessage = function(event) {
       height = event.data.height;
 
   var simulation = d3.forceSimulation()
-      .force("charge", d3.forceManyBody().strength(-40))
+      .force("charge", d3.forceManyBody().strength(-150))
       .force("link",
              d3.forceLink()
                   .id(function(d) { return d.id; })
@@ -23,10 +23,12 @@ onmessage = function(event) {
   simulation.force("link").links(links);
   simulation.stop();
 
+  // Posting message with progress of simulations
   for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
     postMessage({type: "tick", progress: i / n});
     simulation.tick();
   }
 
+  // Posting message with computed positions (inside the nodes)
   postMessage({type: "end", nodes: nodes, links: links});
 };

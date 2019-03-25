@@ -3,6 +3,14 @@
  * 
  */
 
+
+function htmlToElement(html) {
+    var template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
 // global vars defining default visualisation configs for different types of nodes
 var META_SIZES = {
   "gene":35,
@@ -15,13 +23,32 @@ var META_SIZES = {
 };
 
 var META_COLORS = {
-  "gene":"#FFA19E",
+  // "gene":"#FFA19E",
+  "gene":"#8db1d1",
+  // "gene": "#ed757a",
   "region":"#ffb080",
   "site":"#ffd780",
-  "residue":"#ccb3ff",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
   "state":"#A3DEFF",
-  "mod":"#9DAEFD",
-  "bnd":"#9EFFC5"
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
+
+var INSTANCE_META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
 };
 
 var META_LABEL_DY = {
@@ -33,6 +60,9 @@ var META_LABEL_DY = {
   "mod":"-2.5em",
   "bnd":"-2.5em"
 }
+
+var HIGHLIGHT_COLOR = "#337ab7";
+var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 function initializePositions(width, height, graph, nuggetType, templateRelation) {
   var fixedPositions = {};
@@ -199,8 +229,17 @@ function initializePositions(width, height, graph, nuggetType, templateRelation)
 
 function visualiseNugget(nuggetJson, nuggetType, metaTyping,
                          agTyping, templateRelation, configs=null,
-                         detailsOnClicks=true, svgId=null, scale=1) {
+                         detailsOnClicks=true, svgId=null, scale=1,
+                         instance=false) {
   // readout nugget graph
+  if (instance) {
+    color_scheme = INSTANCE_META_COLORS;
+    highlight = INSTANCE_HIGHLIGHT_COLOR;
+  } else {
+    color_scheme = META_COLORS;
+    highlight = HIGHLIGHT_COLOR;
+  }
+
   var graph = JSON.parse(nuggetJson);
   var metaTyping = JSON.parse(metaTyping);
   var agTyping = JSON.parse(agTyping);
@@ -272,7 +311,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
     .attr("orient", "auto")
   .append("svg:path")
     .attr("d", "M0,-5L10, 0L0, 5")
-    .attr('fill', '#337ab7');
+    .attr('fill', highlight);
 
   //add encompassing group for the zoom 
   var g = svg.append("g")
@@ -286,7 +325,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
                         .distance(function(d) {return d.distance; }))
       .force("charge", d3.forceManyBody().strength(-200 * scale))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide",d3.forceCollide().strength(1.8).radius(
+      .force("collide", d3.forceCollide().strength(1.8).radius(
         function(d) {return d.radius})
       );
 
@@ -337,7 +376,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
   node.append("circle")
       .attr("class", "node")
       .attr("r", function(d) { return META_SIZES[metaTyping[d.id]] * scale; })
-      .attr("fill", function(d) { return d3.rgb(META_COLORS[metaTyping[d.id]]); })
+      .attr("fill", function(d) { return d3.rgb(color_scheme[metaTyping[d.id]]); })
       .attr("stroke-width", 0).attr("stroke", d3.rgb("#B8B8B8"));
 
   if (detailsOnClicks == true) {
@@ -373,7 +412,6 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
   // zoom_handler(svg); 
 
   function ticked() {
-
     link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
@@ -405,9 +443,11 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
 
     node.attr("cx", function(d) {
           var r  = META_SIZES[metaTyping[d.id]] * scale;
+          console.log(Math.max(r, Math.min(width - r, d.x)));
           return d.x = Math.max(r, Math.min(width - r, d.x)); })
         .attr("cy", function(d) { 
           var r  = META_SIZES[metaTyping[d.id]] * scale;
+          console.log(Math.max(r, Math.min(height - r, d.y))); 
           return d.y = Math.max(r, Math.min(height - r, d.y)); })
         .attr(
           "transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
@@ -506,7 +546,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
 
     d3.select(this)
       .attr("stroke-width", 3)
-      .attr("stroke", d3.rgb("#337ab7"));
+      .attr("stroke", d3.rgb(highlight));
 
     // autofill the data on the sidebar
     var selectedNodeInfo = document.getElementById("selectedNodeInfo");
@@ -622,7 +662,7 @@ function visualiseNugget(nuggetJson, nuggetType, metaTyping,
 
     d3.select(this)
     .attr("stroke-width", 4)
-    .attr("stroke", d3.rgb("#337ab7"))
+    .attr("stroke", d3.rgb(highlight))
     .attr("marker-end", "url(#arrow-selected)");
 
     var selectedNodeInfo = document.getElementById("selectedNodeInfo");
@@ -692,14 +732,14 @@ function addNodeTypeTr(nodeType) {
 // });
 
 
-function addSvgAndVisualizeNugget(element, hierarchy_id, nugget_id) {
+function addSvgAndVisualizeNugget(element, model_id, nugget_id, instance=false) {
   svgElement = htmlToElement('<tr><td colspan="3"><svg id="nuggetSvg' + nugget_id + '" width="500" height="200"></svg></td></tr>');
   
   var immediateParent = element.parentNode;
   var previousSibling = immediateParent.previousElementSibling.appendChild(svgElement);
 
   // use AJAX to send request for retrieving the nugget data
-  $.get(hierarchy_id + "/raw-nugget/" + nugget_id, function(data, status) {
+  $.get(model_id + "/raw-nugget/" + nugget_id, function(data, status) {
     var svgId = "nuggetSvg" + nugget_id;
     visualiseNugget(JSON.stringify(data["nuggetJson"]),
                     data["nuggetType"],
@@ -709,7 +749,8 @@ function addSvgAndVisualizeNugget(element, hierarchy_id, nugget_id) {
                     null,
                     detailsOnClicks=false,
                     svgId=svgId,
-                    scale=0.5);
+                    scale=0.5,
+                    instance=instance);
   })
   // Remove 'Show graph' button 
   element.style.display = 'none';

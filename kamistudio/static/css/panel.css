@@ -1,4 +1,5 @@
 
+
 .panel {
   margin-bottom: 15px;
   margin-top: 20px;
@@ -11,4 +12,5 @@
 .panel-button-right {
 	float: right;
 	margin-right: 20px;
+	margin-bottom: 10px;
 }

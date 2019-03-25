@@ -33,6 +33,14 @@
 */
 
 
+#sidebar-wrapper {
+  margin-top: 20px;
+}
+
+#sidebar-wrapper > .highlighted-item, #sidebar-wrapper > .highlighted-item.intsance {
+  padding: 15px;
+}  
+
 .sidebar-nav {
   position: absolute;
   top: 0;
@@ -120,9 +128,9 @@ ul.info-list {
   margin-left: 0px;
 }
 
-.info-table > tbody > tr > td {
+/*.info-table > tbody > tr > td {
   border-top: 1px solid #eee;
-}
+}*/
 
 .sidebar-block-name {
   margin-left: 10px;
@@ -134,4 +142,9 @@ ul.info-list {
 
 .sidebar-block-message {
   margin: 10px;
+}
+
+
+.sidebar-corpus-sep {
+  border-top: 1px solid #bfc3c6;
 }

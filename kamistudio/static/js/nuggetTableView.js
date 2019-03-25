@@ -62,7 +62,7 @@ function drawTable(pairs, metaData=null) {
 	}
 }
 
-function creatNuggetTable(hierarchyId) {
+function creatNuggetTable(modelId) {
 	// remove child elements of the 'nuggetsView' div
 	var parent = document.getElementById("nuggetsView");
 	while (parent.firstChild) {
@@ -71,7 +71,7 @@ function creatNuggetTable(hierarchyId) {
 
 	// fetch nugget table
 	$.ajax({
-	    url: hierarchyId + "/nugget-table",
+	    url: modelId + "/nugget-table",
 	    type: 'get',
 	    dataType: "json"
 	}).done(function (data) {

@@ -4,144 +4,196 @@
 {% block panel_buttons %}
 <div class="row">
   <div class="col-md-4">
-    <h1 class="mb-6 model-action-brand">Model overview</h1>
+    <h2 class="mb-6 model-action-brand">{{ model.annotation.name }}</h2>
   </div>
   <div class="col-md-8">
     <div class="model-action-buttons">
-      <a href="{{ url_for('model.add_interaction', hierarchy_id=hierarchy_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
-      <a href="{{ url_for('model.import_json_interactions', hierarchy_id=hierarchy_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-import"></span> Import interactions</a>
-      <a href="{{ url_for('model.download_model', hierarchy_id=hierarchy_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Download model</a>
+        <a href="{{ url_for('model.add_interaction', model_id=model_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+        <a href="{{ url_for('model.import_json_interactions', model_id=model_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+        <a href="{{ url_for('model.download_model', model_id=model_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
+        <a href="{{ url_for('model.delete_model', model_id=model_id) }}" type="button" class="btn btn-primary btn-md panel-button instantiation"><span class="glyphicon glyphicon-remove"></span> Delete</a>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block sidebar_items %}
-<!--   <div class="side-bar-tools">
-    <h3 id="browsing">Tools</h3>
-  </div> -->
+  <h2 class="mb-6 model-action-brand">Model overview</h2>
+  <div class="highlighted-item instance" id="modelData">
+  </div>
 {% endblock %}
 
 {% block tabs %}
 
-<!--     <ul class="nav nav-tabs">
-      <li class="nav-item">
-        <a class="nav-link active" href="#">
-          Action graph ({% if hierarchies[hierarchy_id].empty() %}empty{% else %}{{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes {% endif %})
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Nuggets ({% if hierarchies[hierarchy_id].empty() %}0{% else %}{{ hierarchies[hierarchy_id].nuggets()|length }}{% endif %} nuggets)</a>
-      </li>
-    </ul> -->
 
     <!-- Nav tabs -->
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item active">
-        <a class="nav-link active" data-toggle="tab" href="#action_graph" role="tab">Action graph ({% if hierarchies[hierarchy_id].empty() %}empty{% else %}{{ hierarchies[hierarchy_id].action_graph.nodes()|length }} nodes {% endif %})</a>
+        <a class="nav-link active instantiation-link" data-toggle="tab" href="#action_graph" role="tab">Action graph ({% if model.empty() %}empty{% else %}{{ model.action_graph.nodes()|length }} nodes {% endif %})</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" data-toggle="tab" href="#nuggets" role="tab">Nuggets ({% if hierarchies[hierarchy_id].empty() %}0{% else %}{{ hierarchies[hierarchy_id].nuggets()|length }}{% endif %} nuggets)</a>
+        <a class="nav-link instantiation-link" data-toggle="tab" href="#nuggets" role="tab">Nuggets ({% if model.empty() %}0{% else %}{{ model.nuggets()|length }}{% endif %} nuggets)</a>
       </li>
     </ul>
 
-    <!-- Tab panes -->
+    <!----------------- Tab panes ----------------------->
     <div class="tab-content">
+
+      <!--------------- Action graph pane ----------------->
+
       <div class="tab-pane active" id="action_graph" role="tabpanel">
-        {% if hierarchies[hierarchy_id].empty() %}
+        {% if model.empty() %}
           Action graph is empty
         {% else %}
-
-          <div class="row">
-            <div class="col-sm-6">
-              Genes: {{ hierarchies[hierarchy_id].genes()|length }}<br>
-              Modifications: {{ hierarchies[hierarchy_id].modifications()|length }}<br>
-              Bindings: {{ hierarchies[hierarchy_id].bindings()|length }}<br>
-            </div>
-
-            <div class="col-sm-6">
+          <div class="row"> 
+            <div class="col-md-9">
               <div class="action-graph-view">
-                <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-resize-small"></span> Interaction network</a>
                 <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a>
+                <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-resize-small"></span> Interaction network</a>
+                <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a>
+                <button id="saveLayoutButton" type="button" class="btn btn-primary btn-md panel-button nugget-list-view instantiation" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</button>
               </div>
-            </div>
-          </div>
 
-
-          <div id="progressBlock">
-            <div id="progressBarMessage">Loading action graph...</div>
-            <div id="progressBarBlock">
-              <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
-              </div>
-            </div>
-          </div>
-          <svg id="actionGraphSvg" width="1000" height="600" style="display: none;"></svg>
-
-          <div class="row">
-            <div class="col-md-10">
-            </div>
-            <div id="saveLayoutButtonBlock" class="col-md-2" style="text-align: right; display: none;">
-              <a id="saveLayoutButton" type="button" class="btn btn-primary btn-md"><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</a>
-            </div>
-          </div>
-
-        {% endif %}
-
-      </div>
-      <div class="tab-pane" id="nuggets" role="tabpanel">
-
-        {% if hierarchies[hierarchy_id].empty() %}
-            Model does not contain any nuggets
-        {% else %}
-            <div class="row">
-              <div class="col-sm-6">
-              </div>
-              <div class="col-sm-6">
-                <div class="nuggets-view">
-                  <a type="button" class="btn btn-default btn-md panel-button nugget-list-view active"><span class="glyphicon glyphicon-list"></span> List view</a>
-                  <a type="button" class="btn btn-default btn-md panel-button nugget-table-view" onclick="creatNuggetTable('{{ hierarchy_id }}')"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
+              <div id="progressBlock">
+                <div id="progressMessage">Retrieving action graph from the database... It may take a moment.</div>
+                <div id="loadingBlock" class="loading-elements center-block">
+                  <div id="loaderModel"></div>
                 </div>
               </div>
-            </div>
-            <div id="nuggetsView">
-              <div class="table-responsive">
-              <table class="table table-striped table-sm">
-                <tbody>
-                  {% for nugget in hierarchies[hierarchy_id].nuggets() %}
-                  <tr>
-                    <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.nugget_view', hierarchy_id=hierarchy_id, nugget_id=nugget) }}">{{ nugget }}</a></td>
-                    <td class="nugget-record nugget-desc"><p>{{ nugget_desc[nugget] }}</p></td>
-                    <td class="nugget-nav-buttons">
-                      <a type="button" id="showNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button" onclick="addSvgAndVisualizeNugget(this,  '{{ hierarchy_id }}', '{{ nugget }}')"><span class="glyphicon glyphicon-search"></span> Show graph</a>
-                      <a type="button" id="hideNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button" onclick="removeNuggetSvg(this, '{{ nugget }}')" style='display: none;'><span class="glyphicon glyphicon-remove"></span> Hide graph</a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            </div>
 
-<!--           <ul class="list-group models">
-          {% for nugget in hierarchies[hierarchy_id].nuggets() %}
-            <li class="list-group-item nugget-item" id="{{ nugget }}">
-              {{ nugget }}
-              <span class="nugget-desc"> {{ nugget_desc[nugget] }}</span><span class="nugget-nav-buttons"><a type="button" class="btn btn-primary btn-md panel-button show-nugget-button"><span class="glyphicon glyphicon-search"></span> Show graph</a></span>
-          </li>
-          {% endfor %}
-          </ul> -->
+
+              <svg id="actionGraphSvg" style="width: 100%; height: 600px; display: none;"></svg>
+            </div>
+            <div class="col-md-3">
+              <div id="graphInfoBoxes">
+              </div>
+            </div>
+          </div>
         {% endif %}
       </div>
+
+      <!------- End of action graph pane ------>
+
+      <!------- Nuggets pane ------>
+
+      <div class="tab-pane" id="nuggets" role="tabpanel">
+        {% if model.empty() %}
+            model does not contain any nuggets
+        {% else %}
+            <div class="row">
+              <!-- Nugget list column -->
+              <div class="col-sm-6">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <h3>Nuggets</h3>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="nuggets-view">
+                      <a type="button" class="btn btn-default btn-md panel-button nugget-list-view active"><span class="glyphicon glyphicon-list"></span> List view</a>
+                      <a type="button" class="btn btn-default btn-md panel-button nugget-table-view" onclick="creatNuggetTable('{{ model_id }}')"><span class="glyphicon glyphicon-equalizer"></span> Table view</a>
+                    </div>
+                  </div>
+                </div>
+                <div id="nuggetsView">
+                  <div id="nuggetsViewTable" class="table-responsive">
+                    <table class="table table-striped table-sm">
+                      <tbody>
+                        {% for nugget in model.nuggets() %}
+                        <tr>
+                          <td class="nugget-record nugget-id"><a href="{{ url_for('nuggets.model_nugget_view', model_id=model_id, nugget_id=nugget) }}" class="instantiation-link">{{ nugget }}</a></td>
+                          <td class="nugget-record nugget-desc"><p>{{ nugget_desc[nugget] }}</p></td>
+                          <td class="nugget-nav-buttons">
+                            <a type="button" id="showNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button instantiation" onclick="addSvgAndVisualizeNugget(this,  '{{ model_id }}', '{{ nugget }}', true)"><span class="glyphicon glyphicon-zoom-in"></span> View</a>
+                            <a type="button" id="hideNuggetButton{{ nugget }}" class="btn btn-primary btn-md panel-button show-nugget-button instantiation" onclick="removeNuggetSvg(this, '{{ nugget }}')" style='display: none;'><span class="glyphicon glyphicon-remove"></span> Hide graph</a>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <!-- End of nugget list column -->
+              <!-- Nugget preview column -->
+              <div class="col-sm-6">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <h3 style="margin-top: 0px;">Nugget view</h3>
+                  </div>
+                  <div class="col-sm-6">
+                    
+                  </div>
+                </div>
+                <p>Select a nugget to view</p>
+              </div>
+              <!-- End of nugget preview column -->          
+            </div>
+        {% endif %}
+      </div>
+  
+      <!------- End of nuggets pane ------>
+
     </div>
 
 
 
 {% endblock %}
-{% if hierarchies[hierarchy_id].empty() %}
+{% if model.empty() %}
 {% else %}
 {% block custom_scripts %}
-  <script type="text/javascript">
-    getActionGraphAndVisualize('{{ hierarchy_id }}', '{{ url_for('static', filename='js/forceLayoutWorker.js') }}');
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/info_boxes/InfoBox.jsx') }}" type="text/babel"></script>
+  <script type="text/babel">
+    getActionGraphAndVisualize('{{ model_id }}', '{{ url_for('static', filename='js/graph_visualisation/forceLayoutWorker.js')}}', true);
   </script>
+  <script type="text/babel">
+
+    if (document.getElementById('graphInfoBoxes')) {
+      ReactDOM.render(
+        [
+          <ElementInfoBox id="graphElement" items={[]}/>,
+          <MetaDataBox id="metaData" items={[]}/>
+        ],
+        document.getElementById('graphInfoBoxes')
+      );
+    }
+    ReactDOM.render(
+      <ModelDataBox 
+          {% if model.annotation.name %}
+                kbName='{{model.annotation.name}}'
+          {% endif %}
+          {% if model.annotation.desc %}
+                desc='{{model.annotation.desc}}'
+          {% endif %}
+          {% if model.annotation.organism %}
+                organism='{{model.annotation.organism}}'
+          {% endif %}
+                creation_time='{{model.creation_time}}'
+                last_modified='{{model.last_modified}}'
+          {% if corpus_id %}
+                corpusId='{{corpus_id}}'
+                corpusName='{{corpus_name}}'
+                corpusUrl='{{url_for('corpus.corpus_view', corpus_id=corpus_id)}}'
+          {% endif %}
+          {% if model._seed_genes %}
+                seedGenes='{{ model._seed_genes }}'
+          {% endif %}
+          {% if model._definitions %}
+                definitions='{{ model._definitions }}'
+          {% endif %}
+          onDataUpdate={handleModelUpdate('{{ model._id }}')}
+          proteins='{{ proteins }}' 
+          bindings='{{ bindings }}'
+          modifications='{{ modifications }}'
+         />,
+      document.getElementById('modelData')
+    );
+  </script>
+  <script src="{{ url_for('static', filename='js/nuggetTableView.js') }}" type="text/javascript"></script>
+
 {% endblock %}
 {% endif %}

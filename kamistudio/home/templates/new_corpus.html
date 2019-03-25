@@ -3,7 +3,7 @@
 {% block panel_buttons %}
   <div class="row">
     <div class="col-md-12">
-      <h1 class="mb-6 model-action-brand">New model</h1>
+      <h1 class="mb-6 model-action-brand">New corpus</h1>
     </div>
   </div>
 {% endblock %}
@@ -11,7 +11,7 @@
 
 {% block tabs %}
 
-<form id="newModelForm" novalidate="{{ url_for('home.new_model') }}" method="post">
+<form id="newModelForm" novalidate="{{ url_for('home.new_corpus') }}" method="post">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 			<div class="row form-row">
@@ -19,19 +19,18 @@
 			      <input type="text" class="form-control" name="name" id="name" placeholder="" value="">
 			</div>
 
-			 <div class="row form-row">
+			<div class="row form-row">
 			    <!-- <div class="col-md-6"> -->
 			      <label for="desc">Description</label>
 			      <input type="text" class="form-control" name="desc" id="desc" placeholder="" value="">
 			    <!-- </div> -->
-			 </div>
+			</div>
 
-			 <div class="row form-row">
-			    <!-- <div class="col-md-6"> -->
+			<div class="row form-row">
 			      <label for="desc">Organism</label>
 			      <input type="text" class="form-control" name="organism" id="organism" placeholder="" value="">
-			    <!-- </div> -->
-			 </div>
+			</div>
+
 
 			<div class="row form-row">
 				<div class="col-md-6">
@@ -41,7 +40,7 @@
 					</div>
 				</div>
 				<div class="col-md-6" style="text-align: right;">
-					<button type="submit" class="btn btn-primary btn-lg instantiation" name="importForm" action="submit">Create</button> 
+					<button type="submit" class="btn btn-primary btn-lg" name="importForm" action="submit">Create</button> 
 				</div>
 			</div>
 		</div>
