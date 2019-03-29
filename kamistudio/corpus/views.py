@@ -12,6 +12,7 @@ from regraph import graph_to_d3_json
 from regraph.neo4j import Neo4jHierarchy
 
 from kami.data_structures.annotations import CorpusAnnotation
+from kami.data_structures.definitions import Definition
 from kami.aggregation.generators import generate_nugget
 
 from kamistudio.corpus.form_parsing import(parse_interaction)
@@ -30,7 +31,7 @@ def get_corpus(corpus_id):
             creation_time=corpus_json["creation_time"],
             last_modified=corpus_json["last_modified"],
             backend="neo4j",
-            driver=app.neo4j_driver
+            driver=app.neo4j_driver,
         )
 
 
@@ -67,33 +68,49 @@ def corpus_view(corpus_id):
             "mongo_connection_failure.html",
             uri=app.config["MONGO_URI"])
 
-
     corpus = get_corpus(corpus_id)
+    gene_adjacency = corpus.get_gene_pairwise_interactions()
 
+    nuggets = {}
     if corpus is not None:
-        nugget_desc = {}
+
         for nugget in corpus.nuggets():
-            nugget_desc[nugget] = corpus.get_nugget_desc(nugget)
+            nuggets[nugget] = (
+                corpus.get_nugget_desc(nugget),
+                corpus.get_nugget_type(nugget)
+            )
 
         genes = {}
         for g in corpus.genes():
             genes[g] = corpus.get_gene_data(g)
 
         modifications = {}
-        # for m in corpus.modifications():
-        #     modifications[m] = corpus.get_modification_data(m)
+        for m in corpus.modifications():
+            modifications[m] = []
 
         bindings = {}
-        # for b in corpus.bindings():
-        #     bindings[b] = corpus.get_binding_data(b)
+        for b in corpus.bindings():
+            bindings[b] = []
+
+        raw_defs = app.mongo.db.kami_definitions.find(
+            {"corpus_id": corpus_id})
+
+        definitions = {}
+        for d in raw_defs:
+            definitions[d["id"]] = [
+                d["desc"], d["protoform"]["uniprotid"], d["product_names"]]
 
         return render_template("corpus.html",
-                               corpus_id=corpus_id,
-                               corpus=corpus,
-                               nugget_desc=nugget_desc,
+                               kb_id=corpus_id,
+                               kb=corpus,
+                               nuggets=json.dumps(nuggets),
                                genes=json.dumps(genes),
+                               gene_adjacency=json.dumps(gene_adjacency),
                                bindings=json.dumps(bindings),
-                               modifications=json.dumps(modifications))
+                               modifications=json.dumps(modifications),
+                               n_definitons=len(definitions),
+                               definitions=json.dumps(definitions),
+                               instantaited=False)
     else:
         return render_template("corpus_not_found.html",
                                corpus_id=corpus_id)
@@ -258,7 +275,6 @@ def update_node_attrs(corpus_id):
     json_data = request.get_json()
     node_id = json_data["id"]
     node_attrs = json_data["attrs"]
-    print(node_attrs)
     corpus = get_corpus(corpus_id)
 
     response = json.dumps(

@@ -1,6 +1,7 @@
 """."""
-from flask import Blueprint, jsonify
-from flask import current_app as app
+import json
+from flask import Blueprint, jsonify, request
+# from flask import current_app as app
 
 from kamistudio.corpus.views import get_corpus
 from kamistudio.model.views import get_model
@@ -72,6 +73,18 @@ def raw_nugget_json(corpus_id, nugget_id):
     return jsonify(data), 200
 
 
+@nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-nugget-desc",
+                         methods=["POST"])
+def update_corpus_nugget(corpus_id, nugget_id):
+    json_data = request.get_json()
+    corpus = get_corpus(corpus_id)
+    corpus.set_nugget_desc(nugget_id, json_data["desc"])
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
+    return response
+
+
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget-table")
 def nugget_table(corpus_id):
     """Generate a nugget table."""
@@ -124,3 +137,64 @@ def nugget_table(corpus_id):
             "nuggets": table[(s, t)]
         })
     return jsonify(data), 200
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-node-attrs",
+                         methods=["POST"])
+def update_node_attrs(corpus_id, nugget_id):
+    """Handle update of node attrs."""
+
+    json_data = request.get_json()
+    node_id = json_data["id"]
+    node_attrs = json_data["attrs"]
+
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+
+        if node_id in corpus.action_graph.nodes() and\
+           nugget_id in corpus.nuggets():
+            try:
+                # Here I actually need to generate rewriting rule
+                corpus.update_nugget_node_attr_from_json(
+                    nugget_id, node_id, node_attrs)
+
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                # updateLastModified(corpus_id)
+            except:
+                pass
+    return response
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-edge-attrs",
+                         methods=["POST"])
+def update_edge_attrs(corpus_id, nugget_id):
+    """Handle update of node attrs."""
+
+    json_data = request.get_json()
+    source = json_data["source"]
+    target = json_data["target"]
+    node_attrs = json_data["attrs"]
+
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+
+        if (source, target) in corpus.action_graph.edges() and\
+           nugget_id in corpus.nuggets():
+            # try:
+                # Here I actually need to generate rewriting rule
+            corpus.update_nugget_edge_attr_from_json(
+                nugget_id, source, target, node_attrs)
+
+            response = json.dumps(
+                {'success': True}), 200, {'ContentType': 'application/json'}
+                # updateLastModified(corpus_id)
+            # except:
+            #     pass
+    return response

@@ -89,6 +89,7 @@ def model_view(model_id):
             user=app.config["NEO4J_USER"])
 
     model = get_model(model_id)
+    nuggets = {}
     if model is not None:
         corpus = None
 
@@ -105,25 +106,28 @@ def model_view(model_id):
 
         modifications = {}
         for m in model.modifications():
-            modifications[m] = model.get_modification_data(m)
+            modifications[m] = []
 
         bindings = {}
         for b in model.bindings():
-            bindings[b] = model.get_binding_data(b)
+            bindings[b] = []
 
-        nugget_desc = {}
         for nugget in model.nuggets():
-            nugget_desc[nugget] = model.get_nugget_desc(nugget)
+            nuggets[nugget] = (
+                model.get_nugget_desc(nugget),
+                model.get_nugget_type(nugget)
+            )
 
         return render_template("model.html",
-                               model_id=model_id,
-                               model=model,
+                               kb_id=model_id,
+                               kb=model,
                                corpus_id=model._corpus_id,
                                corpus_name=corpus_name,
-                               nugget_desc=nugget_desc,
+                               nuggets=json.dumps(nuggets),
                                proteins=json.dumps(proteins),
                                modifications=json.dumps(modifications),
-                               bindings=json.dumps(bindings))
+                               bindings=json.dumps(bindings),
+                               instantiated=True)
     else:
         return render_template("model_not_found.html",
                                model_id=model_id)
