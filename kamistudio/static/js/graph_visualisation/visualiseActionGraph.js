@@ -136,8 +136,72 @@ function updateEdgeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
 }
 
 
+function handleMultipleNodeClick(model_id, instantiated, graph, metaTyping) {
+	return function(d, i, el) {
+		// deselect all the selected elements
+	    var svg = d3.select("#actionGraphSvg");
+
+	    var highlight;
+		if (instantiated) {
+			highlight = INSTANCE_HIGHLIGHT_COLOR;
+		} else {
+			highlight = HIGHLIGHT_COLOR;
+		}
+
+	    svg.selectAll(".arrow")
+	      .style("stroke", d3.rgb("#B8B8B8"))
+	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	    // svg.selectAll("circle")
+	    //   .attr("stroke-width", 0);
+	    // console.log(d3.select(el));
+	    // select current element
+		d3.select(el)
+	      .attr("stroke-width", 2)
+	      .attr("stroke", d3.rgb(highlight));
+
+	    // call react func
+
+	    ReactDOM.render(
+	      [<ElementInfoBox id="graphElement" 
+	      				   items={[]}/>,
+	       <MetaDataBox id="metaData"
+	       				items={[]}/>],
+	      document.getElementById('graphInfoBoxes')
+	    );
+	};
+}
+
+
+function handleUnselectNodeClick(instantiated) {
+	return function(d, i, el) {
+		// deselect all the selected elements
+	    var svg = d3.select("#actionGraphSvg");
+
+	    var highlight;
+		if (instantiated) {
+			highlight = INSTANCE_HIGHLIGHT_COLOR;
+		} else {
+			highlight = HIGHLIGHT_COLOR;
+		}
+
+	    svg.selectAll(".arrow")
+	      .style("stroke", d3.rgb("#B8B8B8"))
+	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	    svg.selectAll("circle")
+	      .attr("stroke-width", 0);
+
+
+	    // call react func
+	    ReactDOM.render(
+	      [<ElementInfoBox id="graphElement" />,
+	       <MetaDataBox id="metaData" />],
+	      document.getElementById('graphInfoBoxes')
+	    );
+	};
+}
+
 function handleNodeClick(model_id, instantiated, graph, metaTyping) {
-	return function(d, i) {
+	return function(d, i, el) {
 		// deselect all the selected elements
 	    var svg = d3.select("#actionGraphSvg");
 
@@ -154,7 +218,7 @@ function handleNodeClick(model_id, instantiated, graph, metaTyping) {
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
 	    // select current element
-		d3.select(this)
+		d3.select(el)
 	      .attr("stroke-width", 2)
 	      .attr("stroke", d3.rgb(highlight));
 
@@ -182,7 +246,7 @@ function handleNodeClick(model_id, instantiated, graph, metaTyping) {
 }
 
 function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
-	return function(d, i) {
+	return function(d, i, el) {
 		// deselect all the selected elements
 		var svg = d3.select("#actionGraphSvg");
 
@@ -198,7 +262,7 @@ function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
 	      .attr("marker-end", "url(#actionGraphSvgarrow)");
-	    d3.select(this)
+	    d3.select(el)
 	      // .attr("stroke-width", 2)
 	      .select(".arrow")
 	      .style("stroke", d3.rgb(highlight))
@@ -230,14 +294,14 @@ function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
 }
 
 function handleDragStarted(graph, metaTyping) {
-	return function(d) {
-		if ((metaTyping[d.id] != "state") &&
-			(metaTyping[d.id] != "bnd") && 
-			(metaTyping[d.id] != "mod")) {
+	return function(d_id) {
+		if ((metaTyping[d_id] != "state") &&
+			(metaTyping[d_id] != "bnd") && 
+			(metaTyping[d_id] != "mod")) {
 			return getAllComponents(
-				graph, metaTyping, d.id);
+				graph, metaTyping, d_id).concat([d_id]);
 		} else {
-			return [];
+			return [d_id];
 		}
 	}
 }
@@ -263,8 +327,6 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 	    	nodePos = data["nodePosition"],
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning",
 	    	nodeSizes = computeNodeSizes(actionGraph, metaTyping, AG_META_SIZES);
-
-	    console.log(actionGraph);
 
 	    var nodeColors;
 	    if (instantiated) {
@@ -299,19 +361,27 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 			highlight = HIGHLIGHT_COLOR;
 		}
 
+		var clickHandlers = {
+			"nodeClick": handleNodeClick(
+                model_id, instantiated, actionGraph, metaTyping), 
+			"multiNodeClick": handleMultipleNodeClick(
+				model_id, instantiated, actionGraph, metaTyping),
+			"edgeClick": handleEdgeClick(
+                model_id, instantiated, actionGraph, metaTyping),
+			"unselectClick": handleUnselectNodeClick(instantiated)
+		}
+
 		visualiseGraph(actionGraph,
 					   "actionGraphSvg", 
-						nodeColors, nodeSizes,
+						nodeColors, 
+						nodeSizes,
 						null,
 						highlight,
 						simulationConf,
 						progressConf,
 						workerUrl, 
 						nodePosUpdateUrl,
-                     	handleNodeClick(
-                     		model_id, instantiated, actionGraph, metaTyping), 
-                     	handleEdgeClick(
-                     		model_id, instantiated, actionGraph, metaTyping),
+                     	clickHandlers,
                      	handleDragStarted(actionGraph, metaTyping),
                     	300,
                     	true,
