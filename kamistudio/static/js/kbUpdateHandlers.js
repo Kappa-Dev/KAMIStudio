@@ -2,7 +2,6 @@ function renderMetaDataBox(modelId, data, oldData) {
 	var name = ("name" in data) ? data["name"] : oldData["name"],
 	 	desc = ("desc" in data) ? data["desc"] : oldData["desc"],
 	 	organism = ("organism" in data) ? data["organism"] : oldData["organism"];
-	console.log(oldData);
     ReactDOM.render(
       <KBMetaDataBox
 			id="modelMetaData"
