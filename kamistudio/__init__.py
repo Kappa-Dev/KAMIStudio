@@ -12,6 +12,7 @@ from kamistudio.model.views import model_blueprint
 from kamistudio.corpus.views import corpus_blueprint
 from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
+from kamistudio.definitions.views import definitions_blueprint
 
 from neo4j.v1 import GraphDatabase
 from neobolt.exceptions import ServiceUnavailable
@@ -77,12 +78,58 @@ def init_mongo_db(add_test=False):
                     },
                     "kappa_models": []
                 })
-        # if app.neo4j_driver is not None:
-        #     h = Neo4jHierarchy(driver=app.neo4j_driver)
-        #     h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
-        #     Neo4jHierarchy.load(
-        #         "kamistudio/instance/test_kamistudio.json",
-        #         driver=app.neo4j_driver)
+            # app.mongo.db.kami_definitions.remove({})
+            if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
+                app.mongo.db.kami_definitions.insert_one({
+                    'id': '1',
+                    'desc': 'Products of A in cancer',
+                    'corpus_id': 'test_corpus',
+                    'protoform': {
+                        'uniprotid': 'A',
+                        'regions': [{
+                            'name': 'SH2',
+                            'sites': [],
+                            'residues': [{'aa': ['D', 'S'], 'loc': 100}],
+                            'states': [],
+                            'bound_to': [],
+                            'unbound_from': []}],
+                        'sites': [],
+                        'residues': [],
+                        'states': [],
+                        'bound_to': [],
+                        'unbound_from': []},
+                    'product_names': ['wt', 'm1', 'm2'],
+                    'product_components': {
+                        'wt': {
+                            'regions': [{
+                                'name': 'SH2',
+                                'sites': [],
+                                'residues': [{'aa': ['S'], 'loc': 100}],
+                                'states': [],
+                                'bound_to': [],
+                                'unbound_from': []}],
+                            'sites': [],
+                            'residues': [],
+                            'states': []},
+                        'm1': {
+                            'regions': [{
+                                'name': 'SH2',
+                                'sites': [],
+                                'residues': [{'aa': ['D'], 'loc': 100}],
+                                'states': [],
+                                'bound_to': [],
+                                'unbound_from': []}],
+                            'sites': [],
+                            'residues': [],
+                            'states': []},
+                        'm2': {}}})
+
+        if app.neo4j_driver is not None:
+            h = Neo4jHierarchy(driver=app.neo4j_driver)
+            # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
+            Neo4jHierarchy.load(
+                "kamistudio/instance/test_kamistudio.json",
+                driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):
@@ -125,6 +172,7 @@ app.register_blueprint(model_blueprint)
 app.register_blueprint(corpus_blueprint)
 app.register_blueprint(action_graph_blueprint)
 app.register_blueprint(nuggets_blueprint)
+app.register_blueprint(definitions_blueprint)
 
 
 @app.context_processor
