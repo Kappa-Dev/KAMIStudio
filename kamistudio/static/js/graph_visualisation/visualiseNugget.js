@@ -201,110 +201,341 @@ function computeFixedPositions(width, height, graph, nuggetType, templateRelatio
   return [fixedPositions, toFix];
 }
 
-function handleNuggetNodeClick(highlight, svgId) {
-  return function(d, i) {
+
+
+function sendNuggetDescUpdate(modelId, nuggetId, desc) {
+  $.ajax({
+      url:  modelId + "/nugget/" + nuggetId + "/update-nugget-desc",
+      type: 'post',
+      data: JSON.stringify({
+        "nugget_id": nuggetId,
+        "desc": desc
+      }),
+      dataType: 'json',
+      contentType: 'application/json',
+  }).done(function () {
+    // if (successCallback) successCallback();
+  }).fail(function (xhr, status, error) {
+    console.log("Failed to update nugget description");
+    console.log(error);
+    // if (failCallback) failCallback();
+  });
+}
+
+
+function renderNuggetBox(modelId, nuggetId, data, oldData) {
+  var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
+  
+  ReactDOM.render(
+      <NuggetPreview
+          nuggetId={oldData["nugget_id"]}
+          nuggetDesc={desc}
+          nuggetType={oldData["nugget_type"]}
+          onDataUpdate={updateNuggetDesc(modelId, nuggetId)}/>,
+      document.getElementById('nuggetViewWidget')
+  );
+  ReactDOM.render(
+      <NuggetListItem
+          nuggetId={oldData["nugget_id"]}
+          nuggetDesc={desc}
+          nuggetType={oldData["nugget_type"]}
+          onDataUpdate={() => viewNugget(model_id)(oldData["nugget_id"], desc, oldData["nugget_type"])}/>,
+      document.getElementById("nuggetListItem" + nuggetId)
+  );
+};
+
+
+function updateNuggetDesc(model_id, nugget_id) {
+  return function(data, oldData) {
+      // re-render info-boxes
+      renderNuggetBox(model_id, nugget_id, data, oldData); 
+      // send attr update to the server
+      var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
+      sendNuggetDescUpdate(
+        model_id, nugget_id, desc);
+  };
+}
+
+
+function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCallback) {
+  $.ajax({
+      url:  modelId + "/nugget/" + nuggetId +"/update-node-attrs",
+      type: 'post',
+      data: JSON.stringify({
+        "id": nodeId,
+        "attrs": attrs
+      }),
+      dataType: 'json',
+      contentType: 'application/json',
+  }).done(function () {
+    console.log("Success");
+    // if (successCallback) successCallback();
+  }).fail(function (xhr, status, error) {
+    console.log("Failed to update new node positions");
+    console.log(error);
+    // if (failCallback) failCallback();
+  });
+}
+
+
+function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs) {
+  $.ajax({
+      url:  modelId + "/nugget/" + nuggetId + "/update-edge-attrs",
+      type: 'post',
+      data: JSON.stringify({
+        "source": sourceId,
+        "target": targetId,
+        "attrs": attrs
+      }),
+      dataType: 'json',
+      contentType: 'application/json',
+  }).done(function () {
+    // if (successCallback) successCallback();
+  }).fail(function (xhr, status, error) {
+    console.log("Failed to update new node positions");
+    console.log(error);
+    // if (failCallback) failCallback();
+  });
+}
+
+function updateNuggetNodeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, d, i) {
+  return function(attrs, oldAttrs) {
+    for (var i=0; i < graph.nodes.length; i++) {
+      if (graph.nodes[i].id === d.id) {
+        
+        for (var k in attrs) {
+          // modify js graph object 
+          if (k in graph.nodes[i].attrs) {
+            graph.nodes[i].attrs[k].data = [attrs[k]];
+          } else {
+            graph.nodes[i].attrs[k] = {
+              data: [attrs[k]],
+              type: "FiniteSet"
+            };
+          }
+        }
+        // re-render info-boxes
+        handleNuggetNodeClick(model_id, nugget_id, instantiated, graph, metaTyping)(d, i); 
+        // send attr update to the server
+        sendUpdateNuggetNodeAttrs(
+          model_id, nugget_id, d.id, graph.nodes[i].attrs);
+      }
+    }
+    
+  };
+}
+
+function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, d, i) {
+  return function(attrs, oldAttrs) {
+    for (var i=0; i < graph.links.length; i++) {
+      if ((graph.links[i].source.id === d.source.id) &&
+        (graph.links[i].target.id === d.target.id)) {
+        for (var k in attrs) {
+          // modify js graph object 
+          if (k in graph.links[i].attrs) {
+            graph.links[i].attrs[k].data = [attrs[k]];
+          } else {
+            graph.links[i].attrs[k] = {
+              data: [attrs[k]],
+              type: "FiniteSet"
+            };
+          }
+          
+        }
+        // re-render updated boxes
+        handleNuggetEdgeClick(model_id, nugget_id, instantiated, graph, metaTyping)(d, i);
+        sendUpdateNuggetEdgeAttrs(model_id, nugget_id, d.source.id, d.target.id, graph.links[i].attrs);
+      }
+    }
+
+    // send attr update to the server
+    
+  };
+}
+
+
+function handleNuggetNodeClick(modelId, nuggetId, instantiated,
+                               graph, metaTyping) {
+  return function(d, i, el) {
     // deselect all the selected elements
-      svg = d3.select("#" + svgId);
+      var svg = d3.select("#nuggetSvg");
+
+      var highlight;
+      if (instantiated) {
+        highlight = INSTANCE_HIGHLIGHT_COLOR;
+      } else {
+        highlight = HIGHLIGHT_COLOR;
+      }
 
       svg.selectAll(".arrow")
         .style("stroke", d3.rgb("#B8B8B8"))
-        .attr("marker-end", "url(#" + svgId + "arrow)");
+        .attr("marker-end", "url(#nuggetSvgarrow)");
       svg.selectAll("circle")
         .attr("stroke-width", 0);
       // select current element
-    d3.select(this)
-        .attr("stroke-width", 2)
-        .attr("stroke", d3.rgb(highlight));
+      d3.select(el)
+          .attr("stroke-width", 2)
+          .attr("stroke", d3.rgb(highlight));
 
       // call react func
+      ReactDOM.render(
+          [<ElementInfoBox id="graphElement" 
+                     elementId={d.id}
+                     elementType="node"
+                     metaType={metaTyping[d.id]}
+                     editable={false}
+                     instantiated={instantiated}/>],
+          document.getElementById('nuggetGraphElementInfo'));
+      ReactDOM.render(
+         [<MetaDataBox id="metaData"
+                     elementId={d.id}
+                     elementType="node"
+                     metaType={metaTyping[d.id]}
+                     attrs={d.attrs}
+                     editable={true}
+                     instantiated={instantiated}
+                     onDataUpdate={updateNuggetNodeAttrs(
+                        modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
+          document.getElementById('nuggetGraphMetaModelInfo')
+      );
   };
 }
 
-function handleNuggetEdgeClick(highlight, svgId) {
-  return function(d, i) {
+function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
+                               graph, metaTyping) {
+  return function(d, i, el) {
     // deselect all the selected elements
-    svg = d3.select("#" + svgId);
-
-      svg.selectAll("circle")
-        .attr("stroke-width", 0);
-      svg.selectAll(".arrow")
-        .style("stroke", d3.rgb("#B8B8B8"))
-        .attr("marker-end", "url(#" + svgId + "arrow)");
-      d3.select(this)
-        // .attr("stroke-width", 2)
-        .select(".arrow")
-        .style("stroke", d3.rgb(highlight))
-        .attr("marker-end", "url(#" + svgId + "arrow-selected)");
-  };
-}
-
-function addSvgAndVisualizeNugget(element, model_id, nugget_id, instantiated=false) {
-  var width=500,
-  	  height=200,
-  	  svgElement = htmlToElement(
-  	'<tr><td colspan="3"><svg id="nuggetSvg' + nugget_id + '" width="500" height="200"></svg></td></tr>');
-  
-  var immediateParent = element.parentNode;
-  var previousSibling = immediateParent.previousElementSibling.appendChild(svgElement);
-
-  // use AJAX to send request for retrieving the nugget data
-  $.get(model_id + "/raw-nugget/" + nugget_id, function(data, status) {
-    var svgId = "nuggetSvg" + nugget_id,
-    	nuggetGraph = data["nuggetJson"],
-    	nuggetType = data["nuggetType"],
-    	metaTyping = data["metaTyping"],
-    	agTyping = data["agTyping"],
-    	templateRelation = data["templateRelation"],
-    	nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
-
-    var nodeColors;
-    if (instantiated) {
-  	    nodeColors = computeNodeColors(
-  	    	nuggetGraph, metaTyping, INSTANCE_META_COLORS);
-  	} else {
-  		nodeColors = computeNodeColors(
-  	    	nuggetGraph, metaTyping, META_COLORS);
-  	}
-  		
-  	var positions = computeFixedPositions(width, height, nuggetGraph, nuggetType, templateRelation);
-  	initNodePosition(
-  		nuggetGraph,
-  		positions[0],
-  		positions[1]);
-  	initLinkStrengthDistance(nuggetGraph, metaTyping, 0.5);
-  	initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
-
-  	var simulationConf = {
-  		"charge_strength": -400,
-  		"collide_strength": 2.5,
-  		"y_strength": 0.2
-  	}
-
+    var svg = d3.select("#nuggetSvg");
 
     var highlight;
-  	if (instantiated) {
-  		highlight = INSTANCE_HIGHLIGHT_COLOR;
-  	} else {
-  		highlight = HIGHLIGHT_COLOR;
-  	}
+      if (instantiated) {
+        highlight = INSTANCE_HIGHLIGHT_COLOR;
+      } else {
+        highlight = HIGHLIGHT_COLOR;
+      }
 
-      visualiseGraph(nuggetGraph, svgId,
-      				nodeColors, nodeSizes,
-      				null,
-      				highlight,
-      				simulationConf,
-      				{},
-      				null,
-      				null,
-      				handleNuggetNodeClick(highlight, svgId),
-      				handleNuggetEdgeClick(highlight, svgId),
-      				function(d) { return []; },
-      				100,
-      				false)
-    });
-    // Remove 'Show graph' button 
-    element.style.display = 'none';
-    document.getElementById("hideNuggetButton" + nugget_id).style.display = "inline-block";
+    svg.selectAll("circle")
+      .attr("stroke-width", 0);
+    svg.selectAll(".arrow")
+      .style("stroke", d3.rgb("#B8B8B8"))
+      .attr("marker-end", "url(#nuggetSvgarrow)");
+    d3.select(el)
+      // .attr("stroke-width", 2)
+      .select(".arrow")
+      .style("stroke", d3.rgb(highlight))
+      .attr("marker-end", "url(#nuggetSvgarrow-selected)");
+
+    // call react func
+    ReactDOM.render(
+          [<ElementInfoBox id="graphElement"
+                   elementType="edge"
+                   sourceId={d.source.id}
+                   targetId={d.target.id}
+                   sourceMetaType={metaTyping[d.source.id]}
+                   targetMetaType={metaTyping[d.target.id]}
+                   editable={false}
+                   instantiated={instantiated}/>],
+          document.getElementById('nuggetGraphElementInfo'));
+    ReactDOM.render(
+         [<MetaDataBox id="metaData"
+                sourceId={d.source.id}
+                targetId={d.target.id}
+                elementType="edge"
+                sourceMetaType={metaTyping[d.source.id]}
+                targetMetaType={metaTyping[d.target.id]}
+                attrs={d.attrs}
+                editable={true}
+                instantiated={instantiated}
+                onDataUpdate={updateNuggetEdgeAttrs(
+                  modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
+          document.getElementById('nuggetGraphMetaModelInfo'));
+  };
+}
+
+function viewNugget(model_id, instantiated=false) {
+
+  return function (nugget_id, nugget_desc, nugget_type) {
+
+    ReactDOM.render(
+        <NuggetPreview
+            nuggetId={nugget_id}
+            nuggetDesc={nugget_desc}
+            nuggetType={nugget_type}
+            onDataUpdate={updateNuggetDesc(model_id, nugget_id)}/>,
+        document.getElementById('nuggetViewWidget')
+    );
+
+
+    // use AJAX to send request for retrieving the nugget data
+    $.get(model_id + "/raw-nugget/" + nugget_id, function(data, status) {
+      var svgId = "nuggetSvg",
+      	nuggetGraph = data["nuggetJson"],
+        width = 500,
+        height = 200,
+      	nuggetType = data["nuggetType"],
+      	metaTyping = data["metaTyping"],
+      	agTyping = data["agTyping"],
+      	templateRelation = data["templateRelation"],
+      	nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+
+      d3.select("#" + svgId).selectAll("*").remove();
+
+      var nodeColors;
+      if (instantiated) {
+    	    nodeColors = computeNodeColors(
+    	    	nuggetGraph, metaTyping, INSTANCE_META_COLORS);
+    	} else {
+    		nodeColors = computeNodeColors(
+    	    	nuggetGraph, metaTyping, META_COLORS);
+    	}
+    		
+    	var positions = computeFixedPositions(width, height, nuggetGraph, nuggetType, templateRelation);
+    	initNodePosition(
+    		nuggetGraph,
+    		positions[0],
+    		positions[1]);
+    	initLinkStrengthDistance(nuggetGraph, metaTyping, 1);
+    	initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+
+    	var simulationConf = {
+    		"charge_strength": -200,
+    		"collide_strength": 2.5,
+    		"y_strength": 0.2
+    	}
+
+
+      var highlight;
+    	if (instantiated) {
+    		highlight = INSTANCE_HIGHLIGHT_COLOR;
+    	} else {
+    		highlight = HIGHLIGHT_COLOR;
+    	}
+
+      var clickHandlers = {
+        "nodeClick": handleNuggetNodeClick(
+            model_id, nugget_id, instantiated,
+            nuggetGraph, metaTyping),
+        "edgeClick": handleNuggetEdgeClick(
+            model_id, nugget_id, instantiated,
+            nuggetGraph, metaTyping),
+      }
+
+      visualiseGraph(nuggetGraph,
+                     svgId,
+                     nodeColors,
+                     nodeSizes,
+      				       null,
+      				       highlight,
+      				       simulationConf,
+      				       {},
+      				       null,
+      				       null,
+                     clickHandlers,
+                     handleDragStarted(nuggetGraph, metaTyping),
+              			 100,
+              			 false)
+      });
+  }
 }
 
 function removeNuggetSvg(element, nugget_id) {
@@ -313,3 +544,4 @@ function removeNuggetSvg(element, nugget_id) {
   element.style.display = "none";
   document.getElementById("showNuggetButton" + nugget_id).style.display = "inline-block";
 }
+

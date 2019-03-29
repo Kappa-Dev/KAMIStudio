@@ -2,56 +2,56 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	// Initialize link strength depending on node meta-types
     for (var i=0; i < graph.links.length; i++) {
 	    var d = graph.links[i];
-	    d.strength = 0.02 * scale;
+	    d.strength = 0.4;
 	    d.distance = 50 * scale;
 	    if (metaTyping[d.target] == "gene") {
 	      if (metaTyping[d.source] == "region") {
-	        d.strength = 0.7 * scale;
-	        d.distance = 10 * scale;
+	        d.strength = 0.7;
+	        d.distance = 25 * scale;
 	      } else if (metaTyping[d.source] == "site") {
-	        d.strength = 0.7 * scale;
-	        d.distance = 15 * scale;
+	        d.strength = 0.7;
+	        d.distance = 25 * scale;
 	      } else if (metaTyping[d.source] == "residue") {
-	        d.strength = 0.7 * scale;
-	        d.distance = 20 * scale;
+	        d.strength = 0.7;
+	        d.distance = 25 * scale;
 	      } 
 	    } else if (metaTyping[d.target] == "region") {
 	      if (metaTyping[d.source] == "site") {
-	        d.strength = 0.6 * scale;
+	        d.strength = 0.6;
 	        d.distance = 10 * scale;
 	      } else if ((metaTyping[d.source] == "residue")) {
-	        d.strength = 0.6 * scale;
+	        d.strength = 0.6;
 	        d.distance = 15 * scale;
 	      } 
 	    } else if (metaTyping[d.target] == "site") {
 	      if (metaTyping[d.source] == "residue") {
-	        d.strength = 0.7 * scale;
+	        d.strength = 0.7;
 	        d.distance = 10 * scale;
 	      } 
 	    } else if (metaTyping[d.target] == "residue") {
 	    	if (metaTyping[d.source] == "state") {
-	    		d.strength = 1 * scale;
+	    		d.strength = 1;
 	    		d.distance = 5 * scale;
 	    	}
 	    } else if (metaTyping[d.target] == "state") {
 	      if (metaTyping[d.source] == "mod") {
-	        d.strength = 0.15 * scale;
+	        d.strength = 0.15;
 	      } 
 	    } else if (metaTyping[d.target] == "bnd") {
 	    	if (metaTyping[d.source] == "region") {
-		      d.strength = 0.4 * scale;
+		      d.strength = 0.4;
 		    } else {
-		    	d.strength = 0.1 * scale;
+		    	d.strength = 0.1;
 		    }
 	    } else if (metaTyping[d.target] == "mod") {
 	    	if (metaTyping[d.source] == "region") {
-		      d.strength = 0.4 * scale;
+		      d.strength = 0.4;
 		    } else {
-		    	d.strength = 0.1 * scale;
+		    	d.strength = 0.1;
 		    }
 	    }
     	if (metaTyping[d.source] == "state") {
-    		d.strength = 1 * scale;
+    		d.strength = 1;
     		d.distance = 10 * scale;
     	}
   }
@@ -132,8 +132,7 @@ function visualiseGraph(graph, svgId,
 						progressConf=null,
 						workerUrl=null, 
 						nodePosUpdateUrl=null,
-                     	onNodeClick=null, 
-                     	onEdgeClick=null,
+                     	clickHandlers={},
                      	onNodeDragStarted=null,
                      	threshold=null,
                      	zoom=true,
@@ -183,9 +182,10 @@ function visualiseGraph(graph, svgId,
 	}
 
 	// array of current components to drag (for group dragging) 
-	var CURRENT_DRAG_COMPONENTS = []; 	
+	var CURRENT_DRAG_COMPONENTS = [];
+	var CTRL_SELECTED_COMPONENTS = [];
 
-	// select svg acnvas
+	// select svg canvas
 	var svg = d3.select("#" + svgId),
     	width = +svg.attr("width"),
       	height = +svg.attr("height"),
@@ -302,6 +302,23 @@ function visualiseGraph(graph, svgId,
 		} 
 		draw(graph.nodes, graph.links, false);
 	}
+
+	var nodeClick = ("nodeClick" in clickHandlers) ? clickHandlers["nodeClick"] : function(d, i, el) {},
+		multiNodeClick = ("multiNodeClick" in clickHandlers) ? clickHandlers["multiNodeClick"] : nodeClick,
+		edgeClick = ("edgeClick" in clickHandlers) ? clickHandlers["edgeClick"] : function(d, i, el) {},
+		unselectClick = ("unselectClick" in clickHandlers) ? clickHandlers["unselectClick"] : function(d, i, el) {};
+	svg.on("click", function(d, i) {
+		var outside = (d3.selectAll(".node").filter(function(d) { return d3.select(this).node() == d3.event.target.parentNode; }).empty()) &&
+					  (d3.selectAll(".link").filter(function(d) { return d3.select(this).node() == d3.event.target.parentNode; }).empty());
+		// console.log(d3.event.target, d3.selectAll("circle").filter(this == d3.event.target), d3.selectAll("line"), outside);
+		if (!d3.event.ctrlKey && outside) {
+	
+			CTRL_SELECTED_COMPONENTS = [];
+			unselectClick(d, i, this);
+		} else {
+
+		}
+	});
 
 	// Nested functions 
 
@@ -453,7 +470,7 @@ function visualiseGraph(graph, svgId,
             function(d) {
             	if (zoom) {
             		var epsilon = 10,
-            			offset = 40;
+            			offset = 10;
             		if ((d.x < 0 + d.radius - epsilon) ||
             			(d.x > width - d.radius + epsilon) ||
             			(d.y < 0 + d.radius - epsilon) ||
@@ -564,7 +581,9 @@ function visualiseGraph(graph, svgId,
 			.data(links)
 			.enter().append("g")
 			.attr("class", "link")
-			.on("click", onEdgeClick)
+			.on("click", function(d, i) {
+					return edgeClick(d, i, this);
+				})
 	        .on("mouseover", 
 	        	function(){ 
 	        		d3.select(this).select(".linkbox").style("opacity", 0.4) 
@@ -604,7 +623,22 @@ function visualiseGraph(graph, svgId,
 	      .attr("stroke-width", 0)
 	      .attr("stroke", edgeStroke)
 	   	  .on("dblclick", zoomInArea)
-	   	  .on("click", onNodeClick);
+	   	  .on("click", function(d, i) {
+			if (d3.event.ctrlKey) {
+		   	  	CTRL_SELECTED_COMPONENTS.push(d.id);
+				// console.log("CTRL detected: ", CTRL_SELECTED_COMPONENTS);
+	   	  		if (CTRL_SELECTED_COMPONENTS.length > 1) {
+		   	  		return multiNodeClick(d, i, this);
+		   	  	} else {
+		   	  		return nodeClick(d, i, this);
+		   	  	}
+	   	  	} else {
+	   	  		CTRL_SELECTED_COMPONENTS = [];
+	   	  		CTRL_SELECTED_COMPONENTS.push(d.id);
+	   	  		// console.log("CTRL cleared: ", CTRL_SELECTED_COMPONENTS);
+	   	  		return nodeClick(d, i, this);
+	   	  	}
+	   	  });
 
 	   	node.append("circle")
 	   		.attr("class", "nodebox")
@@ -618,12 +652,12 @@ function visualiseGraph(graph, svgId,
 	       fitViewBox();
 	    }
 
-	    console.log('#' + saveLayoutButton);
+
 	    d3.select('#' + saveLayoutButton)
           .on('click', function() {
           	updateNodePositions(nodes, nodePosUpdateUrl, null, null, null);
           });
-         console.log(d3.select('#' + saveLayoutButton));
+
 	}
 
 	function zoomed() {
@@ -632,7 +666,16 @@ function visualiseGraph(graph, svgId,
 
 	function dragstarted(d) {
 		d3.event.sourceEvent.stopPropagation();
-		CURRENT_DRAG_COMPONENTS = onNodeDragStarted(d);
+		if (CTRL_SELECTED_COMPONENTS.length > 1) {
+			CURRENT_DRAG_COMPONENTS = [];
+			for (var i=0; i < CTRL_SELECTED_COMPONENTS.length; i++) {
+				CURRENT_DRAG_COMPONENTS = CURRENT_DRAG_COMPONENTS.concat(
+					onNodeDragStarted(CTRL_SELECTED_COMPONENTS[i]));
+			}
+			// console.log(CURRENT_DRAG_COMPONENTS);
+		} else {
+			CURRENT_DRAG_COMPONENTS = onNodeDragStarted(d.id);
+		}
 	}
 
 	function dragged(d) {
@@ -651,15 +694,15 @@ function visualiseGraph(graph, svgId,
 	    // if (d3.event.y >= by_min + radius && d3.event.y <= by_max - radius) {
 	    d.y = d3.event.y;
 	    // }
-
 	    var draggedNode = d3.select(this);
+
 	    draggedNode.attr(
 	    	"transform", "translate(" + d.x + "," + d.y + ")"); 
 
 	    container.selectAll(".components").remove();
     	var components = CURRENT_DRAG_COMPONENTS;
     	var componentSelector = svg.selectAll(".node")
-		  .filter(function(e) { return components.includes(e.id); })
+		  .filter(function(e) { return (components.includes(e.id) && (e.id !== d.id)); })
 		  .each(function(e) {
     			e.x += d3.event.dx;
 			   	e.y += d3.event.dy;
@@ -709,7 +752,6 @@ function visualiseGraph(graph, svgId,
 function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallback, 
 							 failCallback, nodesToUpdate=null) {
 	// POST newly computed node positioning to the server
-	console.log("Updating node positions");
 	var positions = {};
 	for (var i=0; i < nodes.length; i++) {
 		if (nodesToUpdate) {
