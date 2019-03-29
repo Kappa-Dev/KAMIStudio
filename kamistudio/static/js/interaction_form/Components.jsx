@@ -24,7 +24,7 @@ function LabeledTextInput(props) {
           	   placeholder={props.placeholder}
           	   value={props.value}
           	   onChange={props.onChange}
-          	   required={props.required} />,
+          	   required={props.required} maxlength="50" />,
         <div className="invalid-feedback" style={{"display": "none"}}>
 	        {props.invalidMessage}
 	    </div>

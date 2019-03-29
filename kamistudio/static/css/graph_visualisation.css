@@ -77,3 +77,7 @@ svg {
   border: 1px solid #ddd;
   border-radius: 10px;
 }
+
+#nuggetSvg {
+  width: 100%;
+}

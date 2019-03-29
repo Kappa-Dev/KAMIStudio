@@ -1,17 +1,23 @@
 function singleValueToString(data, attr_name) {
 	// convert value of an attribute to innerText/innerHtml
-	var value = "";
-	if (attr_name in data) {
-		value = data[attr_name].data[0];
-	} else {
-		value = <p className="faded">not specified</p>;
-	}
+	var value = (attr_name in data) ? data[attr_name].data[0] : 
+		<p className="faded">not specified</p>;
+	return value;
+};
 
+function multipleValuesToString(data, attr_name) {
+	// convert value of an attribute to innerText/innerHtml
+	var value = (attr_name in data) ? value = data[attr_name].data.join(", ") : 
+		<p className="faded">not specified</p>;
 	return value;
 };
 
 function getSingleValue(data, attr_name) {
 	return attr_name in data ? data[attr_name].data[0] : null;
+};
+
+function getMultipleValues(data, attr_name) {
+	return attr_name in data ? data[attr_name].data : null;
 };
 
 class EditableBox extends React.Component {
@@ -278,7 +284,7 @@ class MetaDataBox extends React.Component {
 
 					var uniprot = singleValueToString(this.props.attrs, "uniprotid"),
 						hgnc = singleValueToString(this.props.attrs, "hgnc_symbol"),
-						synonyms = singleValueToString(this.props.attrs, "synonyms");
+						synonyms = multipleValuesToString(this.props.attrs, "synonyms");
 					items = [
 						[
 							"uniprotid",
@@ -292,7 +298,7 @@ class MetaDataBox extends React.Component {
 					];
 					data["uniprotid"] = getSingleValue(this.props.attrs, "uniprotid");
 					data["hgnc_symbol"] = getSingleValue(this.props.attrs, "hgnc_symbol");
-					data["synonyms"] = getSingleValue(this.props.attrs, "synonyms");
+					data["synonyms"] = getMultipleValues(this.props.attrs, "synonyms");
 
 				} else if ((this.props.metaType === "region") || (this.props.metaType === "site")) {
 					var name = singleValueToString(this.props.attrs, "name"),
@@ -315,13 +321,13 @@ class MetaDataBox extends React.Component {
 					data["interproid"] = getSingleValue(this.props.attrs, "interproid");
 					data["name"] = getSingleValue(this.props.attrs, "name");
 				} else if (this.props.metaType === "residue") {
-					var aa = singleValueToString(this.props.attrs, "aa"),
+					var aa = multipleValuesToString(this.props.attrs, "aa"),
 						test = singleValueToString(this.props.attrs, "test");
 					items = [
 						["aa", "Amino Acid", aa],
 						["test", "Test", String(test)]
 					];
-					data["aa"] = getSingleValue(this.props.attrs, "aa");
+					data["aa"] = getMultipleValues(this.props.attrs, "aa");
 					data["test"] = getSingleValue(this.props.attrs, "test");
 				} else if (this.props.metaType === "state") {
 					var name = singleValueToString(this.props.attrs, "name"),
@@ -443,8 +449,9 @@ class DropDownRow extends React.Component {
 	render() {
 		var content = null;
 		if (typeof this.props.items !== 'undefined') {
+			// <span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span>
 			content =
-				<tr><span className="glyphicon glyphicon-menu-right" aria-hidden="true"></span>{" " + this.props.name + " (" + Object.keys(this.props.items).length + ")"}</tr>;
+				<tr>{" " + this.props.name + " (" + Object.keys(this.props.items).length + ")"}</tr>;
 		}
 		return (content);
 	}
@@ -513,7 +520,7 @@ class ModelDataBox extends React.Component {
 					instantiated={true}
 					onDataUpdate={this.props.onDataUpdate}/>
 			</div>,
-			<hr className="sidebar-model-sep"/>,
+			<hr className="sidebar-corpus-sep"/>,
 			<h3 className="info-brand">Origin</h3>,
 		    <div className="table-responsive">
 		      <table className="table table info-table no-borders">

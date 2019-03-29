@@ -141,7 +141,7 @@ td.data {
 	margin-left: 10px;
 }
 
-.model-action-brand, .corpus-action-brand {
+.model-action-brand, .kb-action-brand {
 	margin-left: 10px;
 	margin-top: 10px;
 }
@@ -186,7 +186,7 @@ table.nugget-info-table > tbody > tr > td {
 }
 
 
-.model-action-buttons, .corpus-action-buttons {
+.model-action-buttons, .kb-action-buttons {
 	float: right;
 	margin-right: 20px;
 }
@@ -337,20 +337,13 @@ a.btn.instantiation:hover, button.instantiation:hover {
 }
 
 
+/*
 #nuggetsViewTable {
-	height: 300px;
+	height: 490px;
 	overflow-x: auto;
 	border: 1pt solid #ddd;
-	border-radius: 15px;
 }
-
-#nuggetsViewTable {
-	height: 500px;
-	overflow-x: auto;
-	border: 1pt solid #ddd;
-	border-radius: 15px;
-}
-
+*/
 
 #nuggetsViewTable > table > tbody > tr > td,
 #nuggetsViewTable > table > tbody > tr > th {
@@ -361,4 +354,130 @@ table.no-borders > tbody > tr > th,
 table.no-borders > tbody > tr > td {
 	border-top: 0px;
 	padding: 3px;
+}
+
+
+.nuggets-nav li {
+	border-bottom: 1pt solid #ddd;
+    position: relative; 
+    line-height: 20px;
+    display: inline-block;
+    width: 100%;
+}
+
+.nuggets-nav li:last-child {
+	border-bottom: 0pt;
+}
+
+.nuggets-nav li:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    height: 100%;
+    width: 0px;
+}
+
+.nuggets-nav li.not-selected:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    height: 100%;
+    width: 0px;
+    /*background-color: #6C7A89;   */
+}
+
+.nuggets-nav li:hover:before,
+.nuggets-nav li.open:hover:before {
+    width: 100%;
+    -webkit-transition: width .2s ease-in;
+      -moz-transition:  width .2s ease-in;
+       -ms-transition:  width .2s ease-in;
+            transition: width .2s ease-in;
+}
+
+.nuggets-nav li a {
+	width: 100%;
+    display: inline-block;
+    /*color: #fff;*/
+    text-decoration: none;
+    padding: 10px 15px 10px 30px;    
+}
+
+#nuggetsListView {
+	height: 490px;
+	overflow-x: auto;
+	border: 1pt solid #ddd;
+}
+
+#definitionListView {
+	height: 490px;
+	overflow-x: auto;
+	border: 1pt solid #ddd;
+}
+
+.nuggets-nav li.selected {
+  background-color: #dae3ec;
+}
+
+.nuggets-nav li a:hover,
+.nuggets-nav li a:active,
+.nuggets-nav li a:focus,
+.nuggets-nav li.open a:hover,
+.nuggets-nav li.open a:active
+.nuggets-nav li.open a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+.nuggets-nav li a p {
+	margin-bottom: 0px;
+}
+
+.nugget-desc {
+	display: inline-block;
+	float: right;
+}
+
+#productsContainer {
+	overflow-x: scroll;
+  	overflow-y: hidden;
+  	white-space: nowrap;
+  	width: 100%;
+}
+
+.product-item {
+	text-align: center;
+	display: inline-block;
+	padding: 10px;
+}
+
+#productListView {
+	height: 109px;
+	overflow-x: auto;
+	border: 1pt solid #ddd;
+	margin-bottom: 15px;
+	margin-left: 25px;
+	margin-right: 25px;
+}
+
+#productListView .nuggets-nav li {
+	line-height: 15px;
+}
+
+h3.editable-box {
+	margin-top: 0px;
+}
+
+svg {
+	margin-bottom: 10px;
+}
+
+#protoformSvgInfoBoxes, #productSvgInfoBoxes {
+	height: 200px;
+	overflow-x: auto;
 }
