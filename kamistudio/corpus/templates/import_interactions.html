@@ -3,30 +3,16 @@
 {% block panel_buttons %}
   <div class="row">
     <div class="col-md-12">
-      <h1 class="mb-6 model-action-brand">Import JSON-formatted interactions</h1>
+    	<h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: import KAMI-interactions in JSON-format</h2>
     </div>
   </div>
 {% endblock %}
 
 {% block tabs %}
 
-<form id="modelImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
+<form id="modelImportForm" novalidate="{{ url_for('corpus.import_json_interactions', corpus_id=corpus_id) }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
-			<div class="row form-row">
-			      <label for="name">Name</label>
-			      <input type="text" class="form-control" name="name" id="name" placeholder="" value="">
-			</div>
-
-			<div class="row form-row">
-			      <label for="desc">Description</label>
-			      <input type="text" class="form-control" name="desc" id="desc">
-			</div>
-
-			<div class="row form-row">
-			      <label for="desc">Organism</label>
-			      <input type="text" class="form-control" name="organism" id="organism" placeholder="" value="">
-			</div>
 
 			<div class="row form-row">
 				<!-- <div class="col-md-6"> -->
@@ -38,7 +24,7 @@
 			<div class="row form-row">
 				<div class="col-md-9">
 					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
-						<p>Importing corpus... It make take a moment.</p>
+						<p>Importing interactions... It make take a moment.</p>
 						<div id="loader"></div>
 					</div>
 				</div>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block panel_buttons %}
+  <div class="row">
+    <div class="col-md-12">
+      <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: nugget preview</h2>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block tabs %}
+  <div class="row">
+    <div class="col-md-7">
+      <div id="nuggetViewWidget">
+
+      </div>
+      <div class="row">
+        <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-lg" {% if not readonly%}href="{{ url_for('corpus.add_nugget_from_session', corpus_id=corpus_id) }}"{%endif%}  {% if readonly %} disabled {%endif%}><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus</a>    
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block custom_scripts %}
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/info_boxes/InfoBox.jsx') }}" type="text/babel"></script>
+  <script type="text/babel">
+    previewNugget(
+      '{{corpus_id}}',
+      '{{nugget_desc}}',
+      '{{nugget_type}}',
+      JSON.parse('{{ nugget_graph | safe }}'),
+      JSON.parse('{{ nugget_meta_typing | safe }}'),
+      JSON.parse('{{ nugget_ag_typing | safe }}'),
+      JSON.parse('{{ nugget_template_rel | safe }}'));
+  </script>
+{% endblock %}

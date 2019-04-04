@@ -37,8 +37,10 @@
           </div>
           <div class="col-md-8">
             <div class="collection-buttons">
-              <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
-              <a href="{{ url_for('home.import_corpus') }}" class="btn btn-primary btn-md panel-button-right">Import corpus</a>
+              {% if not readonly %}
+                <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
+                <a href="{{ url_for('home.import_corpus') }}" class="btn btn-primary btn-md panel-button-right">Import corpus</a>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -84,8 +86,10 @@
           </div>
           <div class="col-md-8">
             <div class="collection-buttons">
-              <a href="{{ url_for('home.new_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">New model</a>
-              <a href="{{ url_for('home.import_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">Import model</a>
+              {% if not readonly %}
+                <a href="{{ url_for('home.new_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">New model</a>
+                <a href="{{ url_for('home.import_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">Import model</a>
+              {% endif %}
             </div>
           </div>
         </div>

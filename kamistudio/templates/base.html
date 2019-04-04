@@ -11,7 +11,7 @@
     <link href="{{url_for('static', filename='css/graph_visualisation.css')}}" rel="stylesheet" type="text/css" />
 {% endblock %}
 
-{% block title %} KAMIStudio {% endblock %}
+{% block title %} KAMIStudio {% if readonly %}(read-only){% endif %} {% endblock %}
 
 {% block navbar %}
 <nav class="navbar navbar-default navbar-static-top">
@@ -21,7 +21,7 @@
       <div class="col-sm-4 navbar-col">
         <a class="navbar-brand" href="/home">
           <p id="titleP">
-              <img src="{{url_for('static', filename='img/logo1.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio
+              <img src="{{url_for('static', filename='img/logo1.svg')}}" alt="logo" style="width:40px;height:40px;"> KAMIStudio 
           </p>
         </a>
       </div>
@@ -70,6 +70,10 @@
 
   {{ super() }}
   <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
   <script src="{{ url_for('static', filename='js/loaders.js') }}"></script>
   <!-- <script src="{{ url_for('static', filename='js/visualiseNugget.js') }}" type="text/javascript"></script> -->
   <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseGraph.js') }}" type="text/babel"></script>
@@ -79,7 +83,7 @@
   <script src="{{ url_for('static', filename='js/entityReferenceFinder.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/metaDataHandlers.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/kbUpdateHandlers.js') }}" type="text/babel"></script>
-  <script src="{{ url_for('static', filename='js/nuggetPreview.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   {% block custom_scripts %}{% endblock %}
 
 {% endblock %}

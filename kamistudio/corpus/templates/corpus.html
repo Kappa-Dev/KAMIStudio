@@ -2,10 +2,11 @@
 
 {% block action_buttons %}
     <div class="kb-action-buttons">
-        <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
-        <button type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-import" value="Choose Files!"></span> Import interactions</button>
-        <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export JSON</a>
-        <a href="{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-primary btn-md panel-button"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+        <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction{% if readonly %} (preview only){% endif %}</a>
+        <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} class="btn btn-default btn-md panel-button add-interaction-button"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+        <a href="{{ url_for('corpus.instantiate', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-play"></span> Instantiate</a>
+        <a {% if not readonly %}href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}"{%endif%} type="button" class="btn btn-default btn-md panel-button add-interaction-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-download-alt"></span> Export</a>
+        <a {% if not readonly %}href="{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}"{% endif %} type="button" class="btn btn-primary btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-remove"></span> Delete</a>
     </div>
 {% endblock %}
 
@@ -23,12 +24,12 @@
 
 {% block definitions_tab %}
 	<li class="nav-item">
-	  <a class="nav-link" data-toggle="tab" href="#definitions" role="tab">Protein definitions ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
+	  <a class="nav-link" href="#definitions" role="tab" onclick="switchToDefinitions(this);">Protein definitions ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
 	</li>
 {% endblock %}
 
 {% block definitions_pane %}
-	<div class="tab-pane" id="definitions" role="tabpanel">
+	<div class="tab-pane" id="definitions" style="display: initial; visibility: hidden;" role="tabpanel">
 	  {% if n_definitons == 0  %}
 	      Corpus does not contain any protein definitions
 	  {% else %}
@@ -60,12 +61,23 @@
     if (document.getElementById('graphInfoBoxes')) {
       ReactDOM.render(
         [<ElementInfoBox id="graphElement" items={[]}/>,
-         <MetaDataBox id="metaData" items={[]}/>],
+         <MetaDataBox 
+          {% if readonly %}
+              editable={false}
+          {% else %}
+              editable={true}
+          {% endif %}
+              id="metaData" items={[]}/>],
         document.getElementById('graphInfoBoxes')
       );
     }
     ReactDOM.render(
       [<CorpusDataBox 
+      {% if readonly %}
+          readonly={true}
+      {% else %}
+          readonly={false}
+      {% endif %}
       {% if kb.annotation.name %}
           kbName='{{kb.annotation.name}}'
       {% endif %}
@@ -85,7 +97,7 @@
       document.getElementById('corpusData')
     );
 
-    renderNuggetList('{{kb_id}}', '{{nuggets|safe}}');
-    renderDefinitionList('{{kb_id}}', '{{definitions|safe}}');
+    renderNuggetList('{{kb_id}}', '{{nuggets|safe}}', false, {% if readonly %}true{% else %}false{% endif %});
+    renderDefinitionList('{{kb_id}}', '{{definitions|safe}}', false, {% if readonly %}true{% else %}false{% endif %});
   </script>
 {% endblock %}

@@ -3,7 +3,7 @@
 {% block action_buttons %}
     <div class="kb-action-buttons">
         <a href="{{ url_for('model.download_model', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export JSON</a>
-        <a href="{{ url_for('model.delete_model', model_id=kb_id) }}" type="button" class="btn btn-primary btn-md panel-button instantiation"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+        <a {% if not readonly %}href="{{ url_for('model.delete_model', model_id=kb_id) }}"{%endif%} type="button" class="btn btn-primary btn-md panel-button instantiation"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-remove"></span> Delete</a>
     </div>
 {% endblock %}
 
@@ -24,14 +24,31 @@
     if (document.getElementById('graphInfoBoxes')) {
       ReactDOM.render(
         [
-          <ElementInfoBox id="graphElement" items={[]}/>,
-          <MetaDataBox id="metaData" items={[]}/>
+          <ElementInfoBox id="graphElement" 
+              {% if readonly %}
+                  editable={false}
+              {% else %}
+                  editable={true}
+              {% endif %}
+              items={[]}/>,
+          <MetaDataBox id="metaData" 
+              {% if readonly %}
+                  editable={false}
+              {% else %}
+                  editable={true}
+              {% endif %}
+              items={[]}/>
         ],
         document.getElementById('graphInfoBoxes')
       );
     }
     ReactDOM.render(
       <ModelDataBox 
+          {% if readonly %}
+              readonly={true}
+          {% else %}
+              readonly={false}
+          {% endif %}
           {% if kb.annotation.name %}
                 kbName='{{kb.annotation.name}}'
           {% endif %}
@@ -62,6 +79,6 @@
       document.getElementById('modelData')
     );
 
-    renderNuggetList('{{kb_id}}', '{{nuggets|safe}}', true);
+    renderNuggetList('{{kb_id}}', '{{nuggets|safe}}', true, {% if readonly %}true{% else %}false{% endif %});
   </script>
 {% endblock %}
