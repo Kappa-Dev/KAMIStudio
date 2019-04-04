@@ -46,7 +46,7 @@ def init_mongo_db(add_test=False):
             app.mongo.db.kami_models.create_index("id", unique=True)
 
         if add_test is True:
-            # app.mongo.db.kami_corpora.remove({})
+            app.mongo.db.kami_corpora.remove({})
             if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
                 app.mongo.db.kami_corpora.insert_one({
                     "id": "test_corpus",
@@ -59,7 +59,7 @@ def init_mongo_db(add_test=False):
                         "annotation": "Converted to KAMI from NCI PID network, originally represented with BioPax"
                     }
                 })
-            # app.mongo.db.kami_models.remove({})
+            app.mongo.db.kami_models.remove({})
             if len(list(app.mongo.db.kami_models.find({}))) == 0:
                 app.mongo.db.kami_models.insert_one({
                     "id": "test_model",
@@ -78,14 +78,13 @@ def init_mongo_db(add_test=False):
                     },
                     "kappa_models": []
                 })
-            # app.mongo.db.kami_definitions.remove({})
+            app.mongo.db.kami_definitions.remove({})
             if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
                 app.mongo.db.kami_definitions.insert_one({
                     'id': '1',
-                    'desc': 'Products of A in cancer',
                     'corpus_id': 'test_corpus',
                     'protoform': {
-                        'uniprotid': 'A',
+                        'uniprotid': 'P00533',
                         'regions': [{
                             'name': 'SH2',
                             'sites': [],
@@ -98,31 +97,85 @@ def init_mongo_db(add_test=False):
                         'states': [],
                         'bound_to': [],
                         'unbound_from': []},
-                    'product_names': ['wt', 'm1', 'm2'],
-                    'product_components': {
-                        'wt': {
-                            'regions': [{
-                                'name': 'SH2',
+                    'products': {
+                        'WT': {
+                            "desc": "Wild type protein",
+                            "components": {
+                                'regions': [{
+                                    'name': 'SH2',
+                                    'sites': [],
+                                    'residues': [{'aa': ['S'], 'loc': 100}],
+                                    'states': [],
+                                    'bound_to': [],
+                                    'unbound_from': []}],
                                 'sites': [],
-                                'residues': [{'aa': ['S'], 'loc': 100}],
-                                'states': [],
-                                'bound_to': [],
-                                'unbound_from': []}],
-                            'sites': [],
-                            'residues': [],
-                            'states': []},
-                        'm1': {
-                            'regions': [{
-                                'name': 'SH2',
+                                'residues': [],
+                                'states': []}
+                        },
+                        'S90D': {
+                            "desc": "Mutation S90D",
+                            "components": {
+                                'regions': [{
+                                    'name': 'SH2',
+                                    'sites': [],
+                                    'residues': [{'aa': ['D'], 'loc': 100}],
+                                    'states': [],
+                                    'bound_to': [],
+                                    'unbound_from': []}],
                                 'sites': [],
-                                'residues': [{'aa': ['D'], 'loc': 100}],
-                                'states': [],
-                                'bound_to': [],
-                                'unbound_from': []}],
-                            'sites': [],
-                            'residues': [],
-                            'states': []},
-                        'm2': {}}})
+                                'residues': [],
+                                'states': []}
+                        },
+                        'noSH2': {
+                            "desc": "Knock-out of SH2",
+                            "components": {}
+                        }}})
+                app.mongo.db.kami_definitions.insert_one({
+                    'id': '2',
+                    'corpus_id': 'test_corpus',
+                    'protoform': {
+                        'uniprotid': 'P56945',
+                        'sites': [{
+                            "start": 407, "end": 413,
+                            "residues": [{
+                                "aa": ["Y", "A"],
+                                "loc": 410,
+                                "test": True}]
+                        }]
+                    },
+                    'products': {
+                        'WT': {
+                            "desc": "Wild type protein",
+                            "components": {
+                                'sites': [{
+                                    "start": 407, "end": 413,
+                                    "residues": [{
+                                        "aa": "Y",
+                                        "loc": 410,
+                                        "test": True
+                                    }]
+                                }]
+                            }
+                        },
+                        'S90A': {
+                            "desc": "Mutation S90A",
+                            "components": {
+                                'sites': [{
+                                    "start": 407, "end": 413,
+                                    "residues": [{
+                                        "aa": "A",
+                                        "loc": 410,
+                                        "test": True
+                                    }]
+                                }]
+                            }
+                        },
+                        'nopY': {
+                            "desc": "Knock-out of SH2",
+                            "components": {}
+                        }
+                    }
+                })
 
         if app.neo4j_driver is not None:
             h = Neo4jHierarchy(driver=app.neo4j_driver)
@@ -147,8 +200,8 @@ Bootstrap(app)
 
 # Session config
 app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
-# app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
+app.config['SESSION_TYPE'] = 'filesystem'
+# app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
 Session(app)
 
 # Configure the KAMIStudio server
