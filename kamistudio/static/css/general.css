@@ -27,8 +27,19 @@ body {
     margin-left: 30px;
 }
 
+.tab-content {
+	position: absolute;
+	top: auto;
+	left: 0;
+	width: 100%;
+}
+
 .tab-pane {
 	margin: 20px;
+	position: absolute;
+	width: 95%;
+	top: 0;
+	left: 0;
 }
 
 .model-checkbox {
@@ -299,16 +310,25 @@ a.btn.instantiation, button.instantiation {
 	border-color: #8d0e14;
 }
 
-a.btn.instantiation:focus, button.instantiation:focus {
+a.btn.instantiation:focus {
 	background-color: #8d0e14;
 	border-color: #8d0e14;
 }
 
-a.btn.instantiation:hover, button.instantiation:hover {
+button.instantiation:focus {
 	background-color: #8d0e14;
 	border-color: #8d0e14;
 }
 
+a.btn.instantiation:hover {
+	background-color: #8d0e14;
+	border-color: #8d0e14;
+}
+
+button.instantiation:hover, button.instantiated[disabled]:hover  {
+	background-color: #8d0e14 !important;
+	border-color: #8d0e14 !important;
+}
 
 .highlighted-item {
 	border-radius: 15px;
@@ -451,7 +471,7 @@ table.no-borders > tbody > tr > td {
 }
 
 .product-item {
-	text-align: center;
+	/*text-align: center;*/
 	display: inline-block;
 	padding: 10px;
 }
@@ -470,6 +490,10 @@ table.no-borders > tbody > tr > td {
 }
 
 h3.editable-box {
+	/*margin-top: 0px;*/
+}
+
+.editable-box.right-button {
 	margin-top: 0px;
 }
 
@@ -477,7 +501,60 @@ svg {
 	margin-bottom: 10px;
 }
 
-#protoformSvgInfoBoxes, #productSvgInfoBoxes {
-	height: 200px;
-	overflow-x: auto;
+
+.inner-list-unstyled {
+	padding-left: 0pt;
+}
+
+.inner-list-unstyled li {
+	border: 0pt;
+	line-height: 15pt;
+}
+
+.nuggets-nav li a.inner-selector {
+	padding-left: 50pt;
+
+}
+
+.selection-dialog {
+	border-radius: 15px;
+	border: 2px solid #ddd;
+	/*background: #dae3ec;*/
+	background: white;
+	width: 400pt;
+	height: 450pt;
+	z-index: 100;
+	position: fixed;
+	top: 15%;
+	left: 33%;
+}
+
+.selection-dialog ul {
+	height: 300pt;
+	overflow-y: auto;
+}
+
+.selection-dialog-title {
+	margin-left: 10pt;
+}
+
+.list-group-item.transparent {
+	background: transparent;
+}
+
+input.search {
+	width: 80%;
+	margin: auto;
+	margin-top: 15pt;
+	margin-bottom: 15pt;
+}
+
+a.cancel-link {
+	float: right;
+	margin-top: 10pt;
+	margin-right: 10pt;
+}
+
+a.cancel-link span {
+	font-size: 16pt;
 }
