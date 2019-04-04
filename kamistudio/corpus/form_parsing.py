@@ -1,10 +1,10 @@
 """Utils for froms parsing."""
 import re
-from kami.interactions import (Modification,
-                               AnonymousModification,
-                               SelfModification,
-                               LigandModification,
-                               Binding)
+from kami.data_structures.interactions import (Modification,
+                                               AnonymousModification,
+                                               SelfModification,
+                                               LigandModification,
+                                               Binding)
 
 
 def _process_explict_target(form):
@@ -21,8 +21,9 @@ def _process_explict_target(form):
             state_to_set = False
             test = True
 
+        state_name = form["targetStateName"]
         target["data"] = {
-            "name": form['targetStateName'],
+            "name": state_name,
             "test": test
         }
     else:
@@ -33,8 +34,9 @@ def _process_explict_target(form):
         else:
             residue_test = False
 
+        residueAA = form['targetResidueAA']
         target["data"] = {
-            "aa": form['targetResidueAA'],
+            "aa": residueAA,
             "test": residue_test
         }
         if form['targetResidueLocation'] != "":
@@ -46,9 +48,9 @@ def _process_explict_target(form):
         else:
             state_to_set = False
             test = True
-
+        name = form["targetResidueStateName"]
         target["data"]["state"] = {
-            "name": form['targetResidueStateName'],
+            "name": name,
             "test": test
         }
     return target, state_to_set
@@ -389,23 +391,35 @@ def _process_actor(gene_data, actor_data):
 def _process_implicit_target(target_data):
     target = None
     value = True
-
-    if "in_regions" in target_data.keys():
-        target = target_data["in_regions"]["target"]
-    elif "in_sites" in target_data.keys():
-        target = target_data["in_sites"]["target"]
-    elif "residue" in target_data.keys():
-        target = {
-            "type": "Residue",
-            "data": target_data["residue"]
-        }
-        value = not target_data["residue"]["state"]["test"]
-    elif "state" in target_data.keys():
-        target = {
-            "type": "State",
-            "data": target_data["state"]
-        }
-        value = not target_data["state"]["test"]
+    if len(target_data) > 0:
+        if "in_regions" in target_data.keys():
+            target = target_data["in_regions"]["target"]
+        elif "in_sites" in target_data.keys():
+            target = target_data["in_sites"]["target"]
+        elif "residue" in target_data.keys():
+            target = {
+                "type": "Residue",
+                "data": target_data["residue"]
+            }
+            value = not target_data["residue"]["state"]["test"]
+        elif "state" in target_data.keys():
+            target = {
+                "type": "State",
+                "data": target_data["state"]
+            }
+            value = not target_data["state"]["test"]
+        elif "aa" in target_data.keys():
+            target = {
+                "type": "Residue",
+                "data": target_data
+            }
+            value = not target_data["state"]["test"]
+        else:
+            target = {
+                "type": "State",
+                "data": target_data
+            }
+            value = not target_data["test"]
     return target, value
 
 
@@ -528,8 +542,10 @@ def parse_interaction(form):
             else:
                 mod_json["enzyme"] = _process_actor(
                     enzyme_gene, {})
-
-            target, value = _process_implicit_target(target_subactor)
+            if "target" in target_subactor:
+                target, value = _process_implicit_target(target_subactor["target"])
+            else:
+                target, value = _process_implicit_target(target_subactor)
 
             substrate_region, substrate_site = _process_target_carriers(
                 target_subactor)

@@ -14,6 +14,8 @@ from kami.aggregation.generators import generate_nugget
 from kami.data_structures.models import KamiModel
 from kami.exporters.old_kami import ag_to_edge_list
 
+from kami.data_structures.annotations import CorpusAnnotation
+from kamistudio.utils import authenticate
 from kamistudio.model.form_parsing import(parse_interaction)
 from kamistudio.corpus.views import get_corpus
 
@@ -35,7 +37,7 @@ def get_model(model_id):
             definitions = model_json["origin"]["definitions"]
         return KamiModel(
             model_id,
-            annotation=model_json["meta_data"],
+            annotation=CorpusAnnotation.from_json(model_json["meta_data"]),
             creation_time=model_json["creation_time"],
             last_modified=model_json["last_modified"],
             corpus_id=corpus_id,
@@ -127,7 +129,8 @@ def model_view(model_id):
                                proteins=json.dumps(proteins),
                                modifications=json.dumps(modifications),
                                bindings=json.dumps(bindings),
-                               instantiated=True)
+                               instantiated=True,
+                               readonly=app.config["READ_ONLY"])
     else:
         return render_template("model_not_found.html",
                                model_id=model_id)
@@ -148,6 +151,7 @@ def download_model(model_id):
 
 
 @model_blueprint.route("/model/<model_id>/delete")
+@authenticate
 def delete_model(model_id):
     """Handle removal of the model."""
     model = get_model(model_id)
@@ -168,6 +172,7 @@ def delete_model(model_id):
 
 @model_blueprint.route("/model/<model_id>/add-interaction",
                        methods=["GET", "POST"])
+@authenticate
 def add_interaction(model_id, add_agents=True,
                     anatomize=True, apply_semantics=True):
     """Handle interaction addition."""
@@ -175,7 +180,7 @@ def add_interaction(model_id, add_agents=True,
     # model = get_model(model_id)
     # if request.method == 'GET':
     #     return render_template(
-    #         "add_interaction.html",
+    #         "add_model_interaction.html",
     #         model_id=model_id)
     # elif request.method == 'POST':
     #     interaction = parse_interaction(request.form)
@@ -246,9 +251,9 @@ def add_interaction(model_id, add_agents=True,
 
 #     return redirect(url_for('model.model_view', model_id=model_id))
 
-
 @model_blueprint.route("/model/<model_id>/import-json-interactions",
                        methods=["GET"])
+@authenticate
 def import_json_interactions(model_id):
     """Handle import of json interactions."""
     pass
@@ -256,6 +261,7 @@ def import_json_interactions(model_id):
 
 @model_blueprint.route("/model/<model_id>/update-ag-node-positioning",
                        methods=["POST"])
+@authenticate
 def update_ag_node_positioning(model_id):
     """Retrieve node positioning from post request."""
     json_data = request.get_json()
@@ -283,6 +289,7 @@ def update_ag_node_positioning(model_id):
 
 @model_blueprint.route("/model/<model_id>/update-node-attrs",
                        methods=["POST"])
+@authenticate
 def update_node_attrs(model_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
@@ -307,6 +314,7 @@ def update_node_attrs(model_id):
 
 @model_blueprint.route("/model/<model_id>/update-edge-attrs",
                        methods=["POST"])
+@authenticate
 def update_edge_attrs(model_id):
     """Handle update of edge attrs."""
     json_data = request.get_json()
@@ -332,6 +340,7 @@ def update_edge_attrs(model_id):
 
 @model_blueprint.route("/model/<model_id>/update-meta-data",
                        methods=["POST"])
+@authenticate
 def update_meta_data(model_id):
     """Handle update of edge attrs."""
     json_data = request.get_json()

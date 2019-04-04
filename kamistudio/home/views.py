@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 
 from kami import KamiCorpus, KamiModel
 
+from kamistudio.utils import authenticate
 from kamistudio.corpus.views import add_new_corpus
 from kamistudio.model.views import add_new_model
 
@@ -71,14 +72,17 @@ def index():
         i += 1
 
     return render_template(
-        "index.html", corpora=corpora, models=models, recent=recent)
+        "index.html",
+        corpora=corpora,
+        models=models,
+        recent=recent,
+        readonly=app.config["READ_ONLY"])
 
 
 def _generate_unique_corpus_id(name):
     existing_corpora = [
         el["id"] for el in app.mongo.db.kami_corpora.find(
             {}, {"id": 1, "_id": 0})]
-    print(existing_corpora)
     if name not in existing_corpora:
         return name
     else:
@@ -94,7 +98,6 @@ def _generate_unique_model_id(name):
     existing_models = [
         el["id"] for el in app.mongo.db.kami_models.find(
             {}, {"id": 1, "_id": 0})]
-    print(existing_models)
     if name not in existing_models:
         return name
     else:
@@ -107,18 +110,21 @@ def _generate_unique_model_id(name):
 
 
 @home_blueprint.route("/new-corpus", methods=["GET"])
+@authenticate
 def new_corpus():
     """New corpus handler."""
     return render_template("new_corpus.html")
 
 
 @home_blueprint.route("/new-model", methods=["GET"])
+@authenticate
 def new_model():
     """New model handler."""
     return render_template("new_model.html")
 
 
 @home_blueprint.route("/new-corpus", methods=["POST"])
+@authenticate
 def create_new_corpus():
     """Handler for creation of a new corpus."""
     annotation = {}
@@ -146,6 +152,7 @@ def create_new_corpus():
 
 
 @home_blueprint.route("/new-model", methods=["POST"])
+@authenticate
 def create_new_model():
     """Handler for creation of a new corpus."""
     annotation = {}
@@ -172,6 +179,7 @@ def create_new_model():
 
 
 @home_blueprint.route("/import-corpus", methods=['GET', 'POST'])
+@authenticate
 def import_corpus():
     """Handler of model import."""
     if request.method == "GET":
@@ -180,7 +188,6 @@ def import_corpus():
             'import_corpus.html', failed=failed)
     else:
         # check if the post request has the file part
-
         annotation = {}
         if request.form["name"]:
             annotation["name"] = request.form["name"]
@@ -206,6 +213,7 @@ def import_corpus():
 
 
 @home_blueprint.route("/import-model", methods=['GET', 'POST'])
+@authenticate
 def import_model():
     """Handler of model import."""
     if request.method == "GET":
@@ -238,6 +246,7 @@ def import_model():
 
 
 @home_blueprint.route("/delete-models", methods=['GET', 'POST'])
+@authenticate
 def delete_models():
     if request.method == "GET":
         return("Are you sure?")
@@ -259,18 +268,18 @@ def imported_corpus(filename, annotation):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             json_data["corpus_id"] = corpus_id
-            # try:
-            add_new_corpus(corpus_id, creation_time, last_modified, annotation)
-            corpus = KamiCorpus.from_json(
-                corpus_id,
-                json_data,
-                annotation,
-                creation_time=creation_time,
-                last_modified=last_modified,
-                backend="neo4j",
-                driver=app.neo4j_driver)
-            # except:
-                # return render_template("500.html")
+            try:
+                add_new_corpus(corpus_id, creation_time, last_modified, annotation)
+                corpus = KamiCorpus.from_json(
+                    corpus_id,
+                    json_data,
+                    annotation,
+                    creation_time=creation_time,
+                    last_modified=last_modified,
+                    backend="neo4j",
+                    driver=app.neo4j_driver)
+            except:
+                return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 

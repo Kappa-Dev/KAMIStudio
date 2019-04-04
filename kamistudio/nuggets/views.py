@@ -1,9 +1,9 @@
 """."""
 import json
 from flask import Blueprint, jsonify, request
-# from flask import current_app as app
 
-from kamistudio.corpus.views import get_corpus
+from kamistudio.utils import authenticate
+from kamistudio.corpus.views import get_corpus, updateLastModified
 from kamistudio.model.views import get_model
 
 from regraph import graph_to_d3_json
@@ -75,6 +75,7 @@ def raw_nugget_json(corpus_id, nugget_id):
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-nugget-desc",
                          methods=["POST"])
+@authenticate
 def update_corpus_nugget(corpus_id, nugget_id):
     json_data = request.get_json()
     corpus = get_corpus(corpus_id)
@@ -141,6 +142,7 @@ def nugget_table(corpus_id):
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-node-attrs",
                          methods=["POST"])
+@authenticate
 def update_node_attrs(corpus_id, nugget_id):
     """Handle update of node attrs."""
 
@@ -154,8 +156,8 @@ def update_node_attrs(corpus_id, nugget_id):
         {'success': False}), 404, {'ContentType': 'application/json'}
     if corpus is not None:
 
-        if node_id in corpus.action_graph.nodes() and\
-           nugget_id in corpus.nuggets():
+        if nugget_id in corpus.nuggets() and\
+           node_id in corpus.nugget[nugget_id].nodes():
             try:
                 # Here I actually need to generate rewriting rule
                 corpus.update_nugget_node_attr_from_json(
@@ -163,7 +165,7 @@ def update_node_attrs(corpus_id, nugget_id):
 
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                # updateLastModified(corpus_id)
+                updateLastModified(corpus_id)
             except:
                 pass
     return response
@@ -171,6 +173,7 @@ def update_node_attrs(corpus_id, nugget_id):
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>/update-edge-attrs",
                          methods=["POST"])
+@authenticate
 def update_edge_attrs(corpus_id, nugget_id):
     """Handle update of node attrs."""
 
