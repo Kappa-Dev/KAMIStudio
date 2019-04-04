@@ -1,48 +1,118 @@
-function DefinitionListItem(props) {
-    return (
-        <li className="not-selected">
-          <a className="nugget-selector"
-             onClick={() => props.onClick(props.id, props.desc, props.protoformGene, props.productNames)}>
-             Gene {props.protoformGene}<div className="nugget-desc"><p>{props.desc}</p></div>
-          </a>
-        </li>
-    );
+class DefinitionListItem extends React.Component {
+
+	constructor(props) {
+        super(props);
+
+        this.state = {
+        	selected: null
+        };
+        this.onItemClick = this.onItemClick.bind(this);
+    }
+
+    onItemClick(id) {
+    	if (id === this.state.selected) {
+    		this.setState({
+	    		selected: null 
+	    	});
+    	} else {
+	    	this.setState({
+	    		selected: id 
+	    	});
+	    	this.props.onItemClick(id);
+	    }
+    }
+
+    render() {
+		var items = this.props.productNames.map((item, key) =>
+				<li class={item === this.state.selected ? "selected" : "not-selected"}>
+					<a onClick={() => this.onItemClick(item)} class="inner-selector">Variant {item}</a>
+				</li>
+			),
+			itemClass = this.props.active ? "selected" : "not-selected",
+			display = this.props.active ? {"display": "initial"} : {"display": "none"},
+			spanClass = this.props.active ? "glyphicon glyphicon-menu-down" : "glyphicon glyphicon-menu-right";
+	    return (
+	        <li className="not-selected">
+	          <a className="nugget-selector" style={{"padding-left": "10pt"}}
+	             onClick={() => this.props.onClick(this.props.id, this.props.protoformGene, this.props.productNames)}>
+	             <span class={spanClass}></span> Gene {this.props.protoformGene}<div className="nugget-desc"></div>
+	          </a>
+	          <ul class="inner-list-unstyled" style={display}>
+	          	{items}
+	          </ul>
+	        </li>
+	    );
+	}
 }
 
-function DefinitionList(props) {
-    var content = Object.keys(props.items).map(
-        (key, i) => <div id={"definitionListItem" + key}>
-                        <DefinitionListItem
-                            id={key}
-                            desc={props.items[key][0]}
-                            protoformGene={props.items[key][1]}
-                            productNames={props.items[key][2]}
-                            onClick={props.onItemClick} />
-                    </div>);
-    return ([
-        <div id="definitionListView">
-            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
-                {content}
-            </ul>
-        </div>
-    ]);
+
+class DefinitionList extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+        	selected: null,
+        	subitemClick: null
+        };
+        this.onItemClick = this.onItemClick.bind(this);
+        this.setSubitemClick = this.setSubitemClick.bind(this);
+    }
+
+    setSubitemClick(f) {
+    	let state = Object.assign({}, this.state);
+    	state["subitemClick"] = f;
+    	this.setState(state);
+    }
+
+    onItemClick(id, protoformGene, productNames) {
+    	if (id === this.state.selected) {
+    		this.setState({
+	    		selected: null,
+	    		subitemClick: null
+	    	});
+    	} else {
+    		var onSubitemClick = this.props.onItemClick(
+	    		id, protoformGene, productNames, this.setSubitemClick);
+	    	this.setState({
+	    		selected: id
+	    	});
+	    	
+	    }
+    }
+
+    render() {
+	    var content = Object.keys(this.props.items).map(
+	        (key, i) => <div id={"definitionListItem" + key}>
+	                        <DefinitionListItem
+	                            id={key}
+	                            active={this.state.selected === key}
+	                            protoformGene={this.props.items[key][0]}
+	                            productNames={this.props.items[key][1]}
+	                            onClick={this.onItemClick}
+	                            onItemClick={this.state.subitemClick} />
+	                    </div>);
+	    return ([
+	        <div id="definitionListView">
+	            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+	                {content}
+	            </ul>
+	        </div>
+	    ]);
+	}
 }
 
 
 function DefinitionGraphView(props) {
-	return (
-		<div className="row">
-            <div class="col-md-6">
-                <div style={{"text-align": "center"}}>
-                	<svg id={props.svgId} style={{"display": props.svgDisplay}} width="200" height="200"></svg>
-                </div>
-            </div>
-            <div id={props.svgId + "InfoBoxes"} class="col-md-6">
-                <ElementInfoBox id={props.elementInfoBoxId} items={[]}/>
-                <MetaDataBox id={props.metaDataBoxId} items={[]}/>
-            </div>
-       	</div>);
+	return ([
+		<svg id={props.svgId} style={{"display": props.svgDisplay}} width="200" height="200"></svg>,
+        <div id={props.svgId + "InfoBoxes"}>
+        	<ElementInfoBox style={{"display": props.svgDisplay}} id={props.elementInfoBoxId} items={[]}/>
+        	<MetaDataBox style={{"display": props.svgDisplay}} id={props.metaDataBoxId} items={[]}/>
+        </div>
+ 	]);
 }
+
 
 class DefinitionPreview extends React.Component {
 
@@ -52,85 +122,61 @@ class DefinitionPreview extends React.Component {
 
     render() {
         var message = null,
-            fields,
             svgDisplay = "none",
             elementInfoBoxes = null,
             protoform = null,
-            products = null;
+            product = null,
+            productMessage = null, content = null;
         if (!this.props.id) {
             message = "No definition selected";
-            fields = <EditableBox
-                        id="definitionInfo"
-                        name="Definition info"
-                        data={{}}
-                        editable={this.props.editable}
-                        message={message}
-                        items={[]}
-                        noBorders={true}
-                        protected={["id"]}
-                        editable={true} />;
         } else {
 
-            var items = [
-                    ["id", "Definition ID", this.props.id],
-                    ["desc", "Description", this.props.desc ? this.props.desc : <p className="faded">not specified</p>],
-                    ["gene", "Gene", this.props.protoformGene],
-                    ["products", "Products", this.props.productNames]
-                ],
-                data = {
-                    "id": this.props.id,
-                    "desc": this.props.desc,
-                    "gene": this.props.protoformGene,
-                    "products": this.props.productNames
-                };
-            fields = <EditableBox
-                        id="definitionInfo"
-                        name="Definition info"
-                        data={data}
-                        editable={this.props.editable}
-                        items={items}
-                        noBorders={true}
-                        protected={["id"]}
-                        editable={true}
-                        onDataUpdate={this.props.onDataUpdate} />;
             svgDisplay = "inline-block";
            
-            protoform = [
-            	<h4>Protoform</h4>,
+            protoform = 
             	<DefinitionGraphView
             		svgId="protoformSvg"
             		svgDisplay={svgDisplay}
             		elementInfoBoxId="protoformGraphElementInfo"
-            		metaDataBoxId="protoformGraphMetaModelInfo"/>
-        	];
-        	var productItems = 
-	        	this.props.productNames.map(
-	        		(item, key) =>
-			        	<li className="not-selected">
-				          <a className="nugget-selector"
-				             onClick={() => this.props.onProductSelect(item, svgDisplay)}>{item}
-				          </a>
-				        </li>);
+            		metaDataBoxId="protoformGraphMetaModelInfo"/>;
 
-        	products = [
-        		<h4>Products</h4>,
-        		<div id="productListView">
-		            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
-		                {productItems}
-		            </ul>
-		        </div>,
-		        <div id="productView">
-		        </div>
-            ];
+        	if (this.props.productId) {
+        		product =
+        			<DefinitionGraphView
+	            		svgId="productSvg"
+	            		svgDisplay={svgDisplay}
+	            		elementInfoBoxId="productGraphElementInfo"
+	            		metaDataBoxId="productGraphMetaModelInfo"/>;
+	        } else {
+	        	productMessage = "No product selected";
+	        	product =
+        			<DefinitionGraphView
+	            		svgId="productSvg"
+	            		svgDisplay={"none"}
+	            		elementInfoBoxId="productGraphElementInfo"
+	            		metaDataBoxId="productGraphMetaModelInfo"/>;
+	        }
+	        content = 
+	        	<div class="row">
+                	<div class="col-md-6">
+                		<h4>Protoform</h4>
+		                {protoform}
+                	</div>
+                	<div class="col-md-6">
+                		<h4>Product</h4>
+                		{productMessage}
+		                {product}
+		            </div>
+                </div>;
         }
 
-        return(
+        return([
+        	<h3 className="editable-box">Definition preview</h3>,
             <div id="definitionPreview">
-                {fields}
-                {protoform}
-                {products}
+            	{message}
+                {content}
             </div>
-        );
+        ]);
     }
 }
 
@@ -145,7 +191,7 @@ function updateProductEdgeAttrs(modelId, definitionId, graph, metaTyping, d, i) 
 
 }
 
-function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping) {    
+function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, readonly) {   
    	var width = 200,
     	height = 200,
     	svgId = graphId + "Svg",
@@ -156,7 +202,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping) 
 			graph, metaTyping, META_COLORS),
 		highlight = HIGHLIGHT_COLOR;
 
-    initLinkStrengthDistance(graph, metaTyping, 0.5);
+    initLinkStrengthDistance(graph, metaTyping, 1);
 	initCircleRadius(graph, metaTyping, NUGGET_META_SIZES, 0.5);
 
 	var simulationConf = {
@@ -192,6 +238,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping) 
 	                     metaType={metaTyping[d.id]}
 	                     attrs={d.attrs}
 	                     editable={true}
+	                     readonly={readonly}
 	                     onDataUpdate={updateProductNodeAttrs(
 	                        modelId, definitionId, graph, metaTyping, d, i)}/>],
 	          document.getElementById(svgId + "InfoBoxes")
@@ -230,6 +277,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping) 
 	                targetMetaType={metaTyping[d.target.id]}
 	                attrs={d.attrs}
 	                editable={true}
+	                readonly={readonly}
 	                onDataUpdate={updateProductEdgeAttrs(
 	                    modelId, definitionId, graph, metaTyping, d, i)}/>
 	          ],
@@ -259,48 +307,47 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping) 
 }
 
 
-function viewDefinition(modelId) {
-	return function(definitionId, desc, protoformGene, productNames) {
 
+function viewDefinition(modelId, readonly) {
+	return function(definitionId, protoformGene, productNames, callback) {
 		var url = "/corpus/" + modelId + "/raw-definition/" + definitionId;
 		$.ajax({
 		    url: url,
 		    type: 'get',
 		    dataType: "json"
 		}).done(
-			function (data) {
+			function(data) {
+				function viewProduct(productName) {
+					ReactDOM.render(
+						 <DefinitionPreview
+				            id={definitionId}
+				            productId={productName}
+				            protoformGene={protoformGene}
+				            productNames={productNames}
+				            editable={false}
+				            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
+				    	document.getElementById("definitionViewWidget"));
 
-				function showProductPreview() {
-					return function(productName, svgDisplay) {
-						ReactDOM.render(
-							<DefinitionGraphView
-					    		svgId="productSvg"
-					    		svgDisplay={svgDisplay}
-					    		elementInfoBoxId="productGraphElementInfo"
-					    		metaDataBoxId="productGraphMetaModelInfo"/>,
-					    	document.getElementById("productView"));
-
-						d3.select("#productSvg").selectAll("*").remove();
-
-						drawDefinitionGraph(
-							modelId,
-							definitionId,
-							"product",
-							data["product_graphs"][productName],
-							data["product_graphs_meta_typing"][productName]);
-					}
+					d3.select("#productSvg").selectAll("*").remove();
+					drawDefinitionGraph(
+						modelId,
+						definitionId,
+						"product",
+						data["product_graphs"][productName],
+						data["product_graphs_meta_typing"][productName],
+						readonly);
 				}
 
 				ReactDOM.render(
 			        <DefinitionPreview
 			            id={definitionId}
-			            desc={desc}
 			            protoformGene={protoformGene}
 			            productNames={productNames}
-			            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}
-			            onProductSelect={showProductPreview()}/>,
+			            editable={false}
+			            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
 			        document.getElementById('definitionViewWidget')
 			    );
+				callback(viewProduct);
 
 				d3.select("#protoformSvg").selectAll("*").remove();
     			d3.selectAll(".product-svg").selectAll("*").remove();
@@ -310,8 +357,8 @@ function viewDefinition(modelId) {
 					definitionId,
 					"protoform",
 					data["protoform_graph"],
-					data["protoform_graph_meta_typing"]);
-
+					data["protoform_graph_meta_typing"],
+					readonly);
 			}
 		).fail(function (e) {
 		    console.log("Failed to load a definition");
@@ -319,17 +366,16 @@ function viewDefinition(modelId) {
 	}
 }
 
-function renderDefinitionList(modelId, definitionList) {
-	
+function renderDefinitionList(modelId, definitionList, instantiated, readonly) {
     ReactDOM.render(
         <DefinitionList 
             items={JSON.parse(definitionList)}
-            onItemClick={viewDefinition(modelId)}/>,
+            onItemClick={viewDefinition(modelId, readonly)}/>,
         document.getElementById('definitionView')
     );
 
     ReactDOM.render(
-        <DefinitionPreview />,
+        <DefinitionPreview editable={false}/>,
         document.getElementById('definitionViewWidget')
     );
 }

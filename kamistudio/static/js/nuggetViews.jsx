@@ -79,7 +79,8 @@ class NuggetPreview extends React.Component {
                         id="nuggetInfo"
                         name="Nugget info"
                         data={{}}
-                        editable={this.props.editable}
+                        editable={true}
+                        readonly={this.props.readonly}
                         message={message}
                         items={[]}
                         noBorders={true}
@@ -87,15 +88,18 @@ class NuggetPreview extends React.Component {
                         editable={true} />;
         } else {
 
-            var items = [
-                    ["nugget_id", "Nugget ID", this.props.nuggetId],
+            var items = [];
+            if (this.props.nuggetId !== "NA") {
+                items = [["nugget_id", "Nugget ID", this.props.nuggetId]];
+            }
+            items = items.concat([
                     ["nugget_desc", "Description", this.props.nuggetDesc ? this.props.nuggetDesc : <p className="faded">not specified</p>],
                     [
                         "nugget_type",
                         "Type",
                         this.props.nuggetType == "bnd" ? [<span className="dot dot-bnd"></span>, "Binding"] : [<span className="dot dot-mod"></span>, "Modification"]],
-                ],
-                data = {
+                ]);
+            var data = {
                     "nugget_id": this.props.nuggetId,
                     "nugget_desc": this.props.nuggetDesc,
                     "nugget_type": this.props.nuggetType
@@ -109,6 +113,7 @@ class NuggetPreview extends React.Component {
                         noBorders={true}
                         protected={["nugget_id", "nugget_type"]}
                         editable={true}
+                        readonly={this.props.readonly}
                         onDataUpdate={this.props.onDataUpdate} />;
             svgDisplay = "inline-block";
             elementInfoBoxes = [
@@ -116,7 +121,7 @@ class NuggetPreview extends React.Component {
                     <ElementInfoBox id="graphElement" items={[]}/>
                 </div>,
                 <div className="col-md-6" id="nuggetGraphMetaModelInfo">
-                    <MetaDataBox id="metaData" items={[]}/>
+                    <MetaDataBox readonly={this.props.readonly} id="metaData" items={[]}/>
                 </div>
             ];
         }
@@ -133,8 +138,8 @@ class NuggetPreview extends React.Component {
     }
 }
 
-function renderNuggetList(modelId, nuggetList, instantiated) {
-    console.log(instantiated);
+function renderNuggetList(modelId, nuggetList, instantiated, readonly) {
+
     // TODO: make it fetch nugget list
     $("#selectNuggetListView").addClass("active");
     $("#selectNuggetTableView").removeClass("active");
@@ -142,19 +147,20 @@ function renderNuggetList(modelId, nuggetList, instantiated) {
     ReactDOM.render(
         <NuggetList 
             items={JSON.parse(nuggetList)}
-            onItemClick={viewNugget(modelId, instantiated)}
+            onItemClick={viewNugget(modelId, instantiated, readonly)}
             instantiated={instantiated}/>,
         document.getElementById('nuggetView')
     );
 
     ReactDOM.render(
         <NuggetPreview 
-            instantiated={instantiated}/>,
+            instantiated={instantiated}
+            readonly={readonly}/>,
         document.getElementById('nuggetViewWidget')
     );
 }
 
-function renderNuggetTable(modelId, adjacency, instantiated) {
+function renderNuggetTable(modelId, adjacency, instantiated, readonly) {
     // TODO: make it fetch nugget table
     $("#selectNuggetTableView").addClass("active");
     $("#selectNuggetListView").removeClass("active");
@@ -163,14 +169,15 @@ function renderNuggetTable(modelId, adjacency, instantiated) {
     ReactDOM.render(
         <NuggetTable 
             geneAdjacency={parsedAdjacency}
-            onItemClick={viewNugget(modelId, instantiated)}
-            instantiated={instantiated}/>,
+            onItemClick={viewNugget(modelId, instantiated, readonly)}
+            instantiated={instantiated} />,
         document.getElementById('nuggetView')
     );
 
     ReactDOM.render(
         <NuggetPreview 
-            instantiated={instantiated}/>,
+            instantiated={instantiated}
+            readonly={readonly}/>,
         document.getElementById('nuggetViewWidget')
     );
 

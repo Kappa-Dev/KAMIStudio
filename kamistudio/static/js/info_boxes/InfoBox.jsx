@@ -20,6 +20,10 @@ function getMultipleValues(data, attr_name) {
 	return attr_name in data ? data[attr_name].data : null;
 };
 
+function boolRepresentation(flag) {
+	return flag ? "+" : "-";
+}
+
 class EditableBox extends React.Component {
 
 	constructor(props) {
@@ -125,12 +129,16 @@ class EditableBox extends React.Component {
 		}
 
 		var topButton = null;
-		if ((this.props.editable) && (this.props.items.length > 0)) {
-			if (!this.state.editing) {
+		if (this.props.items.length > 0) {
+			if ((this.props.editable) && (!this.state.editing)) {
+				var disable = false;
+				if (this.props.readonly) {
+					disable = true;
+				}
 				topButton = 
 					<button 
 					   type="button" onClick={this.handleEditClick}
-					   className="btn btn-default btn-sm panel-button editable-box right-button">
+					   className="btn btn-default btn-sm panel-button editable-box right-button" disabled={disable}>
 					   	<span className="glyphicon glyphicon-pencil"></span> Edit
 					</button>;
 			}
@@ -325,7 +333,7 @@ class MetaDataBox extends React.Component {
 						test = singleValueToString(this.props.attrs, "test");
 					items = [
 						["aa", "Amino Acid", aa],
-						["test", "Test", String(test)]
+						["test", "Test", boolRepresentation(test)]
 					];
 					data["aa"] = getMultipleValues(this.props.attrs, "aa");
 					data["test"] = getSingleValue(this.props.attrs, "test");
@@ -334,7 +342,7 @@ class MetaDataBox extends React.Component {
 						test = singleValueToString(this.props.attrs, "test");
 					items = [
 						["name", "Name", name],
-						["test", "Test", String(test)]
+						["test", "Test", boolRepresentation(test)]
 					];
 					data["name"] = getSingleValue(this.props.attrs, "name");
 					data["test"] = getSingleValue(this.props.attrs, "test");
@@ -342,17 +350,23 @@ class MetaDataBox extends React.Component {
 					var value = singleValueToString(this.props.attrs, "value"),
 						rate = singleValueToString(this.props.attrs, "rate");
 					items = [
-						["value", "Value", value],
+						["value", "Value", boolRepresentation(value)],
 						["rate", "Rate", rate],
 					];
 					data["value"] = getSingleValue(this.props.attrs, "value");
 					data["rate"] = getSingleValue(this.props.attrs, "rate");
 				} else if (this.props.metaType === "bnd") {
-					var rate = singleValueToString(this.props.attrs, "rate");
+					var rate = singleValueToString(this.props.attrs, "rate"),
+						test = multipleValuesToString(this.props.attrs, "test"),
+						type = multipleValuesToString(this.props.attrs, "type");
 					items = [
-						["rate", "Rate", rate, rate],
+						["rate", "Rate", rate],
+						["test", "Test", boolRepresentation(test)],
+						["type", "Type", type]
 					];
-					data["rate"] = getSingleValue(this.props.attrs, "rate");
+					data["rate"] = getSingleValue(this.props.attrs, "rate"),
+					data["test"] = getMultipleValues(this.props.attrs, "test");
+					data["type"] = getMultipleValues(this.props.attrs, "type");
 				} else {
 					message = "No meta-data available";
 				}
@@ -394,6 +408,7 @@ class MetaDataBox extends React.Component {
 						 name="Meta-data"
 						 items={items}
 						 message={message}
+						 readonly={this.props.readonly}
 						 editable={this.props.editable}
 						 protected={[]}
 						 data={data} 
@@ -429,7 +444,8 @@ class KBMetaDataBox extends React.Component {
 			<EditableBox id={this.props.id}
 						 name={this.props.name}
 						 items={items}
-						 editable={true}
+						 editable={this.props.editable}
+						 readonly={this.props.readonly}
 						 onDataUpdate={this.props.onDataUpdate}
 						 data={data}
 						 noBorders={true}
@@ -511,6 +527,7 @@ class ModelDataBox extends React.Component {
 					id="modelMetaData"
 					name="Meta-data"
 					editable={true}
+					readonly={this.props.readonly}
 					kbName={this.props.kbName}
 					desc={this.props.desc}
 					organism={this.props.organism}
@@ -552,6 +569,7 @@ class CorpusDataBox extends React.Component {
 	}
 
 	render() {
+		console.log(this.props.readonly);
 		var genes, modifications, bindings;
 		genes = 
 			<th scope="row">
@@ -565,6 +583,7 @@ class CorpusDataBox extends React.Component {
 					id="corpusMetaData"
 					name="Meta-data"
 					editable={true}
+					readonly={this.props.readonly}
 					kbName={this.props.kbName}
 					desc={this.props.desc}
 					organism={this.props.organism}
