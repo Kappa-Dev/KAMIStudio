@@ -1,37 +1,40 @@
 function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	// Initialize link strength depending on node meta-types
+
+	var baseDistance = 50 * scale,
+		baseStrengthFactor = 4;
     for (var i=0; i < graph.links.length; i++) {
-	    var d = graph.links[i];
-	    d.strength = 0.4;
-	    d.distance = 50 * scale;
+	    var d = graph.links[i], 
+	    	factor = baseStrengthFactor;
+	    d.distance = baseDistance;
 	    if (metaTyping[d.target] == "gene") {
 	      if (metaTyping[d.source] == "region") {
-	        d.strength = 0.7;
-	        d.distance = 25 * scale;
+	        factor = baseStrengthFactor * 0.7;
+	        d.distance = baseDistance * 0.7;
 	      } else if (metaTyping[d.source] == "site") {
-	        d.strength = 0.7;
-	        d.distance = 25 * scale;
+	        factor = baseStrengthFactor * 0.3;
+	        d.distance = baseDistance * 0.3;
 	      } else if (metaTyping[d.source] == "residue") {
-	        d.strength = 0.7;
-	        d.distance = 25 * scale;
+	        factor = baseStrengthFactor * 0.7;
+	        d.distance = baseDistance * 0.3;
 	      } 
 	    } else if (metaTyping[d.target] == "region") {
 	      if (metaTyping[d.source] == "site") {
 	        d.strength = 0.6;
-	        d.distance = 10 * scale;
+	        d.distance = baseDistance * 0.5;
 	      } else if ((metaTyping[d.source] == "residue")) {
 	        d.strength = 0.6;
-	        d.distance = 15 * scale;
+	        d.distance = baseDistance * 0.5;
 	      } 
 	    } else if (metaTyping[d.target] == "site") {
 	      if (metaTyping[d.source] == "residue") {
 	        d.strength = 0.7;
-	        d.distance = 10 * scale;
+	        d.distance = baseDistance * 0.3;
 	      } 
 	    } else if (metaTyping[d.target] == "residue") {
 	    	if (metaTyping[d.source] == "state") {
 	    		d.strength = 1;
-	    		d.distance = 5 * scale;
+	    		d.distance = baseDistance * 0.2;
 	    	}
 	    } else if (metaTyping[d.target] == "state") {
 	      if (metaTyping[d.source] == "mod") {
@@ -52,8 +55,10 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	    }
     	if (metaTyping[d.source] == "state") {
     		d.strength = 1;
-    		d.distance = 10 * scale;
+    		d.distance = baseDistance * 0.1;
     	}
+    	d.strength = 1 / Math.max(1, factor);
+    	// console.log(d.strength, d.distance);
   }
 }
 

@@ -42,9 +42,14 @@ var HIGHLIGHT_COLOR = "#337ab7";
 var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
 
-function displayHiddenSvg() {
-	document.getElementById("actionGraphSvg").style.display = "initial";		
-	document.getElementById("saveLayoutButton").disabled = false;
+function displayHiddenSvg(readonly) {
+	return function() {
+		document.getElementById("actionGraphSvg").style.display = "initial";
+		document.getElementById("ctrlClickMessage").style.display = "initial";
+		if (!readonly) {
+			document.getElementById("saveLayoutButton").disabled = false;
+		}
+	}
 }
 
 
@@ -91,10 +96,16 @@ function updateNodeAttrs(model_id, instantiated, graph, metaTyping, d, i) {
 	return function(attrs, oldAttrs) {
 		for (var i=0; i < graph.nodes.length; i++) {
 			if (graph.nodes[i].id === d.id) {
-				// console.log("Updted node: ", graph.nodes[i].attrs);
 				for (var k in attrs) {
-					// modify js graph object 
-					graph.nodes[i].attrs[k].data = [attrs[k]];
+					if (k in graph.nodes[i].attrs) {
+						// modify js graph object 
+						graph.nodes[i].attrs[k].data = [attrs[k]];
+					} else {
+						graph.nodes[i].attrs[k] = {
+							data: [attrs[k]],
+							type: "FiniteSet"
+						}
+					}
 				}
 				// re-render info-boxes
 				handleNodeClick(model_id, instantiated, graph, metaTyping)(d, i); 
@@ -200,9 +211,10 @@ function handleUnselectNodeClick(instantiated) {
 	};
 }
 
-function handleNodeClick(model_id, instantiated, graph, metaTyping) {
+function handleNodeClick(model_id, instantiated, graph, metaTyping, readonly) {
 	return function(d, i, el) {
 		// deselect all the selected elements
+		console.log(d.attrs);
 	    var svg = d3.select("#actionGraphSvg");
 
 	    var highlight;
@@ -237,6 +249,7 @@ function handleNodeClick(model_id, instantiated, graph, metaTyping) {
 	       				   metaType={metaTyping[d.id]}
 	       				   attrs={d.attrs}
 	       				   editable={true}
+	       				   readonly={readonly}
 	       				   instantiated={instantiated}
 	       				   onDataUpdate={updateNodeAttrs(
 	       				   		model_id, instantiated, graph, metaTyping, d, i)}/>],
@@ -245,7 +258,7 @@ function handleNodeClick(model_id, instantiated, graph, metaTyping) {
 	};
 }
 
-function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
+function handleEdgeClick(model_id, instantiated, graph, metaTyping, readonly) {
 	return function(d, i, el) {
 		// deselect all the selected elements
 		var svg = d3.select("#actionGraphSvg");
@@ -285,6 +298,7 @@ function handleEdgeClick(model_id, instantiated, graph, metaTyping) {
 	       				targetMetaType={metaTyping[d.target.id]}
 	       				attrs={d.attrs}
 	       				editable={true}
+	       				readonly={readonly}
 	       				instantiated={instantiated}
 	       				onDataUpdate={updateEdgeAttrs(
 	       					model_id, instantiated, graph, metaTyping, d, i)}/>],
@@ -306,7 +320,8 @@ function handleDragStarted(graph, metaTyping) {
 	}
 }
 
-function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
+function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
+									readonly=false) {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
 	    url: model_id + "/raw-action-graph",
@@ -336,7 +351,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 			nodeColors = computeNodeColors(
 		    	actionGraph, metaTyping, META_COLORS);
 		}
-		
+		console.log(nodePos);
 		initNodePosition(actionGraph, nodePos, Object.keys(nodePos));
 		initLinkStrengthDistance(actionGraph, metaTyping);
 		initCircleRadius(actionGraph, metaTyping, AG_META_SIZES);
@@ -348,7 +363,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 
 		var progressConf = {
 			"remove_progress": removeProgressBlock,
-			"init_svg": displayHiddenSvg,
+			"init_svg": displayHiddenSvg(readonly),
 			"init_layout_progress": () => initilizeLayoutProgressBar(instantiated),
 			"init_update_progress": initializePositionUpdateProgressBar,
 			"ag_loading_progress": updateAGLoadingProgress
@@ -363,11 +378,11 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false) {
 
 		var clickHandlers = {
 			"nodeClick": handleNodeClick(
-                model_id, instantiated, actionGraph, metaTyping), 
+                model_id, instantiated, actionGraph, metaTyping, readonly), 
 			"multiNodeClick": handleMultipleNodeClick(
 				model_id, instantiated, actionGraph, metaTyping),
 			"edgeClick": handleEdgeClick(
-                model_id, instantiated, actionGraph, metaTyping),
+                model_id, instantiated, actionGraph, metaTyping, readonly),
 			"unselectClick": handleUnselectNodeClick(instantiated)
 		}
 

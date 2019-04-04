@@ -223,7 +223,7 @@ function sendNuggetDescUpdate(modelId, nuggetId, desc) {
 }
 
 
-function renderNuggetBox(modelId, nuggetId, data, oldData) {
+function renderNuggetBox(modelId, nuggetId, data, oldData, readonly) {
   var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
   
   ReactDOM.render(
@@ -231,6 +231,7 @@ function renderNuggetBox(modelId, nuggetId, data, oldData) {
           nuggetId={oldData["nugget_id"]}
           nuggetDesc={desc}
           nuggetType={oldData["nugget_type"]}
+          readonly={readonly}
           onDataUpdate={updateNuggetDesc(modelId, nuggetId)}/>,
       document.getElementById('nuggetViewWidget')
   );
@@ -245,10 +246,10 @@ function renderNuggetBox(modelId, nuggetId, data, oldData) {
 };
 
 
-function updateNuggetDesc(model_id, nugget_id) {
+function updateNuggetDesc(model_id, nugget_id, readonly) {
   return function(data, oldData) {
       // re-render info-boxes
-      renderNuggetBox(model_id, nugget_id, data, oldData); 
+      renderNuggetBox(model_id, nugget_id, data, oldData, readonly); 
       // send attr update to the server
       var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
       sendNuggetDescUpdate(
@@ -268,10 +269,9 @@ function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCall
       dataType: 'json',
       contentType: 'application/json',
   }).done(function () {
-    console.log("Success");
     // if (successCallback) successCallback();
   }).fail(function (xhr, status, error) {
-    console.log("Failed to update new node positions");
+    console.log("Failed to update nugget node attributes");
     console.log(error);
     // if (failCallback) failCallback();
   });
@@ -298,11 +298,10 @@ function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs)
   });
 }
 
-function updateNuggetNodeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, d, i) {
+function updateNuggetNodeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, readonly, d, i) {
   return function(attrs, oldAttrs) {
     for (var i=0; i < graph.nodes.length; i++) {
       if (graph.nodes[i].id === d.id) {
-        
         for (var k in attrs) {
           // modify js graph object 
           if (k in graph.nodes[i].attrs) {
@@ -315,7 +314,8 @@ function updateNuggetNodeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
           }
         }
         // re-render info-boxes
-        handleNuggetNodeClick(model_id, nugget_id, instantiated, graph, metaTyping)(d, i); 
+        handleNuggetNodeClick(
+          model_id, nugget_id, instantiated, graph, metaTyping, readonly)(d, i); 
         // send attr update to the server
         sendUpdateNuggetNodeAttrs(
           model_id, nugget_id, d.id, graph.nodes[i].attrs);
@@ -325,7 +325,7 @@ function updateNuggetNodeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
   };
 }
 
-function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, d, i) {
+function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyping, readonly, d, i) {
   return function(attrs, oldAttrs) {
     for (var i=0; i < graph.links.length; i++) {
       if ((graph.links[i].source.id === d.source.id) &&
@@ -343,7 +343,7 @@ function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
           
         }
         // re-render updated boxes
-        handleNuggetEdgeClick(model_id, nugget_id, instantiated, graph, metaTyping)(d, i);
+        handleNuggetEdgeClick(model_id, nugget_id, instantiated, graph, metaTyping, readonly)(d, i);
         sendUpdateNuggetEdgeAttrs(model_id, nugget_id, d.source.id, d.target.id, graph.links[i].attrs);
       }
     }
@@ -353,9 +353,8 @@ function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
   };
 }
 
-
 function handleNuggetNodeClick(modelId, nuggetId, instantiated,
-                               graph, metaTyping) {
+                               graph, metaTyping, readonly) {
   return function(d, i, el) {
     // deselect all the selected elements
       var svg = d3.select("#nuggetSvg");
@@ -393,16 +392,17 @@ function handleNuggetNodeClick(modelId, nuggetId, instantiated,
                      metaType={metaTyping[d.id]}
                      attrs={d.attrs}
                      editable={true}
+                     readonly={readonly}
                      instantiated={instantiated}
                      onDataUpdate={updateNuggetNodeAttrs(
-                        modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
+                        modelId, nuggetId, instantiated, graph, metaTyping, readonly, d, i)}/>],
           document.getElementById('nuggetGraphMetaModelInfo')
       );
   };
 }
 
 function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
-                               graph, metaTyping) {
+                               graph, metaTyping, readonly) {
   return function(d, i, el) {
     // deselect all the selected elements
     var svg = d3.select("#nuggetSvg");
@@ -445,6 +445,7 @@ function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
                 targetMetaType={metaTyping[d.target.id]}
                 attrs={d.attrs}
                 editable={true}
+                readonly={readonly}
                 instantiated={instantiated}
                 onDataUpdate={updateNuggetEdgeAttrs(
                   modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
@@ -452,7 +453,182 @@ function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
   };
 }
 
-function viewNugget(model_id, instantiated=false) {
+
+function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelation,
+                    clickHandlers, instantiated) {
+      var svgId = "nuggetSvg",
+          width = 500,
+          height = 200,
+          nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+
+      d3.select("#" + svgId).selectAll("*").remove();
+
+      var nodeColors;
+      if (instantiated) {
+          nodeColors = computeNodeColors(
+            nuggetGraph, metaTyping, INSTANCE_META_COLORS);
+      } else {
+        nodeColors = computeNodeColors(
+            nuggetGraph, metaTyping, META_COLORS);
+      }
+        
+      var positions = computeFixedPositions(
+        width, height, nuggetGraph, nuggetType, templateRelation);
+      initNodePosition(
+        nuggetGraph,
+        positions[0],
+        positions[1]);
+      initLinkStrengthDistance(nuggetGraph, metaTyping, 1);
+      initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+
+      var simulationConf = {
+        "charge_strength": -200,
+        "collide_strength": 2.5,
+        "y_strength": 0.2
+      }
+
+
+      var highlight;
+      if (instantiated) {
+        highlight = INSTANCE_HIGHLIGHT_COLOR;
+      } else {
+        highlight = HIGHLIGHT_COLOR;
+      }
+
+      visualiseGraph(nuggetGraph,
+                     svgId,
+                     nodeColors,
+                     nodeSizes,
+                     null,
+                     highlight,
+                     simulationConf,
+                     {},
+                     null,
+                     null,
+                     clickHandlers,
+                     handleDragStarted(nuggetGraph, metaTyping),
+                     100,
+                     false)
+}
+
+
+
+function previewNugget(modelId, desc, type,
+                       graph, metaTyping, agTyping, templateRel) {
+  function updateNuggetPreviewDesc() {
+
+  }
+
+  function updateNuggetPreviewNodeAttrs(graph, metaTyping, d, i) {
+
+  }
+
+  function updateNuggetPreviewEdgeAttrs(graph, metaTyping, d, i) {
+
+  }
+
+
+  function handleNuggetPreviewNodeClick(graph, metaTyping) {
+    return function(d, i, el) {
+      // deselect all the selected elements
+        var svg = d3.select("#nuggetSvg");
+
+        svg.selectAll(".arrow")
+          .style("stroke", d3.rgb("#B8B8B8"))
+          .attr("marker-end", "url(#nuggetSvgarrow)");
+        svg.selectAll("circle")
+          .attr("stroke-width", 0);
+        // select current element
+        d3.select(el)
+            .attr("stroke-width", 2)
+            .attr("stroke", d3.rgb(HIGHLIGHT_COLOR));
+
+        // call react func
+        ReactDOM.render(
+            [<ElementInfoBox id="graphElement" 
+                       elementId={d.id}
+                       elementType="node"
+                       metaType={metaTyping[d.id]}
+                       editable={false}
+                       instantiated={false}/>],
+            document.getElementById('nuggetGraphElementInfo'));
+        ReactDOM.render(
+           [<MetaDataBox id="metaData"
+                       elementId={d.id}
+                       elementType="node"
+                       metaType={metaTyping[d.id]}
+                       attrs={d.attrs}
+                       editable={true}
+                       instantiated={false}
+                       onDataUpdate={updateNuggetPreviewNodeAttrs(
+                          graph, metaTyping, d, i)}/>],
+            document.getElementById('nuggetGraphMetaModelInfo')
+      );
+    };
+  }
+
+  function handleNuggetPreviewEdgeClick(graph, metaTyping) {
+    return function(d, i, el) {
+      // deselect all the selected elements
+      var svg = d3.select("#nuggetSvg");
+      svg.selectAll("circle")
+        .attr("stroke-width", 0);
+      svg.selectAll(".arrow")
+        .style("stroke", d3.rgb("#B8B8B8"))
+        .attr("marker-end", "url(#nuggetSvgarrow)");
+      d3.select(el)
+        // .attr("stroke-width", 2)
+        .select(".arrow")
+        .style("stroke", d3.rgb(HIGHLIGHT_COLOR))
+        .attr("marker-end", "url(#nuggetSvgarrow-selected)");
+
+      // call react func
+      ReactDOM.render(
+            [<ElementInfoBox id="graphElement"
+                     elementType="edge"
+                     sourceId={d.source.id}
+                     targetId={d.target.id}
+                     sourceMetaType={metaTyping[d.source.id]}
+                     targetMetaType={metaTyping[d.target.id]}
+                     editable={false}
+                     instantiated={false}/>],
+            document.getElementById('nuggetGraphElementInfo'));
+      ReactDOM.render(
+           [<MetaDataBox id="metaData"
+                  sourceId={d.source.id}
+                  targetId={d.target.id}
+                  elementType="edge"
+                  sourceMetaType={metaTyping[d.source.id]}
+                  targetMetaType={metaTyping[d.target.id]}
+                  attrs={d.attrs}
+                  editable={true}
+                  instantiated={false}
+                  onDataUpdate={updateNuggetPreviewEdgeAttrs(
+                          graph, metaTyping, d, i)}/>],
+            document.getElementById('nuggetGraphMetaModelInfo'));
+    };
+
+  }
+
+  ReactDOM.render(
+        <NuggetPreview
+            nuggetId={"NA"}
+            nuggetDesc={desc}
+            nuggetType={type}
+            onDataUpdate={updateNuggetPreviewDesc}/>,
+        document.getElementById('nuggetViewWidget')
+  );
+  drawNugget(
+    graph, type, metaTyping,
+    agTyping, templateRel,
+    {
+      "nodeClick": handleNuggetPreviewNodeClick(graph, metaTyping),
+      "edgeClick": handleNuggetPreviewEdgeClick(graph, metaTyping)
+    },
+    false);
+}
+
+function viewNugget(model_id, instantiated=false, readonly=false) {
 
   return function (nugget_id, nugget_desc, nugget_type) {
 
@@ -461,80 +637,34 @@ function viewNugget(model_id, instantiated=false) {
             nuggetId={nugget_id}
             nuggetDesc={nugget_desc}
             nuggetType={nugget_type}
-            onDataUpdate={updateNuggetDesc(model_id, nugget_id)}/>,
+            editable={true}
+            readonly={readonly}
+            onDataUpdate={updateNuggetDesc(model_id, nugget_id, readonly)}/>,
         document.getElementById('nuggetViewWidget')
     );
 
 
     // use AJAX to send request for retrieving the nugget data
-    $.get(model_id + "/raw-nugget/" + nugget_id, function(data, status) {
-      var svgId = "nuggetSvg",
-      	nuggetGraph = data["nuggetJson"],
-        width = 500,
-        height = 200,
-      	nuggetType = data["nuggetType"],
-      	metaTyping = data["metaTyping"],
-      	agTyping = data["agTyping"],
-      	templateRelation = data["templateRelation"],
-      	nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+    $.get(model_id + "/raw-nugget/" + nugget_id,
+          function(data, status) {
+            var nuggetGraph = data["nuggetJson"],
+            	  nuggetType = data["nuggetType"],
+            	  metaTyping = data["metaTyping"],
+            	  agTyping = data["agTyping"],
+            	  templateRelation = data["templateRelation"];
 
-      d3.select("#" + svgId).selectAll("*").remove();
+            var clickHandlers = {
+              "nodeClick": handleNuggetNodeClick(
+                  model_id, nugget_id, instantiated,
+                  nuggetGraph, metaTyping, readonly),
+              "edgeClick": handleNuggetEdgeClick(
+                  model_id, nugget_id, instantiated,
+                  nuggetGraph, metaTyping, readonly),
+            }
 
-      var nodeColors;
-      if (instantiated) {
-    	    nodeColors = computeNodeColors(
-    	    	nuggetGraph, metaTyping, INSTANCE_META_COLORS);
-    	} else {
-    		nodeColors = computeNodeColors(
-    	    	nuggetGraph, metaTyping, META_COLORS);
-    	}
-    		
-    	var positions = computeFixedPositions(width, height, nuggetGraph, nuggetType, templateRelation);
-    	initNodePosition(
-    		nuggetGraph,
-    		positions[0],
-    		positions[1]);
-    	initLinkStrengthDistance(nuggetGraph, metaTyping, 1);
-    	initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
-
-    	var simulationConf = {
-    		"charge_strength": -200,
-    		"collide_strength": 2.5,
-    		"y_strength": 0.2
-    	}
-
-
-      var highlight;
-    	if (instantiated) {
-    		highlight = INSTANCE_HIGHLIGHT_COLOR;
-    	} else {
-    		highlight = HIGHLIGHT_COLOR;
-    	}
-
-      var clickHandlers = {
-        "nodeClick": handleNuggetNodeClick(
-            model_id, nugget_id, instantiated,
-            nuggetGraph, metaTyping),
-        "edgeClick": handleNuggetEdgeClick(
-            model_id, nugget_id, instantiated,
-            nuggetGraph, metaTyping),
-      }
-
-      visualiseGraph(nuggetGraph,
-                     svgId,
-                     nodeColors,
-                     nodeSizes,
-      				       null,
-      				       highlight,
-      				       simulationConf,
-      				       {},
-      				       null,
-      				       null,
-                     clickHandlers,
-                     handleDragStarted(nuggetGraph, metaTyping),
-              			 100,
-              			 false)
-      });
+            drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelation, 
+                       clickHandlers, instantiated);
+          });
   }
 }
 
