@@ -49,30 +49,52 @@ def init_mongo_db(add_test=False):
             app.mongo.db.kami_corpora.remove({})
             if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
                 app.mongo.db.kami_corpora.insert_one({
-                    "id": "test_corpus",
-                    "creation_time": "12-12-2018 11:53:56",
-                    "last_modified": "14-12-2018 03:02:01",
+                    "id": "tcbb",
+                    "creation_time": "04-04-2019 11:08:56",
+                    "last_modified": "04-04-2019 11:08:56",
                     "meta_data": {
-                        "name": "Human PID database",
-                        "desc": "PPIs extracted from Pathway Interaction Database",
+                        "name": "EGFR signalling",
+                        "desc": "Partial EGFR signalling network, toy example",
                         "organism": "Homo sapiens (Human)",
-                        "annotation": "Converted to KAMI from NCI PID network, originally represented with BioPax"
+                        "annotation": "Manually created, example from the paper 'Bio-curation for cellular signalling: the KAMI project'"
+                    }
+                })
+                app.mongo.db.kami_corpora.insert_one({
+                    "id": "pYNET_20",
+                    "creation_time": "04-04-2019 11:13:53",
+                    "last_modified": "04-04-2019 11:15:40",
+                    "meta_data": {
+                        "name": "pYNET 20",
+                        "desc": "Phosphotyrosine and SH2 signalling network, extract 20 interactions",
+                        "organism": "Homo sapiens (Human)",
+                        "annotation": "Automatically built from data collated from the literature"
+                    }
+                })
+                app.mongo.db.kami_corpora.insert_one({
+                    "id": "pYNET_200",
+                    "creation_time": "04-04-2019 13:18:53",
+                    "last_modified": "04-04-2019 14:15:40",
+                    "meta_data": {
+                        "name": "pYNET 200",
+                        "desc": "Phosphotyrosine and SH2 signalling network, extract 200 interactions",
+                        "organism": "Homo sapiens (Human)",
+                        "annotation": "Automatically built from data collated from the literature"
                     }
                 })
             app.mongo.db.kami_models.remove({})
             if len(list(app.mongo.db.kami_models.find({}))) == 0:
                 app.mongo.db.kami_models.insert_one({
-                    "id": "test_model",
-                    "creation_time": "13-12-2018 17:19:45",
-                    "last_modified": "17-12-2018 18:23:00",
+                    "id": "tcbb_model",
+                    "creation_time": "04-04-2019 11:08:56",
+                    "last_modified": "04-04-2019 11:08:56",
                     "meta_data": {
-                        "name": "Hepatocyte (Human PID)",
-                        "desc": "Instantiation of PID for human hepatocytes",
+                        "name": "Instantiated EGFR model",
+                        "desc": "Instantiated EGFR signalling subnetwork, toy example",
                         "organism": "Homo sapiens (Human)",
-                        "annotation": ""
+                        "annotation": "Manually created, example from the paper 'Bio-curation for cellular signalling: the KAMI project'"
                     },
                     "origin": {
-                        "corpus_id": "test_corpus",
+                        "corpus_id": "tcbb",
                         "definitions": [],
                         "seed_genes": []
                     },
@@ -82,57 +104,80 @@ def init_mongo_db(add_test=False):
             if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
                 app.mongo.db.kami_definitions.insert_one({
                     'id': '1',
-                    'corpus_id': 'test_corpus',
+                    'corpus_id': 'tcbb',
                     'protoform': {
                         'uniprotid': 'P00533',
                         'regions': [{
-                            'name': 'SH2',
-                            'sites': [],
-                            'residues': [{'aa': ['D', 'S'], 'loc': 100}],
-                            'states': [],
-                            'bound_to': [],
-                            'unbound_from': []}],
-                        'sites': [],
-                        'residues': [],
-                        'states': [],
-                        'bound_to': [],
-                        'unbound_from': []},
+                            'name': 'Protein kinase',
+                        }],
+                        'residues': [{'aa': ['Y'], 'loc': 1092}],
+                    },
                     'products': {
                         'WT': {
+                            "wild_type": True,
                             "desc": "Wild type protein",
                             "components": {
                                 'regions': [{
-                                    'name': 'SH2',
-                                    'sites': [],
-                                    'residues': [{'aa': ['S'], 'loc': 100}],
-                                    'states': [],
-                                    'bound_to': [],
-                                    'unbound_from': []}],
-                                'sites': [],
-                                'residues': [],
-                                'states': []}
+                                    'name': 'Protein kinase',
+                                }],
+                                'residues': [{'aa': ['Y'], 'loc': 1092}],
+                            }
                         },
-                        'S90D': {
-                            "desc": "Mutation S90D",
-                            "components": {
-                                'regions': [{
-                                    'name': 'SH2',
-                                    'sites': [],
-                                    'residues': [{'aa': ['D'], 'loc': 100}],
-                                    'states': [],
-                                    'bound_to': [],
-                                    'unbound_from': []}],
-                                'sites': [],
-                                'residues': [],
-                                'states': []}
-                        },
-                        'noSH2': {
-                            "desc": "Knock-out of SH2",
+                        'p60': {
+                            "wild_type": False,
+                            "desc": "Missing 406-1219",
                             "components": {}
                         }}})
                 app.mongo.db.kami_definitions.insert_one({
                     'id': '2',
-                    'corpus_id': 'test_corpus',
+                    'corpus_id': 'tcbb',
+                    'protoform': {'uniprotid': 'P62993',
+                      'regions': [{'name': 'SH2',
+                        'sites': [],
+                        'residues': [{'aa': ['S', 'D'], 'loc': 90}],
+                        'states': [],
+                        'bound_to': [],
+                        'unbound_from': []}],
+                      'sites': [],
+                      'residues': [],
+                      'states': [],
+                      'bound_to': [],
+                      'unbound_from': []},
+                     'products': {'Wild type': {
+                        "wild_type": True,
+                        'components': {'regions': [{'name': 'SH2',
+                          'sites': [],
+                          'residues': [{'aa': ['S'], 'loc': 90}],
+                          'states': [],
+                          'bound_to': [],
+                          'unbound_from': []}],
+                        'sites': [],
+                        'residues': [],
+                        'states': []},
+                       'desc': 'Wild type isoform of GRB2'},
+                      'S90D': {
+                        "wild_type": False,
+                        'components': {'regions': [{'name': 'SH2',
+                          'sites': [],
+                          'residues': [{'aa': ['D'], 'loc': 90}],
+                          'states': [],
+                          'bound_to': [],
+                          'unbound_from': []}],
+                        'sites': [],
+                        'residues': [],
+                        'states': []},
+                       'desc': 'Mutation S90D'},
+                      'noSH2': {
+                        "wild_type": False,
+                        'components': {'regions': [],
+                        'sites': [],
+                        'residues': [],
+                        'states': []},
+                       'desc': 'SH2 knock-out splice variant'}}}
+                )
+                app.mongo.db.kami_definitions.insert_one({
+                    'id': '3',
+                    'corpus_id': 'tcbb',
                     'protoform': {
                         'uniprotid': 'P56945',
                         'sites': [{
@@ -145,6 +190,7 @@ def init_mongo_db(add_test=False):
                     },
                     'products': {
                         'WT': {
+                            "wild_type": True,
                             "desc": "Wild type protein",
                             "components": {
                                 'sites': [{
@@ -158,6 +204,7 @@ def init_mongo_db(add_test=False):
                             }
                         },
                         'S90A': {
+                            "wild_type": False,
                             "desc": "Mutation S90A",
                             "components": {
                                 'sites': [{
@@ -171,18 +218,19 @@ def init_mongo_db(add_test=False):
                             }
                         },
                         'nopY': {
-                            "desc": "Knock-out of SH2",
+                            "wild_type": False,
+                            "desc": "Knock-out of pY-site",
                             "components": {}
                         }
                     }
                 })
 
-        if app.neo4j_driver is not None:
-            h = Neo4jHierarchy(driver=app.neo4j_driver)
-            # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
-            Neo4jHierarchy.load(
-                "kamistudio/instance/test_kamistudio.json",
-                driver=app.neo4j_driver)
+        # if app.neo4j_driver is not None:
+        #     h = Neo4jHierarchy(driver=app.neo4j_driver)
+        #     # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
+        #     Neo4jHierarchy.load(
+        #         "kamistudio/instance/test_kamistudio.json",
+        #         driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):

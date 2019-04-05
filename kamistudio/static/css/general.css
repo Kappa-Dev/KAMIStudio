@@ -558,3 +558,16 @@ a.cancel-link {
 a.cancel-link span {
 	font-size: 16pt;
 }
+
+ul.selection-items {
+	list-style-type: none;
+	padding-left: 0pt
+}
+
+ul.selection-items li {
+	border: solid 1px #ddd;
+	border-radius: 15px;
+	padding: 10px;
+	margin: 10px;
+	margin-left: 0pt;
+}

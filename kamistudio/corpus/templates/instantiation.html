@@ -10,54 +10,22 @@
 
 {% block tabs %}
 
-<form id="newModelForm" novalidate="{{ url_for('home.new_model') }}" method="post">
-	<div class="col-md-6">
-	    <div class="model-input-form-block">
-			<div class="row form-row">
-			      <label for="name">Name</label>
-			      <input type="text" class="form-control" name="name" id="name" placeholder="" value="">
-			</div>
+<div id="instantiationForm"></div>
 
-			<div class="row form-row">
-			    <!-- <div class="col-md-6"> -->
-			      <label for="desc">Description</label>
-			      <input type="text" class="form-control" name="desc" id="desc" placeholder="" value="">
-			    <!-- </div> -->
-			</div>
-
-			<div class="row form-row">
-			    <label for="desc">Variant selection</label>
-			      <p>Select non-wild-type variants for instantation of the model</p>
-
-			    <div id="variantSelectionWidget">
-			   	</div>
-			</div>
-
-
-			<div class="row form-row">
-				<div class="col-md-6">
-					<div id="loadingBlock" style="display: none;" class="loading-elements center-block" display="none;">
-						<p>Loading...</p>
-						<div id="loader"></div>
-					</div>
-				</div>
-				<div class="col-md-6" style="text-align: right;">
-					<button type="submit" class="btn btn-primary btn-lg" name="importForm" action="submit"><span class="glyphicon glyphicon-play"></span> Instantiate</button> 
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
 {% endblock %}
 
 {% block custom_scripts %}
   <script type="text/babel" src="{{ url_for('static', filename='js/selection.jsx') }}"></script>
   <script type="text/babel">
  	ReactDOM.render(
-        <SelectionWidget id="variants"
+        <InstantiationForm id="variants"
         				 buttonLabel="Specify variant"
-        				 selectionDialogTitle="Select a gene"/>,
-        document.getElementById("variantSelectionWidget")
+        				 selectionDialogTitle="Select a gene"
+        				 onFetchSubitems={getVariants('{{ corpus._id }}')}
+        				 onFetchItems={getGenes('{{ corpus._id }}')}
+        				 modelId='{{ corpus._id }}'
+        				 readonly={% if readonly %}{true}{%else%}{false}{%endif%}/>,
+        document.getElementById("instantiationForm")
     );
   </script>
 

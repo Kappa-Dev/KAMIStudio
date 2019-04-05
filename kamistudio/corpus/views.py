@@ -6,7 +6,7 @@ import os
 from kami.data_structures.corpora import KamiCorpus
 from flask import (render_template, Blueprint, request, session, redirect,
                    url_for, send_file)
-from flask import current_app as app
+from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
 from regraph.neo4j import Neo4jHierarchy
@@ -23,6 +23,22 @@ from kamistudio.corpus.form_parsing import(parse_interaction)
 
 
 corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
+
+
+def _generate_unique_model_id(corpus_id):
+    name = corpus_id + "_model"
+    existing_models = [
+        el["id"] for el in app.mongo.db.kami_models.find(
+            {}, {"id": 1, "_id": 0})]
+    if name not in existing_models:
+        return name
+    else:
+        i = 1
+        new_name = name + "_{}".format(i)
+        while new_name in existing_models:
+            i += 1
+            new_name = name + "_{}".format(i)
+        return new_name
 
 
 def get_corpus(corpus_id):
@@ -194,12 +210,48 @@ def instantiate(corpus_id):
         corpus = get_corpus(corpus_id)
         return render_template(
             "instantiation.html",
-            corpus=corpus)
+            corpus=corpus,
+            readonly=app.config["READ_ONLY"])
     else:
         if app.config["READ_ONLY"]:
             return render_template("403.html")
         else:
-            pass
+            json_data = request.get_json()
+            corpus = get_corpus(corpus_id)
+
+            if corpus:
+                model_name = json_data["name"]
+                model_desc = json_data["desc"]
+
+                definitions = []
+                for element in json_data["choices"]:
+                    uniprotid = element["uniprotid"]
+                    definition_json = app.mongo.db.kami_definitions.find_one({
+                        "corpus_id": corpus_id,
+                        "protoform.uniprotid": uniprotid
+                    })
+                    if definition_json is not None:
+                        selected_products = element["selectedVariants"]
+                        new_def = {
+                            "id": definition_json["id"],
+                            "corpus_id": definition_json["corpus_id"],
+                            "protoform": definition_json["protoform"],
+                            "products": {}
+                        }
+                        for p in selected_products:
+                            new_def["products"][p] = definition_json["products"][p]
+                        definitions.append(Definition.from_json(new_def))
+                model_id = _generate_unique_model_id(corpus._id)
+                corpus.instantiate(
+                    model_id,
+                    definitions,
+                    annotation=CorpusAnnotation.from_json({
+                        "name": model_name,
+                        "desc": model_desc,
+                        "organism": corpus.annotation.organism
+                    })
+                )
+                return redirect(url_for('model.model_view', model_id=model_id))
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-generated-nugget",
@@ -405,4 +457,23 @@ def update_meta_data(corpus_id):
     response = json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
 
+    return response
+
+
+@corpus_blueprint.route("/corpus/<corpus_id>/genes")
+def get_genes(corpus_id):
+    """Handle get genes request."""
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+        gene_nodes = corpus.genes()
+        data = {
+            "genes": []
+        }
+        for g in gene_nodes:
+            uniprotid, hgnc, syn, _ = corpus.get_gene_data(g)
+            data["genes"].append([uniprotid, hgnc, syn])
+        response = jsonify(data), 200
     return response
