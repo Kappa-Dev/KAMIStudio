@@ -16,7 +16,6 @@ from kami.exporters.old_kami import ag_to_edge_list
 
 from kami.data_structures.annotations import CorpusAnnotation
 from kamistudio.utils import authenticate
-from kamistudio.model.form_parsing import(parse_interaction)
 from kamistudio.corpus.views import get_corpus
 
 model_blueprint = Blueprint('model', __name__, template_folder='templates')
