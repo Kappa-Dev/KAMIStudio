@@ -156,6 +156,7 @@ class DefinitionPreview extends React.Component {
 	            		elementInfoBoxId="productGraphElementInfo"
 	            		metaDataBoxId="productGraphMetaModelInfo"/>;
 	        }
+	        var wt = this.props.wildType ? " (WT)" : "";
 	        content = 
 	        	<div class="row">
                 	<div class="col-md-6">
@@ -163,7 +164,7 @@ class DefinitionPreview extends React.Component {
 		                {protoform}
                 	</div>
                 	<div class="col-md-6">
-                		<h4>Product</h4>
+                		<h4>{"Product" + wt}</h4>
                 		{productMessage}
 		                {product}
 		            </div>
@@ -320,6 +321,7 @@ function viewDefinition(modelId, readonly) {
 				function viewProduct(productName) {
 					ReactDOM.render(
 						 <DefinitionPreview
+						 	wildType={productName == data["wild_type"]}
 				            id={definitionId}
 				            productId={productName}
 				            protoformGene={protoformGene}
@@ -340,6 +342,7 @@ function viewDefinition(modelId, readonly) {
 
 				ReactDOM.render(
 			        <DefinitionPreview
+			        	wildType={false}
 			            id={definitionId}
 			            protoformGene={protoformGene}
 			            productNames={productNames}
