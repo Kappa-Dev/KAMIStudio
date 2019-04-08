@@ -286,7 +286,6 @@ def imported_corpus(filename, annotation):
 def imported_model(filename, annotation):
     """Internal handler of already imported model."""
     model_id = _generate_unique_model_id("model")
-    print(model_id)
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)

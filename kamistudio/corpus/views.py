@@ -310,7 +310,6 @@ def imported_interactions(filename, corpus_id):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             for i, el in enumerate(json_data):
-                print("Adding interaction", i + 1)
                 corpus.add_interaction(Interaction.from_json(el))
         #     try:
         #         interactions = [

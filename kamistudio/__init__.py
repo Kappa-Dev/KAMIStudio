@@ -247,7 +247,7 @@ app = KAMIStudio(__name__,
 Bootstrap(app)
 
 # Configure the KAMIStudio server
-app.config.from_object('config')
+app.config.from_pyfile('config.py')
 app.config.from_pyfile('instance/config.py')
 
 # Session config

@@ -294,7 +294,6 @@ def update_node_attrs(model_id):
     json_data = request.get_json()
     node_id = json_data["id"]
     node_attrs = json_data["attrs"]
-    print(node_attrs)
     model = get_model(model_id)
 
     response = json.dumps(
@@ -320,7 +319,6 @@ def update_edge_attrs(model_id):
     source = json_data["source"]
     target = json_data["target"]
     edge_attrs = json_data["attrs"]
-    print(edge_attrs)
     model = get_model(model_id)
 
     response = json.dumps(

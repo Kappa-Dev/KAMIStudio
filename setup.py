@@ -10,6 +10,7 @@ setup(name='KAMIStudio',
       license='MIT License',
       packages=[
           'kamistudio',
+          'kamistudio.instance',
           'kamistudio.action_graph',
           'kamistudio.home',
           'kamistudio.model',
