@@ -1,7 +1,7 @@
 """Root server app."""
 import os
-
 import json
+
 from flask import Flask, url_for, render_template
 from flask_session import Session
 from flask_bootstrap import Bootstrap
@@ -246,14 +246,13 @@ app = KAMIStudio(__name__,
                  template_folder="./kamistudio/templates")
 Bootstrap(app)
 
+# Configure the KAMIStudio server
+app.config.from_object('config')
+app.config.from_pyfile('instance/config.py')
+
 # Session config
-app.secret_key = b'_5#y2L"H9R8z\n\xec]/'
-app.config['SESSION_TYPE'] = 'filesystem'
-# app.config['SESSION_TYPE'] = 'MongoDBSessionInterface'
 Session(app)
 
-# Configure the KAMIStudio server
-app.config.from_pyfile('instance/configs.py')
 app.mongo = PyMongo(app, serverSelectionTimeoutMS=10)
 try:
     app.mongo.cx.server_info()

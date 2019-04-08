@@ -1,0 +1,6 @@
+recursive-include kamistudio/templates *
+recursive-include kamistudio/static *
+recursive-include kamistudio/static *
+recursive-include kamistudio/corpus/templates *
+recursive-include kamistudio/home/templates *
+recursive-include kamistudio/model/templates *
