@@ -246,9 +246,11 @@ app = KAMIStudio(__name__,
                  template_folder="./kamistudio/templates")
 Bootstrap(app)
 
+
 # Configure the KAMIStudio server
 app.config.from_pyfile('config.py')
 app.config.from_pyfile('instance/config.py')
+app.config.from_envvar('KAMISTUDIO_SETTINGS')
 
 # Session config
 Session(app)
