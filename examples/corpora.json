@@ -1,0 +1,35 @@
+[
+	{
+        "id": "tcbb",
+        "creation_time": "04-04-2019 11:08:56",
+        "last_modified": "04-04-2019 11:08:56",
+        "meta_data": {
+            "name": "EGFR signalling",
+            "desc": "Partial EGFR signalling network, toy example",
+            "organism": "Homo sapiens (Human)",
+            "annotation": "Manually created, example from the paper 'Bio-curation for cellular signalling: the KAMI project'"
+        }
+    },
+    {
+        "id": "pYNET_20",
+        "creation_time": "04-04-2019 11:13:53",
+        "last_modified": "04-04-2019 11:15:40",
+        "meta_data": {
+            "name": "pYNET 20",
+            "desc": "Phosphotyrosine and SH2 signalling network, extract 20 interactions",
+            "organism": "Homo sapiens (Human)",
+            "annotation": "Automatically built from data collated from the literature"
+        }
+    },
+    {
+        "id": "pYNET_200",
+        "creation_time": "04-04-2019 13:18:53",
+        "last_modified": "04-04-2019 14:15:40",
+        "meta_data": {
+            "name": "pYNET 200",
+            "desc": "Phosphotyrosine and SH2 signalling network, extract 200 interactions",
+            "organism": "Homo sapiens (Human)",
+            "annotation": "Automatically built from data collated from the literature"
+        }
+    }
+]

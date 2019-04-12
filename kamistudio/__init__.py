@@ -1,6 +1,8 @@
 """Root server app."""
 import os
 import json
+import sys
+import datetime
 
 from flask import Flask, url_for, render_template
 from flask_session import Session
@@ -46,190 +48,36 @@ def init_mongo_db(add_test=False):
             app.mongo.db.kami_models.create_index("id", unique=True)
 
         if add_test is True:
-            app.mongo.db.kami_corpora.remove({})
-            if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-                app.mongo.db.kami_corpora.insert_one({
-                    "id": "tcbb",
-                    "creation_time": "04-04-2019 11:08:56",
-                    "last_modified": "04-04-2019 11:08:56",
-                    "meta_data": {
-                        "name": "EGFR signalling",
-                        "desc": "Partial EGFR signalling network, toy example",
-                        "organism": "Homo sapiens (Human)",
-                        "annotation": "Manually created, example from the paper 'Bio-curation for cellular signalling: the KAMI project'"
-                    }
-                })
-                app.mongo.db.kami_corpora.insert_one({
-                    "id": "pYNET_20",
-                    "creation_time": "04-04-2019 11:13:53",
-                    "last_modified": "04-04-2019 11:15:40",
-                    "meta_data": {
-                        "name": "pYNET 20",
-                        "desc": "Phosphotyrosine and SH2 signalling network, extract 20 interactions",
-                        "organism": "Homo sapiens (Human)",
-                        "annotation": "Automatically built from data collated from the literature"
-                    }
-                })
-                app.mongo.db.kami_corpora.insert_one({
-                    "id": "pYNET_200",
-                    "creation_time": "04-04-2019 13:18:53",
-                    "last_modified": "04-04-2019 14:15:40",
-                    "meta_data": {
-                        "name": "pYNET 200",
-                        "desc": "Phosphotyrosine and SH2 signalling network, extract 200 interactions",
-                        "organism": "Homo sapiens (Human)",
-                        "annotation": "Automatically built from data collated from the literature"
-                    }
-                })
-            app.mongo.db.kami_models.remove({})
-            if len(list(app.mongo.db.kami_models.find({}))) == 0:
-                app.mongo.db.kami_models.insert_one({
-                    "id": "tcbb_model",
-                    "creation_time": "04-04-2019 11:08:56",
-                    "last_modified": "04-04-2019 11:08:56",
-                    "meta_data": {
-                        "name": "Instantiated EGFR model",
-                        "desc": "Instantiated EGFR signalling subnetwork, toy example",
-                        "organism": "Homo sapiens (Human)",
-                        "annotation": "Manually created, example from the paper 'Bio-curation for cellular signalling: the KAMI project'"
-                    },
-                    "origin": {
-                        "corpus_id": "tcbb",
-                        "definitions": [],
-                        "seed_genes": []
-                    },
-                    "kappa_models": []
-                })
-            app.mongo.db.kami_definitions.remove({})
-            if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
-                app.mongo.db.kami_definitions.insert_one({
-                    'id': '1',
-                    'corpus_id': 'tcbb',
-                    'protoform': {
-                        'uniprotid': 'P00533',
-                        'regions': [{
-                            'name': 'Protein kinase',
-                        }],
-                        'residues': [{'aa': ['Y'], 'loc': 1092}],
-                    },
-                    'products': {
-                        'WT': {
-                            "wild_type": True,
-                            "desc": "Wild type protein",
-                            "components": {
-                                'regions': [{
-                                    'name': 'Protein kinase',
-                                }],
-                                'residues': [{'aa': ['Y'], 'loc': 1092}],
-                            }
-                        },
-                        'p60': {
-                            "wild_type": False,
-                            "desc": "Missing 406-1219",
-                            "components": {}
-                        }}})
-                app.mongo.db.kami_definitions.insert_one({
-                    'id': '2',
-                    'corpus_id': 'tcbb',
-                    'protoform': {'uniprotid': 'P62993',
-                      'regions': [{'name': 'SH2',
-                        'sites': [],
-                        'residues': [{'aa': ['S', 'D'], 'loc': 90}],
-                        'states': [],
-                        'bound_to': [],
-                        'unbound_from': []}],
-                      'sites': [],
-                      'residues': [],
-                      'states': [],
-                      'bound_to': [],
-                      'unbound_from': []},
-                     'products': {'Wild type': {
-                        "wild_type": True,
-                        'components': {'regions': [{'name': 'SH2',
-                          'sites': [],
-                          'residues': [{'aa': ['S'], 'loc': 90}],
-                          'states': [],
-                          'bound_to': [],
-                          'unbound_from': []}],
-                        'sites': [],
-                        'residues': [],
-                        'states': []},
-                       'desc': 'Wild type isoform of GRB2'},
-                      'S90D': {
-                        "wild_type": False,
-                        'components': {'regions': [{'name': 'SH2',
-                          'sites': [],
-                          'residues': [{'aa': ['D'], 'loc': 90}],
-                          'states': [],
-                          'bound_to': [],
-                          'unbound_from': []}],
-                        'sites': [],
-                        'residues': [],
-                        'states': []},
-                       'desc': 'Mutation S90D'},
-                      'noSH2': {
-                        "wild_type": False,
-                        'components': {'regions': [],
-                        'sites': [],
-                        'residues': [],
-                        'states': []},
-                       'desc': 'SH2 knock-out splice variant'}}}
-                )
-                app.mongo.db.kami_definitions.insert_one({
-                    'id': '3',
-                    'corpus_id': 'tcbb',
-                    'protoform': {
-                        'uniprotid': 'P56945',
-                        'sites': [{
-                            "start": 407, "end": 413,
-                            "residues": [{
-                                "aa": ["Y", "A"],
-                                "loc": 410,
-                                "test": True}]
-                        }]
-                    },
-                    'products': {
-                        'WT': {
-                            "wild_type": True,
-                            "desc": "Wild type protein",
-                            "components": {
-                                'sites': [{
-                                    "start": 407, "end": 413,
-                                    "residues": [{
-                                        "aa": "Y",
-                                        "loc": 410,
-                                        "test": True
-                                    }]
-                                }]
-                            }
-                        },
-                        'S90A': {
-                            "wild_type": False,
-                            "desc": "Mutation S90A",
-                            "components": {
-                                'sites': [{
-                                    "start": 407, "end": 413,
-                                    "residues": [{
-                                        "aa": "A",
-                                        "loc": 410,
-                                        "test": True
-                                    }]
-                                }]
-                            }
-                        },
-                        'nopY': {
-                            "wild_type": False,
-                            "desc": "Knock-out of pY-site",
-                            "components": {}
-                        }
-                    }
-                })
+            pass
+            # app.mongo.db.kami_corpora.remove({})
+            # if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+            #     with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
+            #         test_corpora = json.load(f)
+            #         for d in test_corpora:
+            #             # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
+            #             app.mongo.db.kami_corpora.insert_one(d)
+            # app.mongo.db.kami_models.remove({})
+            # if len(list(app.mongo.db.kami_models.find({}))) == 0:
+            #     with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
+            #         test_models = json.load(f)
+            #         for d in test_models:
+            #             # if not app.mongo.db.kami_models.find({"id": d["id"]}):
+            #             app.mongo.db.kami_models.insert_one(d)
+            # app.mongo.db.kami_definitions.remove({})
+            # if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
+            #     with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
+            #         test_definitions = json.load(f)
+            #         for d in test_definitions:
+            #             # if not app.mongo.db.kami_definitions.find(
+            #                     # {"id": d["id"]}):
+            #             app.mongo.db.kami_definitions.insert_one(d)
 
         # if app.neo4j_driver is not None:
         #     h = Neo4jHierarchy(driver=app.neo4j_driver)
+        #     h._clear()
         #     # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
         #     Neo4jHierarchy.load(
-        #         "kamistudio/instance/test_kamistudio.json",
+        #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
         #         driver=app.neo4j_driver)
 
 
@@ -250,7 +98,9 @@ Bootstrap(app)
 # Configure the KAMIStudio server
 app.config.from_pyfile('config.py')
 app.config.from_pyfile('instance/config.py')
-app.config.from_envvar('KAMISTUDIO_SETTINGS')
+
+if os.environ.get('KAMISTUDIO_SETTINGS'):
+    app.config.from_envvar('KAMISTUDIO_SETTINGS')
 
 # Session config
 Session(app)
@@ -297,8 +147,14 @@ def dated_url_for(endpoint, **values):
             file_path = os.path.join(app.root_path,
                                      endpoint, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
+    elif endpoint == 'model.generate_kappa' or\
+            endpoint == 'model.download_model':
+        values['q'] = datetime.datetime.now().timestamp()
+    elif endpoint == 'corpus.download_corpus':
+        values['q'] = datetime.datetime.now().timestamp()
+
     return url_for(endpoint, **values)
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0')

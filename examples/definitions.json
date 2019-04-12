@@ -1,0 +1,128 @@
+[
+	{
+        "id": "1",
+        "corpus_id": "tcbb",
+        "protoform": {
+            "uniprotid": "P00533",
+            "regions": [{
+                "name": "Protein kinase"
+            }],
+            "residues": [{"aa": ["Y"], "loc": 1092}]
+        },
+        "products": {
+            "WT": {
+                "wild_type": true,
+                "desc": "Wild type protein",
+                "components": {
+                    "regions": [{
+                        "name": "Protein kinase"
+                    }],
+                    "residues": [{"aa": ["Y"], "loc": 1092}]
+                }
+            },
+            "p60": {
+                "wild_type": false,
+                "desc": "Missing 406-1219",
+                "components": {}
+            }
+        }
+   },
+   {
+        "id": "2",
+        "corpus_id": "tcbb",
+        "protoform": {
+        	"uniprotid": "P62993",
+	        "regions": [{"name": "SH2",
+	            "sites": [],
+	            "residues": [{"aa": ["S", "D"], "loc": 90}],
+	            "states": [],
+	            "bound_to": [],
+	            "unbound_from": []}],
+	        "sites": [],
+	        "residues": [],
+	        "states": [],
+	        "bound_to": [],
+	        "unbound_from": []},
+        "products": {"Wild type": {
+            "wild_type": true,
+            "components": {"regions": [{"name": "SH2",
+              "sites": [],
+              "residues": [{"aa": ["S"], "loc": 90}],
+              "states": [],
+              "bound_to": [],
+              "unbound_from": []}],
+            "sites": [],
+            "residues": [],
+            "states": []},
+           "desc": "Wild type isoform of GRB2"},
+          "S90D": {
+            "wild_type": false,
+            "components": {"regions": [{"name": "SH2",
+              "sites": [],
+              "residues": [{"aa": ["D"], "loc": 90}],
+              "states": [],
+              "bound_to": [],
+              "unbound_from": []}],
+            "sites": [],
+            "residues": [],
+            "states": []},
+           "desc": "Mutation S90D"},
+          "noSH2": {
+            "wild_type": false,
+            "components": {"regions": [],
+            "sites": [],
+            "residues": [],
+            "states": []},
+           "desc": "SH2 knock-out splice variant"}
+       }
+    },
+    {
+        "id": "3",
+        "corpus_id": "tcbb",
+        "protoform": {
+            "uniprotid": "P56945",
+            "sites": [{
+                "start": 407, "end": 413,
+                "residues": [{
+                    "aa": ["Y", "A"],
+                    "loc": 410,
+                    "test": true}]
+            }]
+        },
+        "products": {
+            "WT": {
+                "wild_type": true,
+                "desc": "Wild type protein",
+                "components": {
+                    "sites": [{
+                        "start": 407, "end": 413,
+                        "residues": [{
+                            "aa": "Y",
+                            "loc": 410,
+                            "test": true
+                        }]
+                    }]
+                }
+            },
+            "S90A": {
+                "wild_type": false,
+                "desc": "Mutation S90A",
+                "components": {
+                    "sites": [{
+                        "start": 407, "end": 413,
+                        "residues": [{
+                            "aa": "A",
+                            "loc": 410,
+                            "test": true
+                        }]
+                    }]
+                }
+            },
+            "nopY": {
+                "wild_type": false,
+                "desc": "Knock-out of pY-site",
+                "components": {}
+            }
+        }
+	}
+]
