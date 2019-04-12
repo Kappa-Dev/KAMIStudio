@@ -84,12 +84,14 @@ def retrieve_states(form, actor_name, wanted_target):
                         state[k] = True
                     else:
                         state[k] = False
-                state[k] = form[field_name]
+                else:
+                    state[k] = form[field_name]
 
         if actor_name + "State" + state_id == wanted_target:
             target_state = state
         else:
             states.append(state)
+
     return states, target_state
 
 
@@ -440,340 +442,343 @@ def parse_interaction(form):
     """Parse interaction from the form."""
     desc = None
     rate = None
-    if form["interactionDesc"] != "":
-        desc = form["interactionDesc"]
-    if form["biRate"] != "":
-        rate = form["biRate"]
 
-    if form['modorbnd'] == 'mod':
+    if len(list(form.keys())) > 0:
+        if form["interactionDesc"] != "":
+            desc = form["interactionDesc"]
+        if form["biRate"] != "":
+            rate = form["biRate"]
 
-        if form['modType'] == "Modification":
+        if form['modorbnd'] == 'mod':
 
-            mod_json = {}
+            if form['modType'] == "Modification":
+                print("HEEEE\n\n")
+                mod_json = {}
 
-            wanted_enzyme_subactor = None
-            if "enzymeActorSelection" in form.keys():
-                wanted_enzyme_subactor = {
-                    "enzymeActorSelection": form[
-                        "enzymeActorSelection"]
-                }
-            wanted_substrate_target = None
-            if "targetSelection" in form.keys():
-                wanted_substrate_target = form["targetSelection"]
+                wanted_enzyme_subactor = None
+                if "enzymeActorSelection" in form.keys():
+                    wanted_enzyme_subactor = {
+                        "enzymeActorSelection": form[
+                            "enzymeActorSelection"]
+                    }
+                wanted_substrate_target = None
+                if "targetSelection" in form.keys():
+                    wanted_substrate_target = form["targetSelection"]
 
-            enzyme_gene, subactors, _ = retrieve_actor(
-                form, "enzyme", wanted_enzyme_subactor)
+                enzyme_gene, subactors, _ = retrieve_actor(
+                    form, "enzyme", wanted_enzyme_subactor)
 
-            if "enzymeActorSelection" in subactors.keys():
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, subactors["enzymeActorSelection"])
-            else:
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, {})
+                if "enzymeActorSelection" in subactors.keys():
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, subactors["enzymeActorSelection"])
+                else:
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, {})
 
-            substrate_gene, _, target_subactor = retrieve_actor(
-                form, "substrate", None, wanted_substrate_target)
-            mod_json["substrate"] = _process_actor(
-                substrate_gene, target_subactor)
+                substrate_gene, _, target_subactor = retrieve_actor(
+                    form, "substrate", None, wanted_substrate_target)
+                mod_json["substrate"] = _process_actor(
+                    substrate_gene, target_subactor)
 
-            target, value = _process_implicit_target(target_subactor)
-
-            if target is None:
-                target, value = _process_explict_target(form)
-
-            mod_json["target"] = target
-            mod_json["value"] = value
-
-            if desc is not None:
-                mod_json["desc"] = desc
-            if rate is not None:
-                mod_json["rate"] = rate
-
-            mod = Modification.from_json(mod_json)
-            return mod
-        elif form['modType'] == "AnonymousModification":
-            mod_json = {}
-
-            wanted_substrate_target = None
-            if "targetSelection" in form.keys():
-                wanted_substrate_target = form["targetSelection"]
-
-            substrate_gene, target_subactor, _ = retrieve_actor(
-                form, "substrate", None, wanted_substrate_target)
-            mod_json["substrate"] = _process_actor(
-                substrate_gene, target_subactor)
-
-            target, value = _process_implicit_target(target_subactor)
-
-            if target is None:
-                target, value = _process_explict_target(form)
-
-            mod_json["target"] = target
-            mod_json["value"] = value
-
-            if desc is not None:
-                mod_json["desc"] = desc
-            if rate is not None:
-                mod_json["rate"] = rate
-
-            mod = AnonymousModification.from_json(mod_json)
-            return mod
-        elif form['modType'] == "SelfModification":
-            mod_json = {}
-
-            wanted_enzyme_subactor = None
-            if "enzymeSubActorSelection" in form.keys():
-                wanted_enzyme_subactor = {
-                    "enzymeSubActorSelection": form[
-                        "enzymeSubActorSelection"]
-                }
-
-            wanted_substrate_target = None
-            if "targetSelection" in form.keys():
-                wanted_substrate_target = form["targetSelection"]
-
-            enzyme_gene, subactors, target_subactor = retrieve_actor(
-                form, "enzymeSub", wanted_enzyme_subactor,
-                wanted_substrate_target)
-
-            if "enzymeSubActorSelection" in subactors.keys():
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, subactors["enzymeSubActorSelection"])
-            else:
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, {})
-            if "target" in target_subactor:
-                target, value = _process_implicit_target(target_subactor["target"])
-            else:
                 target, value = _process_implicit_target(target_subactor)
 
-            substrate_region, substrate_site = _process_target_carriers(
-                target_subactor)
+                if target is None:
+                    target, value = _process_explict_target(form)
 
-            if substrate_region is not None:
-                mod_json["substrate_region"] = substrate_region
-            if substrate_site is not None:
-                mod_json["substrate_site"] = substrate_site
-
-            if target is None:
-                target, value = _process_explict_target(form)
-
-            mod_json["target"] = target
-            mod_json["value"] = value
-
-            if desc is not None:
-                mod_json["desc"] = desc
-            if rate is not None:
-                mod_json["rate"] = rate
-
-            mod = SelfModification.from_json(mod_json)
-            return mod
-        elif form['modType'] == "LigandModification":
-            mod_json = {}
-
-            wanted_enzyme_subactors = {}
-            if "enzymeLigandActorSelection" in form.keys():
-                wanted_enzyme_subactors["enzymeLigandActorSelection"] =\
-                    form["enzymeLigandActorSelection"]
-            if "enzymeLigandBindingActorSelection" in form.keys():
-                wanted_enzyme_subactors["enzymeLigandBindingActorSelection"] =\
-                    form["enzymeLigandBindingActorSelection"]
-            if len(wanted_enzyme_subactors) == 0:
-                wanted_enzyme_subactors = None
-
-            # usual stuff enzyme/substrate actors
-            enzyme_gene, enzyme_subactors, _ = retrieve_actor(
-                form, "enzymeLigand", wanted_enzyme_subactors)
-
-            if "enzymeLigandActorSelection" in enzyme_subactors.keys():
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, enzyme_subactors["enzymeLigandActorSelection"])
-            else:
-                mod_json["enzyme"] = _process_actor(
-                    enzyme_gene, {})
-
-            wanted_substrate_subactors = None
-            if "substrateLigandBindingActorSelection" in form.keys():
-                wanted_substrate_subactors =\
-                    {"substrateLigandBindingActorSelection": form[
-                        "substrateLigandBindingActorSelection"]}
-
-            wanted_substrate_target = None
-            if "targetSelection" in form.keys():
-                wanted_substrate_target = form["targetSelection"]
-
-            substrate_gene, substrate_subactors, target_subactor = retrieve_actor(
-                form, "substrateLigand", wanted_substrate_subactors,
-                wanted_substrate_target)
-            mod_json["substrate"] = _process_actor(
-                substrate_gene, target_subactor)
-
-            target, value = _process_implicit_target(target_subactor)
-
-            if target is None:
-                target, value = _process_explict_target(form)
-                mod_json["target"] = target
-                mod_json["value"] = value
-            else:
                 mod_json["target"] = target
                 mod_json["value"] = value
 
-            # process binding subactors
-            if "enzymeLigandBindingActorSelection" in enzyme_subactors.keys():
-                # enzymatic and binding regions can coincide
-                if "in_regions" in enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"].keys() and\
-                   len(enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"]["in_regions"]) > 0:
-                    bnd_subactor_data = enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"]["in_regions"]
+                if desc is not None:
+                    mod_json["desc"] = desc
+                if rate is not None:
+                    mod_json["rate"] = rate
 
-                    if "enzymeLigandActorSelection" in enzyme_subactors.keys() and\
-                       "in_regions" in enzyme_subactors[
-                            "enzymeLigandActorSelection"].keys() and\
-                       bnd_subactor_data["region"][0] ==\
-                       enzyme_subactors[
-                            "enzymeLigandActorSelection"]["in_regions"]["region"][0]:
-                        if "site" in bnd_subactor_data.keys():
-                            # acting and binding sites are the same
-                            if "site" in enzyme_subactors[
-                                "enzymeLigandActorSelection"]["in_regions"].keys() and \
-                               bnd_subactor_data["site"][0] ==\
-                               enzyme_subactors[
-                                    "enzymeLigandActorSelection"]["in_regions"]["site"][0]:
-                                mod_json["enzyme_bnd_subactor"] =\
-                                    "site"
-                            # acting and binding sites are different
+                print(mod_json)
+                mod = Modification.from_json(mod_json)
+                return mod
+            elif form['modType'] == "AnonymousModification":
+                mod_json = {}
+
+                wanted_substrate_target = None
+                if "targetSelection" in form.keys():
+                    wanted_substrate_target = form["targetSelection"]
+
+                substrate_gene, target_subactor, _ = retrieve_actor(
+                    form, "substrate", None, wanted_substrate_target)
+                mod_json["substrate"] = _process_actor(
+                    substrate_gene, target_subactor)
+
+                target, value = _process_implicit_target(target_subactor)
+
+                if target is None:
+                    target, value = _process_explict_target(form)
+
+                mod_json["target"] = target
+                mod_json["value"] = value
+
+                if desc is not None:
+                    mod_json["desc"] = desc
+                if rate is not None:
+                    mod_json["rate"] = rate
+
+                mod = AnonymousModification.from_json(mod_json)
+                return mod
+            elif form['modType'] == "SelfModification":
+                mod_json = {}
+
+                wanted_enzyme_subactor = None
+                if "enzymeSubActorSelection" in form.keys():
+                    wanted_enzyme_subactor = {
+                        "enzymeSubActorSelection": form[
+                            "enzymeSubActorSelection"]
+                    }
+
+                wanted_substrate_target = None
+                if "targetSelection" in form.keys():
+                    wanted_substrate_target = form["targetSelection"]
+
+                enzyme_gene, subactors, target_subactor = retrieve_actor(
+                    form, "enzymeSub", wanted_enzyme_subactor,
+                    wanted_substrate_target)
+
+                if "enzymeSubActorSelection" in subactors.keys():
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, subactors["enzymeSubActorSelection"])
+                else:
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, {})
+                if "target" in target_subactor:
+                    target, value = _process_implicit_target(target_subactor["target"])
+                else:
+                    target, value = _process_implicit_target(target_subactor)
+
+                substrate_region, substrate_site = _process_target_carriers(
+                    target_subactor)
+
+                if substrate_region is not None:
+                    mod_json["substrate_region"] = substrate_region
+                if substrate_site is not None:
+                    mod_json["substrate_site"] = substrate_site
+
+                if target is None:
+                    target, value = _process_explict_target(form)
+
+                mod_json["target"] = target
+                mod_json["value"] = value
+
+                if desc is not None:
+                    mod_json["desc"] = desc
+                if rate is not None:
+                    mod_json["rate"] = rate
+
+                mod = SelfModification.from_json(mod_json)
+                return mod
+            elif form['modType'] == "LigandModification":
+                mod_json = {}
+
+                wanted_enzyme_subactors = {}
+                if "enzymeLigandActorSelection" in form.keys():
+                    wanted_enzyme_subactors["enzymeLigandActorSelection"] =\
+                        form["enzymeLigandActorSelection"]
+                if "enzymeLigandBindingActorSelection" in form.keys():
+                    wanted_enzyme_subactors["enzymeLigandBindingActorSelection"] =\
+                        form["enzymeLigandBindingActorSelection"]
+                if len(wanted_enzyme_subactors) == 0:
+                    wanted_enzyme_subactors = None
+
+                # usual stuff enzyme/substrate actors
+                enzyme_gene, enzyme_subactors, _ = retrieve_actor(
+                    form, "enzymeLigand", wanted_enzyme_subactors)
+
+                if "enzymeLigandActorSelection" in enzyme_subactors.keys():
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, enzyme_subactors["enzymeLigandActorSelection"])
+                else:
+                    mod_json["enzyme"] = _process_actor(
+                        enzyme_gene, {})
+
+                wanted_substrate_subactors = None
+                if "substrateLigandBindingActorSelection" in form.keys():
+                    wanted_substrate_subactors =\
+                        {"substrateLigandBindingActorSelection": form[
+                            "substrateLigandBindingActorSelection"]}
+
+                wanted_substrate_target = None
+                if "targetSelection" in form.keys():
+                    wanted_substrate_target = form["targetSelection"]
+
+                substrate_gene, substrate_subactors, target_subactor = retrieve_actor(
+                    form, "substrateLigand", wanted_substrate_subactors,
+                    wanted_substrate_target)
+                mod_json["substrate"] = _process_actor(
+                    substrate_gene, target_subactor)
+
+                target, value = _process_implicit_target(target_subactor)
+
+                if target is None:
+                    target, value = _process_explict_target(form)
+                    mod_json["target"] = target
+                    mod_json["value"] = value
+                else:
+                    mod_json["target"] = target
+                    mod_json["value"] = value
+
+                # process binding subactors
+                if "enzymeLigandBindingActorSelection" in enzyme_subactors.keys():
+                    # enzymatic and binding regions can coincide
+                    if "in_regions" in enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"].keys() and\
+                       len(enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"]["in_regions"]) > 0:
+                        bnd_subactor_data = enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"]["in_regions"]
+
+                        if "enzymeLigandActorSelection" in enzyme_subactors.keys() and\
+                           "in_regions" in enzyme_subactors[
+                                "enzymeLigandActorSelection"].keys() and\
+                           bnd_subactor_data["region"][0] ==\
+                           enzyme_subactors[
+                                "enzymeLigandActorSelection"]["in_regions"]["region"][0]:
+                            if "site" in bnd_subactor_data.keys():
+                                # acting and binding sites are the same
+                                if "site" in enzyme_subactors[
+                                    "enzymeLigandActorSelection"]["in_regions"].keys() and \
+                                   bnd_subactor_data["site"][0] ==\
+                                   enzyme_subactors[
+                                        "enzymeLigandActorSelection"]["in_regions"]["site"][0]:
+                                    mod_json["enzyme_bnd_subactor"] =\
+                                        "site"
+                                # acting and binding sites are different
+                                else:
+                                    mod_json["enzyme_bnd_subactor"] =\
+                                        "region"
+                                    mod_json["enzyme_bnd_site"] =\
+                                        bnd_subactor_data["site"][1]
                             else:
-                                mod_json["enzyme_bnd_subactor"] =\
-                                    "region"
+                                mod_json["enzyme_bnd_subactor"] = "region"
+                        # acting and binding regions are not the same
+                        else:
+                            mod_json["enzyme_bnd_region"] =\
+                                bnd_subactor_data["region"][1]
+                            if "site" in bnd_subactor_data.keys():
                                 mod_json["enzyme_bnd_site"] =\
                                     bnd_subactor_data["site"][1]
+
+                    # enzymatic and binding sites can coincide
+                    elif "in_sites" in enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"].keys() and\
+                         len(enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"]) > 0:
+                        bnd_subactor_data = enzyme_subactors[
+                            "enzymeLigandBindingActorSelection"]["in_sites"]
+                        # acting and binding sites are the same
+                        if "enzymeLigandActorSelection" in enzyme_subactors.keys() and\
+                           "in_sites" in enzyme_subactors["enzymeLigandActorSelection"].keys() and\
+                           bnd_subactor_data[0] ==\
+                           enzyme_subactors["enzymeLigandActorSelection"]["in_sites"][0]:
+                            mod_json["enzyme_bnd_subactor"] = "site"
                         else:
-                            mod_json["enzyme_bnd_subactor"] = "region"
-                    # acting and binding regions are not the same
-                    else:
-                        mod_json["enzyme_bnd_region"] =\
-                            bnd_subactor_data["region"][1]
-                        if "site" in bnd_subactor_data.keys():
                             mod_json["enzyme_bnd_site"] =\
-                                bnd_subactor_data["site"][1]
+                                bnd_subactor_data[1]
 
-                # enzymatic and binding sites can coincide
-                elif "in_sites" in enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"].keys() and\
-                     len(enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"]) > 0:
-                    bnd_subactor_data = enzyme_subactors[
-                        "enzymeLigandBindingActorSelection"]["in_sites"]
-                    # acting and binding sites are the same
-                    if "enzymeLigandActorSelection" in enzyme_subactors.keys() and\
-                       "in_sites" in enzyme_subactors["enzymeLigandActorSelection"].keys() and\
-                       bnd_subactor_data[0] ==\
-                       enzyme_subactors["enzymeLigandActorSelection"]["in_sites"][0]:
-                        mod_json["enzyme_bnd_subactor"] = "site"
-                    else:
-                        mod_json["enzyme_bnd_site"] =\
-                            bnd_subactor_data[1]
-
-            # process substrate binding subactors
-            if "substrateLigandBindingActorSelection" in substrate_subactors.keys():
-                # target and binding regions can coincide
-                if "in_regions" in substrate_subactors[
-                   "substrateLigandBindingActorSelection"].keys() and\
-                    len(substrate_subactors[
-                        "substrateLigandBindingActorSelection"]["in_regions"]) > 0:
-                    bnd_subactor_data = substrate_subactors[
-                        "substrateLigandBindingActorSelection"]["in_regions"]
-                    if "in_regions" in target_subactor.keys() and\
-                       bnd_subactor_data["region"][0] ==\
-                       target_subactor["in_regions"]["region"][0]:
-                        if "site" in bnd_subactor_data.keys():
-                            # acting and binding sites are the same
-                            if "site" in target_subactor["in_regions"].keys() and \
-                               bnd_subactor_data["site"][0] ==\
-                               target_subactor["in_regions"]["site"][0]:
-                                mod_json["substrate_bnd_subactor"] =\
-                                    "site"
-                            # acting and binding sites are different
+                # process substrate binding subactors
+                if "substrateLigandBindingActorSelection" in substrate_subactors.keys():
+                    # target and binding regions can coincide
+                    if "in_regions" in substrate_subactors[
+                       "substrateLigandBindingActorSelection"].keys() and\
+                        len(substrate_subactors[
+                            "substrateLigandBindingActorSelection"]["in_regions"]) > 0:
+                        bnd_subactor_data = substrate_subactors[
+                            "substrateLigandBindingActorSelection"]["in_regions"]
+                        if "in_regions" in target_subactor.keys() and\
+                           bnd_subactor_data["region"][0] ==\
+                           target_subactor["in_regions"]["region"][0]:
+                            if "site" in bnd_subactor_data.keys():
+                                # acting and binding sites are the same
+                                if "site" in target_subactor["in_regions"].keys() and \
+                                   bnd_subactor_data["site"][0] ==\
+                                   target_subactor["in_regions"]["site"][0]:
+                                    mod_json["substrate_bnd_subactor"] =\
+                                        "site"
+                                # acting and binding sites are different
+                                else:
+                                    mod_json["substrate_bnd_subactor"] =\
+                                        "region"
+                                    mod_json["substrate_bnd_site"] =\
+                                        bnd_subactor_data["site"][1]
                             else:
-                                mod_json["substrate_bnd_subactor"] =\
-                                    "region"
+                                mod_json["substrate_bnd_subactor"] = "region"
+                        else:
+                            # acting and binding regions are not the same
+                            mod_json["substrate_bnd_region"] =\
+                                bnd_subactor_data["region"][1]
+                            if "site" in bnd_subactor_data.keys():
                                 mod_json["substrate_bnd_site"] =\
                                     bnd_subactor_data["site"][1]
-                        else:
-                            mod_json["substrate_bnd_subactor"] = "region"
-                    else:
-                        # acting and binding regions are not the same
-                        mod_json["substrate_bnd_region"] =\
-                            bnd_subactor_data["region"][1]
-                        if "site" in bnd_subactor_data.keys():
-                            mod_json["substrate_bnd_site"] =\
-                                bnd_subactor_data["site"][1]
 
-                # target and binding regions can coincide
-                if "in_sites" in substrate_subactors[
-                   "substrateLigandBindingActorSelection"].keys() and\
-                    len(substrate_subactors[
-                        "substrateLigandBindingActorSelection"]["in_sites"]) > 0:
-                    bnd_subactor_data = substrate_subactors[
-                        "substrateLigandBindingActorSelection"]["in_sites"]
-                    if "in_sites" in target_subactor.keys() and\
-                       bnd_subactor_data[0] ==\
-                       target_subactor["in_sites"][0]:
-                        mod_json["substrate_bnd_subactor"] = "site"
-                    else:
-                        mod_json["substrate_bnd_site"] =\
-                            bnd_subactor_data[1]
+                    # target and binding regions can coincide
+                    if "in_sites" in substrate_subactors[
+                       "substrateLigandBindingActorSelection"].keys() and\
+                        len(substrate_subactors[
+                            "substrateLigandBindingActorSelection"]["in_sites"]) > 0:
+                        bnd_subactor_data = substrate_subactors[
+                            "substrateLigandBindingActorSelection"]["in_sites"]
+                        if "in_sites" in target_subactor.keys() and\
+                           bnd_subactor_data[0] ==\
+                           target_subactor["in_sites"][0]:
+                            mod_json["substrate_bnd_subactor"] = "site"
+                        else:
+                            mod_json["substrate_bnd_site"] =\
+                                bnd_subactor_data[1]
+
+                if desc is not None:
+                    mod_json["desc"] = desc
+                if rate is not None:
+                    mod_json["rate"] = rate
+
+                mod = LigandModification.from_json(mod_json)
+                return mod
+        else:
+            bnd_json = {}
+            # process left actor
+            wanted_left_subactor = None
+            if "leftBindingActorSelection" in form.keys():
+                wanted_left_subactor = {
+                    "leftBindingActorSelection": form[
+                        "leftBindingActorSelection"]
+                }
+            left_gene, subactors, _ = retrieve_actor(
+                form, "left", wanted_left_subactor)
+
+            if "leftBindingActorSelection" in subactors.keys():
+                bnd_json["left"] = _process_actor(
+                    left_gene, subactors["leftBindingActorSelection"])
+            else:
+                bnd_json["left"] = _process_actor(
+                    left_gene, {})
+
+            # process right actor
+            wanted_right_subactor = None
+            if "rightBindingActorSelection" in form.keys():
+                wanted_right_subactor = {
+                    "rightBindingActorSelection": form[
+                        "rightBindingActorSelection"]
+                }
+
+            right_gene, subactors, _ = retrieve_actor(
+                form, "right", wanted_right_subactor)
+
+            if "rightBindingActorSelection" in subactors.keys():
+                bnd_json["right"] = _process_actor(
+                    right_gene, subactors["rightBindingActorSelection"])
+            else:
+                bnd_json["right"] = _process_actor(
+                    right_gene, {})
 
             if desc is not None:
-                mod_json["desc"] = desc
+                bnd_json["desc"] = desc
             if rate is not None:
-                mod_json["rate"] = rate
+                bnd_json["rate"] = rate
 
-            mod = LigandModification.from_json(mod_json)
-            return mod
-    else:
-        bnd_json = {}
-        # process left actor
-        wanted_left_subactor = None
-        if "leftBindingActorSelection" in form.keys():
-            wanted_left_subactor = {
-                "leftBindingActorSelection": form[
-                    "leftBindingActorSelection"]
-            }
-        left_gene, subactors, _ = retrieve_actor(
-            form, "left", wanted_left_subactor)
-
-        if "leftBindingActorSelection" in subactors.keys():
-            bnd_json["left"] = _process_actor(
-                left_gene, subactors["leftBindingActorSelection"])
-        else:
-            bnd_json["left"] = _process_actor(
-                left_gene, {})
-
-        # process right actor
-        wanted_right_subactor = None
-        if "rightBindingActorSelection" in form.keys():
-            wanted_right_subactor = {
-                "rightBindingActorSelection": form[
-                    "rightBindingActorSelection"]
-            }
-
-        right_gene, subactors, _ = retrieve_actor(
-            form, "right", wanted_right_subactor)
-
-        if "rightBindingActorSelection" in subactors.keys():
-            bnd_json["right"] = _process_actor(
-                right_gene, subactors["rightBindingActorSelection"])
-        else:
-            bnd_json["right"] = _process_actor(
-                right_gene, {})
-
-        if desc is not None:
-            bnd_json["desc"] = desc
-        if rate is not None:
-            bnd_json["rate"] = rate
-
-        bnd = Binding.from_json(bnd_json)
-        return bnd
+            bnd = Binding.from_json(bnd_json)
+            return bnd
