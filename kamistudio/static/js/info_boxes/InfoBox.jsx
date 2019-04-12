@@ -81,7 +81,7 @@ class EditableBox extends React.Component {
 			if (this.state.editing) {
 
 				var items = this.props.items.map(
-					(item, key) =>
+					(item) =>
 					    !this.props.protected.includes(item[0]) ?
 						    <tr>
 							  	<th scope="row">{item[1]}</th>
@@ -101,7 +101,7 @@ class EditableBox extends React.Component {
 							</tr>
 				);
 			} else {
-				var items = this.props.items.map((item, key) =>
+				var items = this.props.items.map((item) =>
 				    <tr>
 					  	<th scope="row">{item[1]}</th>
 					  	<td>{item[2]}</td>
@@ -419,6 +419,33 @@ class MetaDataBox extends React.Component {
 }
 
 
+function RateDataBox(props) {
+	var rateItems = [
+		["default_bnd_rate", "Binding rate", props.default_bnd_rate ? props.default_bnd_rate : <p className="faded">not specified</p>],
+		["default_brk_rate", "Unbinding rate", props.default_brk_rate ? props.default_brk_rate : <p className="faded">not specified</p>],
+		["default_mod_rate", "Modification rate", props.default_mod_rate ? props.default_mod_rate : <p className="faded">not specified</p>]
+	];
+
+	var rateData = {
+		default_bnd_rate: props.default_bnd_rate,
+		default_brk_rate: props.default_brk_rate,
+		default_mod_rate: props.default_mod_rate, 
+	};
+	return (
+		<EditableBox id={props.id}
+			 name="Default interaction rates"
+			 items={rateItems}
+			 editable={true}
+			 readonly={props.readonly}
+			 onDataUpdate={props.onDataUpdate}
+			 data={rateData}
+			 noBorders={true}
+			 protected={[]}
+			 instantiated={props.instantiated} />
+	)
+}
+
+
 class KBMetaDataBox extends React.Component {
 	constructor(props) {
 		super(props);
@@ -521,6 +548,7 @@ class ModelDataBox extends React.Component {
 
 		var seedGenes = this.props.seedGenes ? JSON.parse(this.props.seedGenes) : {},
 			definitions = this.props.definitions ? JSON.parse(this.props.definitions) : {};
+		
 		return ([
 			<div id="modelMetaData">
 				<KBMetaDataBox
@@ -557,7 +585,18 @@ class ModelDataBox extends React.Component {
    			<InteractionsDataBox
    				proteins={this.props.proteins}
    				modifications={this.props.modifications}
-   				bindings={this.props.bindings}/>
+   				bindings={this.props.bindings}/>,
+   			<hr className="sidebar-corpus-sep"/>,
+			<div id="modelRateData">
+				<RateDataBox
+					id="modeRateDataBox"
+					default_bnd_rate={this.props.default_bnd_rate}
+					default_brk_rate={this.props.default_brk_rate}
+					default_mod_rate={this.props.default_mod_rate}
+					readonly={this.props.readonly}
+					onDataUpdate={this.props.onRateDataUpdate}
+					instantiated={true}/>
+			</div>
 		]);
 				
 	}

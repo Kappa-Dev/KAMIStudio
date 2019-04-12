@@ -25,37 +25,45 @@ function updateAGLoadingProgress(ratio) {
 
 
 function initilizeLayoutProgressBar(instatiated) {
-	document.getElementById("progressMessage").innerHTML =
-		"Computing force layout for the graph...";
+	if (document.getElementById('progressMessage')) {
+		document.getElementById("progressMessage").innerHTML =
+			"Computing force layout for the graph...";
+	}
+
 	var progressBlock = document.getElementById("progressBlock"),
 		loadingBlock = document.getElementById("loadingBlock");
 
-	loadingBlock.parentNode.removeChild(loadingBlock);
-	var barId =  "progressBar";
-	var suffix = "";
-	if (instatiated) {
-		suffix = " instantiated";
-	}
+	if (progressBlock && loadingBlock) {
+		loadingBlock.parentNode.removeChild(loadingBlock);
+		var barId =  "progressBar";
+		var suffix = "";
+		if (instatiated) {
+			suffix = " instantiated";
+		}
 
-	var progressBar = htmlToElement(
-		'<div id="progressBarBlock">' +
-	    '    <div id="' + barId + '" class="progress-bar'+ suffix + '" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">' +
-	    '    </div>' +
-		'</div>\n');
-	progressBlock.appendChild(progressBar);
-	document.getElementById(barId).style.width = "1%";
+		var progressBar = htmlToElement(
+			'<div id="progressBarBlock">' +
+		    '    <div id="' + barId + '" class="progress-bar'+ suffix + '" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">' +
+		    '    </div>' +
+			'</div>\n');
+		progressBlock.appendChild(progressBar);
+		document.getElementById(barId).style.width = "1%";
+	}
 }
 
 
 function initializePositionUpdateProgressBar() {
-	document.getElementById("progressMessage").innerHTML =
-		"Updating force layout with new nodes...";
-	document.getElementById("progressBar").style.width = "1%";
+	if (document.getElementById("progressMessage") && 
+		document.getElementById("progressBar")) {
+		document.getElementById("progressMessage").innerHTML =
+			"Updating force layout with new nodes...";
+		document.getElementById("progressBar").style.width = "1%";
+	}
 }
 
 function removeProgressBlock() {
 	if (document.getElementById("progressBlock")) {
 		var progressBlock = document.getElementById("progressBlock");
+		progressBlock.parentNode.removeChild(progressBlock);
 	}
-	progressBlock.parentNode.removeChild(progressBlock);
 }

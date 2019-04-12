@@ -223,7 +223,7 @@ function sendNuggetDescUpdate(modelId, nuggetId, desc) {
 }
 
 
-function renderNuggetBox(modelId, nuggetId, data, oldData, readonly) {
+function renderNuggetBox(modelId, nuggetId, data, oldData, instantiated, readonly) {
   var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
   
   ReactDOM.render(
@@ -232,7 +232,7 @@ function renderNuggetBox(modelId, nuggetId, data, oldData, readonly) {
           nuggetDesc={desc}
           nuggetType={oldData["nugget_type"]}
           readonly={readonly}
-          onDataUpdate={updateNuggetDesc(modelId, nuggetId)}/>,
+          onDataUpdate={updateNuggetDesc(modelId, nuggetId, instantiated, readonly)}/>,
       document.getElementById('nuggetViewWidget')
   );
   ReactDOM.render(
@@ -240,16 +240,17 @@ function renderNuggetBox(modelId, nuggetId, data, oldData, readonly) {
           nuggetId={oldData["nugget_id"]}
           nuggetDesc={desc}
           nuggetType={oldData["nugget_type"]}
-          onDataUpdate={() => viewNugget(model_id)(oldData["nugget_id"], desc, oldData["nugget_type"])}/>,
+          instantiated={instantiated}
+          onDataUpdate={() => viewNugget(model_id, instantiated)(oldData["nugget_id"], desc, oldData["nugget_type"])}/>,
       document.getElementById("nuggetListItem" + nuggetId)
   );
 };
 
 
-function updateNuggetDesc(model_id, nugget_id, readonly) {
+function updateNuggetDesc(model_id, nugget_id, instantiated, readonly) {
   return function(data, oldData) {
       // re-render info-boxes
-      renderNuggetBox(model_id, nugget_id, data, oldData, readonly); 
+      renderNuggetBox(model_id, nugget_id, data, oldData, instantiated, readonly); 
       // send attr update to the server
       var desc = ("nugget_desc" in data) ? data["nugget_desc"] : oldData["nugget_desc"];
       sendNuggetDescUpdate(
@@ -461,8 +462,6 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
           height = 200,
           nodeSizes = computeNodeSizes(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
 
-      d3.select("#" + svgId).selectAll("*").remove();
-
       var nodeColors;
       if (instantiated) {
           nodeColors = computeNodeColors(
@@ -506,9 +505,20 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
                      null,
                      null,
                      clickHandlers,
-                     handleDragStarted(nuggetGraph, metaTyping),
+                     handleDragStarted,
                      100,
                      false)
+
+     function handleDragStarted(d_id) {
+      if ((metaTyping[d_id] != "state") &&
+        (metaTyping[d_id] != "bnd") && 
+        (metaTyping[d_id] != "mod")) {
+        return getAllComponents(
+          nuggetGraph, metaTyping, d_id).concat([d_id]);
+      } else {
+        return [d_id];
+      }
+    };
 }
 
 
@@ -631,6 +641,7 @@ function previewNugget(modelId, desc, type,
 function viewNugget(model_id, instantiated=false, readonly=false) {
 
   return function (nugget_id, nugget_desc, nugget_type) {
+    d3.select("#nuggetSvg").selectAll("*").remove();
 
     ReactDOM.render(
         <NuggetPreview
@@ -639,7 +650,7 @@ function viewNugget(model_id, instantiated=false, readonly=false) {
             nuggetType={nugget_type}
             editable={true}
             readonly={readonly}
-            onDataUpdate={updateNuggetDesc(model_id, nugget_id, readonly)}/>,
+            onDataUpdate={updateNuggetDesc(model_id, nugget_id, instantiated, readonly)}/>,
         document.getElementById('nuggetViewWidget')
     );
 

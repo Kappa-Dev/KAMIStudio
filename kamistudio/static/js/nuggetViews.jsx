@@ -138,26 +138,34 @@ class NuggetPreview extends React.Component {
     }
 }
 
-function renderNuggetList(modelId, nuggetList, instantiated, readonly) {
+function renderNuggetList(modelId, instantiated, readonly) {
+    // fetch nugget list from the server 
+    $.ajax({
+        url: modelId + "/nuggets",
+        type: 'get',
+        dataType: "json",
+    }).done(function (data) {
+        var nuggetList = data["nuggets"];
+        $("#selectNuggetListView").addClass("active");
+        $("#selectNuggetTableView").removeClass("active");
 
-    // TODO: make it fetch nugget list
-    $("#selectNuggetListView").addClass("active");
-    $("#selectNuggetTableView").removeClass("active");
+        ReactDOM.render(
+            <NuggetList 
+                items={nuggetList}
+                onItemClick={viewNugget(modelId, instantiated, readonly)}
+                instantiated={instantiated}/>,
+            document.getElementById('nuggetView')
+        );
 
-    ReactDOM.render(
-        <NuggetList 
-            items={JSON.parse(nuggetList)}
-            onItemClick={viewNugget(modelId, instantiated, readonly)}
-            instantiated={instantiated}/>,
-        document.getElementById('nuggetView')
-    );
-
-    ReactDOM.render(
-        <NuggetPreview 
-            instantiated={instantiated}
-            readonly={readonly}/>,
-        document.getElementById('nuggetViewWidget')
-    );
+        ReactDOM.render(
+            <NuggetPreview 
+                instantiated={instantiated}
+                readonly={readonly}/>,
+            document.getElementById('nuggetViewWidget')
+        );
+    }).fail(function (e) {
+        console.log("Failed to load nuggets");
+    });
 }
 
 function renderNuggetTable(modelId, adjacency, instantiated, readonly) {

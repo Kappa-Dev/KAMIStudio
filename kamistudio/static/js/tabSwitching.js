@@ -21,6 +21,18 @@ function switchToNuggets(element) {
 	$("#definitions").css("visibility", "hidden");
 }
 
+function loadNuggetsTab(element, modelId, instantiated=false, readonly=false) {
+	switchToNuggets(element);
+	renderNuggetList(modelId, instantiated, readonly);
+	$("#switchToNuggetsTab").attr("onClick", "switchToNuggets(this);");
+}
+
+function loadDefinitionsTab(element, modelId, readonly=false) {
+	switchToDefinitions(element);
+	renderDefinitionList(modelId, readonly);
+	$("#switchToDefinitionsTab").attr("onClick", "switchToDefinitions(this);");
+}
+
 
 function switchToDefinitions(element) {
 	activateLink(element);

@@ -15,9 +15,10 @@ onmessage = function(event) {
 
   var simulation = d3.forceSimulation()
       .force("charge", d3.forceManyBody().strength(
-          chargeStrength / 10))
+         chargeStrength))
       .force("link",
            d3.forceLink()
+              .iterations(5)
               .id(function(d) { return d.id; })
               .distance(function(d) {
                   if (d.distance) {
@@ -33,8 +34,10 @@ onmessage = function(event) {
                       return defaultStrength;
                     }}))
                 // function(d) {return d.distance; }))
-      .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("x", d3.forceX())
+      .force("y", d3.forceY())
+      // .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
+      // .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collide", d3.forceCollide().strength(collideStrength).radius(
           function(d) {
                 if (d.radius) {

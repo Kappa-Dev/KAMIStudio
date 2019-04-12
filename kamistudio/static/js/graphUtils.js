@@ -1,5 +1,141 @@
 function id(d) { return d.id; }
 
+
+function mergeAttributes(attrList) {
+	var result = attrList[0];
+	for (var i=1; i < attrList.length; i++) {
+		for (var k in attrList[i]) {
+			if (k in result) {
+				for (var j=0; j < attrList[i][k]["data"].length; j++) {
+					var el =  attrList[i][k]["data"][j];
+					if (!result[k]["data"].includes(el)) {
+						result[k]["data"].push(el);
+					}
+				}
+			} else {
+				result[k] = attrList[i][k];
+			}
+		}
+	}
+	return result;
+}
+
+function mergeNodes(graph, nodes) {
+	if (nodes.length > 0) {
+		// Accumulate attributes on the same node
+		var targetNode = nodes[0];
+			targetNodeIndex = null;
+			otherNodesIndices = [],
+			dataUpdate = {
+				"merged": targetNode,
+				"newLinks": [],
+				"removedLinks": [],
+				"removedNodes": [] 
+			},
+			attrList = [];
+
+		var x=[], y=[];
+
+		for (var i=0; i < graph.nodes.length; i++) {
+			if (nodes.includes(graph.nodes[i].id)) {
+				attrList.push(graph.nodes[i].attrs);
+				if (graph.nodes[i].id == targetNode) {
+					targetNodeIndex = i;
+				} else {
+					otherNodesIndices.push(i);
+				}
+				x.push(graph.nodes[i].x);
+				y.push(graph.nodes[i].y);
+			}
+		}
+
+		graph.nodes[targetNodeIndex].attrs = mergeAttributes(attrList);
+		graph.nodes[targetNodeIndex].x = x.reduce((acc, n) => acc + n) / nodes.length;
+		graph.nodes[targetNodeIndex].y = y.reduce((acc, n) => acc + n) / nodes.length;
+
+		delete graph.nodes[targetNodeIndex].fx;
+		delete graph.nodes[targetNodeIndex].fy;
+
+		// Connect new edges
+		var inNeighbors = {},
+			outNeighbors = {},
+			loopsAttrs = [],
+			edge,
+			linkIndicesToRemove = [];
+		for (var i=0; i < graph.links.length; i++) {
+			edge = graph.links[i];
+			if (nodes.includes(edge.source.id)) {
+				if (nodes.includes(edge.target.id)) {
+					loopEdges.push(edge.attrs);
+				} else {
+					if (edge.target.id in outNeighbors) {
+						outNeighbors[edge.target.id].attrs.push(edge.attrs);
+					} else {
+						outNeighbors[edge.target.id] = {
+							"target": edge.target,
+							"attrs": [edge.attrs],
+							"distance": edge.distance,
+							"strength": edge.strength
+						};
+					}
+				}
+				console.log(i, edge.source.id, edge.target.id);
+				linkIndicesToRemove.push(i);
+			} else if (nodes.includes(edge.target.id)) {
+				if (edge.source.id in inNeighbors) {
+					inNeighbors[edge.source.id].attrs.push(edge.attrs);
+				} else {
+					inNeighbors[edge.source.id] = {
+						"source": edge.source,
+						"attrs": [edge.attrs],
+						"distance": edge.distance,
+						"strength": edge.strength
+					};
+				}
+				console.log(i, edge.source.id, edge.target.id);
+				linkIndicesToRemove.push(i);
+			}
+		}
+
+		for (var n in inNeighbors) {
+			inNeighbors[n].attrs = mergeAttributes(inNeighbors[n].attrs);
+			inNeighbors[n].target = graph.nodes[targetNodeIndex];
+			graph.links.push(inNeighbors[n]);
+			dataUpdate["newLinks"].push({
+				"source": inNeighbors[n].source.id,
+				"target": inNeighbors[n].target.id
+			});
+		}
+		for (var n in outNeighbors) {
+			outNeighbors[n].attrs = mergeAttributes(outNeighbors[n].attrs);
+			outNeighbors[n].source = graph.nodes[targetNodeIndex];
+			graph.links.push(outNeighbors[n]);
+			dataUpdate["newLinks"].push([
+				outNeighbors[n].source.id,
+				outNeighbors[n].target.id
+			]);
+		}
+
+		// Remove other nodes and edges
+		for (var i=otherNodesIndices.length - 1; i >=0; i--) {
+			dataUpdate["removedNodes"].push(graph.nodes[otherNodesIndices[i]].id);
+			graph.nodes.splice(otherNodesIndices[i], 1); 
+		}
+
+		for (var i=linkIndicesToRemove.length - 1; i >= 0; i--) {
+			dataUpdate["removedLinks"].push([
+				graph.links[linkIndicesToRemove[i]].source.id,
+				graph.links[linkIndicesToRemove[i]].target.id
+			]);
+			graph.links.splice(linkIndicesToRemove[i], 1);
+		}
+
+
+		return dataUpdate;
+	}
+}
+
+
 function find(nodeById, nodeId) {
   var node = nodeById.get(nodeId);
   if (!node) throw new Error("missing: " + nodeId);

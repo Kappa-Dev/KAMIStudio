@@ -25,7 +25,7 @@ class SelectionItem extends React.Component {
 		var subitems = null;
 		if (Object.keys(this.props.subitems).length > 0) { 
 			var subitems = Object.keys(this.props.subitems).map(
-				(item, key) =>
+				(item) =>
 					[<input type="checkbox"
 							onChange={() => this.onSelection(this.props.selectionId, item)}
 							name={this.props.selectionId}
@@ -141,6 +141,9 @@ class InstantiationForm extends React.Component {
 		this.state = {
 			name: null,
 			desc: null,
+			default_bnd_rate: null,
+			default_brk_rate: null,
+			default_mod_rate: null,
 			choices: [],
 			activeDialog: false
 		};
@@ -196,6 +199,8 @@ class InstantiationForm extends React.Component {
 		e.preventDefault();
 		if (!this.props.readonly) {
 	        // get our form data out of state
+	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
+
 	        const data = this.state;
 	        const url = "/corpus/" + this.props.modelId + "/instantiate";
 	        $.ajax({
@@ -204,6 +209,10 @@ class InstantiationForm extends React.Component {
 			    dataType: "json",
 			    contentType: 'application/json',
 			    data:  JSON.stringify(data),
+			}).done(function (data) {
+				window.location.href = data["redirect"];
+			}).fail(function (e) {
+			    console.log("Failed to instantiate corpus");
 			});
 		}
 	}
@@ -265,6 +274,33 @@ class InstantiationForm extends React.Component {
 						</div>
 
 						<div class="row form-row">
+						    <label for="default_bnd_rate">Default binding rate</label>
+						    <input type="text" class="form-control" name="default_bnd_rate"
+						    	   placeholder=""
+						    	   value={this.state.default_bnd_rate}
+						    	   id="default_bnd_rate"
+						    	   onChange={this.handleFieldChange("default_bnd_rate")}/>
+						</div>
+
+						<div class="row form-row">
+						    <label for="default_brk_rate">Default unbinding rate</label>
+						    <input type="text" class="form-control" name="default_brk_rate"
+						    	   placeholder=""
+						    	   value={this.state.default_brk_rate}
+						    	   id="default_brk_rate"
+						    	   onChange={this.handleFieldChange("default_brk_rate")}/>
+						</div>
+
+						<div class="row form-row">
+						    <label for="default_mod_rate">Default modification rate</label>
+						    <input type="text" class="form-control" name="default_mod_rate"
+						    	   placeholder=""
+						    	   value={this.state.default_mod_rate}
+						    	   id="default_mod_rate"
+						    	   onChange={this.handleFieldChange("default_mod_rate")}/>
+						</div>
+
+						<div class="row form-row">
 						    <label for="desc">Variant selection</label>
 						    <p>Select non-wild-type variants for instantation of the model</p>
 						    <div id="variantSelectionWidget">
@@ -281,9 +317,12 @@ class InstantiationForm extends React.Component {
 								</a>
 								<div className="row form-row">
 									<div className="col-md-6">
-										<div id="loadingBlock" style={{"display": "none"}} className="loading-elements center-block" display="none;">
-											<p>Loading...</p>
-											<div id="loader"></div>
+										<div id="progressBlock" style={{"padding-top": "10px", "display": "none"}}>
+	          								<div id="progressMessage">Instantiating the corpus... It may take a moment.</div>
+											<div id="loadingBlock"  className="loading-elements center-block" display="none;">
+												<p>Loading...</p>
+												<div id="loader"></div>
+											</div>
 										</div>
 									</div>
 									<div className="col-md-6" style={{"text-align": "right"}}>

@@ -43,3 +43,47 @@ function handleModelUpdate(modelId) {
 		sendMetaDataUpdate(modelId, data);
 	}
 };
+
+
+function renderRateDataBox(modelId, data, oldData, readonly) {
+	var default_bnd_rate = ("default_bnd_rate" in data) ? data["default_bnd_rate"] : oldData["default_bnd_rate"],
+	 	default_brk_rate = ("default_brk_rate" in data) ? data["default_brk_rate"] : oldData["default_brk_rate"],
+	 	default_mod_rate = ("default_mod_rate" in data) ? data["default_mod_rate"] : oldData["default_mod_rate"];
+
+
+    ReactDOM.render(
+   		<RateDataBox
+			id="modeRateDataBox"
+			default_bnd_rate={default_bnd_rate}
+			default_brk_rate={default_brk_rate}
+			default_mod_rate={default_mod_rate}
+			readonly={readonly}
+			onDataUpdate={handleRateInfoUpdate(modelId, readonly)}
+			instantiated={true}/>,
+      document.getElementById('modelRateData')
+    );
+};
+
+
+function sendRateDataUpdate(modelId, data) {
+	$.ajax({
+	    url:  modelId + "/update-rate-data",
+	    type: 'post',
+	    data: JSON.stringify(data),
+	    dataType: 'json',
+    	contentType: 'application/json',
+	}).done(function () {
+		// if (successCallback) successCallback();
+	}).fail(function (xhr, status, error) {
+		console.log("Failed send the request");
+		console.log(error);
+		// if (failCallback) failCallback();
+	});
+};
+
+function handleRateInfoUpdate(modelId, readonly) {
+	return function(data, oldData) {
+		renderRateDataBox(modelId, data, oldData, readonly);
+		sendRateDataUpdate(modelId, data);
+	}
+}

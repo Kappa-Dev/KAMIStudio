@@ -285,6 +285,17 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
 	          document.getElementById(svgId + 'InfoBoxes'));
 	};
 
+	function handleDragStarted(d_id) {
+      if ((metaTyping[d_id] != "state") &&
+        (metaTyping[d_id] != "bnd") && 
+        (metaTyping[d_id] != "mod")) {
+        return getAllComponents(
+          graph, metaTyping, d_id).concat([d_id]);
+      } else {
+        return [d_id];
+      }
+    };
+
 	var clickHandlers =  {
         "nodeClick": handleNodeClick,
         "edgeClick": handleEdgeClick,
@@ -302,7 +313,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
         null,
         null,
         clickHandlers,
-        handleDragStarted(graph, metaTyping),
+        handleDragStarted,
         100,
   		false);
 }
@@ -369,16 +380,29 @@ function viewDefinition(modelId, readonly) {
 	}
 }
 
-function renderDefinitionList(modelId, definitionList, instantiated, readonly) {
-    ReactDOM.render(
+function renderDefinitionList(modelId, readonly) {
+	// fetch definitions list from the server 
+    $.ajax({
+        url: modelId + "/definitions",
+        type: 'get',
+        dataType: "json",
+    }).done(function (data) {
+        var definitionList = data["definitions"];
+        console.log(definitionList);
+        ReactDOM.render(
         <DefinitionList 
-            items={JSON.parse(definitionList)}
+            items={definitionList}
             onItemClick={viewDefinition(modelId, readonly)}/>,
         document.getElementById('definitionView')
-    );
+	    );
 
-    ReactDOM.render(
-        <DefinitionPreview editable={false}/>,
-        document.getElementById('definitionViewWidget')
-    );
+	    ReactDOM.render(
+	        <DefinitionPreview editable={false}/>,
+	        document.getElementById('definitionViewWidget')
+	    );
+    }).fail(function (e) {
+        console.log("Failed to load nuggets");
+    });
+
+
 }

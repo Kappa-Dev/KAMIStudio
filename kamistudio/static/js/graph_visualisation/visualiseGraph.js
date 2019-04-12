@@ -1,16 +1,16 @@
 function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	// Initialize link strength depending on node meta-types
 
-	var baseDistance = 50 * scale,
-		baseStrengthFactor = 4;
+	var baseDistance = 70 * scale,
+		baseStrengthFactor = 2;
     for (var i=0; i < graph.links.length; i++) {
 	    var d = graph.links[i], 
 	    	factor = baseStrengthFactor;
 	    d.distance = baseDistance;
 	    if (metaTyping[d.target] == "gene") {
 	      if (metaTyping[d.source] == "region") {
-	        factor = baseStrengthFactor * 0.7;
-	        d.distance = baseDistance * 0.7;
+	        factor = baseStrengthFactor * 0.9;
+	        d.distance = baseDistance * 0.4;
 	      } else if (metaTyping[d.source] == "site") {
 	        factor = baseStrengthFactor * 0.3;
 	        d.distance = baseDistance * 0.3;
@@ -84,6 +84,62 @@ function initNodePosition(graph, posDict, fix=null) {
 			}
 		}
 	}
+}
+
+function initCCPositions(graph, cc, svgId) {
+
+	var components = Object.keys(cc),
+		svg = d3.select("#" + svgId),
+		width = +svg.attr("width"),
+		height = +svg.attr("height"),
+    	radius =  graph.nodes.length * 40,
+    	// height = graph.nodes.length * 80,
+      	centerX = width / 2,
+      	centerY = height / 2;
+
+    // Find the Largest connected component
+    var maxCC = components[0];
+    for (var i = 1; i < components.length; i++) {
+    	if (cc[components[i]].length > cc[maxCC].length) {
+    		maxCC = components[i];
+    	}
+    }
+
+    // Generate positions for CC
+    var ccPos = {};
+    // var radius = width / 2;
+    var j = 0;
+    var angleDelta = (360 / (components.length - 1)) * Math.PI / 180,
+    	currentAngle;
+    for (var i = 0; i < components.length; i++) {
+    	if (components[i] == maxCC) {
+    		ccPos[components[i]] = [centerX, centerY];
+    	} else {
+			currentAngle = j * angleDelta;
+			ccPos[components[i]] = [
+				centerX + radius * Math.cos(currentAngle),
+				centerY + radius * Math.sin(currentAngle)
+				// Math.random() * width,
+				// Math.random() * height
+			];
+			j += 1;
+    	}
+    } 
+
+
+    var reversedDict = {}
+    for (var c in cc) {
+    	for (var i=0; i < cc[c].length; i++) {
+    		reversedDict[cc[c][i]] = c;
+    	}
+    }
+
+    // Assign initial pos to nodes depending on cc
+    for (var i=0; i < graph.nodes.length; i++) {
+    	graph.nodes[i].x = ccPos[reversedDict[graph.nodes[i].id]][0];
+		graph.nodes[i].y = ccPos[reversedDict[graph.nodes[i].id]][1];
+    }
+
 }
 
 
@@ -270,6 +326,8 @@ function visualiseGraph(graph, svgId,
 				progressConf["init_layout_progress"]();
 			}
 
+			mapEdgesToObjects(graph);
+
 			// initalize web-worker
 			var worker = new Worker(workerUrl);
 			worker.postMessage({
@@ -316,7 +374,7 @@ function visualiseGraph(graph, svgId,
 		var outside = (d3.selectAll(".node").filter(function(d) { return d3.select(this).node() == d3.event.target.parentNode; }).empty()) &&
 					  (d3.selectAll(".link").filter(function(d) { return d3.select(this).node() == d3.event.target.parentNode; }).empty());
 		// console.log(d3.event.target, d3.selectAll("circle").filter(this == d3.event.target), d3.selectAll("line"), outside);
-		if (!d3.event.ctrlKey && outside) {
+		if (!d3.event.ctrlKey && !d3.event.metaKey && outside) {
 	
 			CTRL_SELECTED_COMPONENTS = [];
 			unselectClick(d, i, this);
@@ -429,39 +487,39 @@ function visualiseGraph(graph, svgId,
 				});
 	}
 
-	function fitViewBox() {
-		var boundaries = container.node().getBBox(),
-            bx = boundaries.x,
-            by = boundaries.y,
-            bheight = boundaries.height,
-            bwidth = boundaries.width;
+	// function fitViewBox() {
+	// 	var boundaries = container.node().getBBox(),
+ //            bx = boundaries.x,
+ //            by = boundaries.y,
+ //            bheight = boundaries.height,
+ //            bwidth = boundaries.width;
 
-        var currentViewBox = svg.attr("viewBox");
-        if (currentViewBox !== null) {
-        	var split =  currentViewBox.split(" ");
-        	if ((split[0] > bx) ||
-        		(split[1] > by) ||
-        		(split[2] < bwidth) ||
-        		(split[3] < bheight)) {
-        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-		        svg  
-		            .attr("viewBox", updatedView)  
-		            .attr("preserveAspectRatio", "xMidYMid meet")  
-		            .call(zoom);
-        	}
-        } else {
-        	if ((bx < 0) ||
-        		(by < 0) ||
-        		(width < bwidth) ||
-        		(height > bheight)) {
-        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-		        svg  
-		            .attr("viewBox", updatedView)  
-		            .attr("preserveAspectRatio", "xMidYMid meet")  
-		            .call(zoom);
-		    }
-        }
-	}
+ //        var currentViewBox = svg.attr("viewBox");
+ //        if (currentViewBox !== null) {
+ //        	var split =  currentViewBox.split(" ");
+ //        	if ((split[0] > bx) ||
+ //        		(split[1] > by) ||
+ //        		(split[2] < bwidth) ||
+ //        		(split[3] < bheight)) {
+ //        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+	// 	        svg  
+	// 	            .attr("viewBox", updatedView)  
+	// 	            .attr("preserveAspectRatio", "xMidYMid meet")  
+	// 	            .call(zoom);
+ //        	}
+ //        } else {
+ //        	if ((bx < 0) ||
+ //        		(by < 0) ||
+ //        		(width < bwidth) ||
+ //        		(height > bheight)) {
+ //        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+	// 	        svg  
+	// 	            .attr("viewBox", updatedView)  
+	// 	            .attr("preserveAspectRatio", "xMidYMid meet")  
+	// 	            .call(zoom);
+	// 	    }
+ //        }
+	// }
 
 	function ticked() {
 		// Set positions of nodes and links corresponding to one tick of simulations
@@ -469,57 +527,27 @@ function visualiseGraph(graph, svgId,
 	  	    link = svg.selectAll(".link");
 
 	  	translateLinks(link, node);
-
-	    node.attr(
+	  	node.attr(
             "transform", 
             function(d) {
             	if (zoom) {
-            		var epsilon = 10,
-            			offset = 10;
-            		if ((d.x < 0 + d.radius - epsilon) ||
-            			(d.x > width - d.radius + epsilon) ||
-            			(d.y < 0 + d.radius - epsilon) ||
-            			(d.y > height - d.radius + epsilon)) {
-            			// zoom to fit the bounding box
-				          	var boundaries = container.node().getBBox(),
-					            bx = boundaries.x,
-					            by = boundaries.y,
-					            bheight = boundaries.height,
-					            bwidth = boundaries.width;
+    				// zoom to fit the bounding box
+		          	var boundaries = container.node().getBBox(),
+			            bx = boundaries.x,
+			            by = boundaries.y,
+			            bheight = boundaries.height,
+			            bwidth = boundaries.width;
 
-					        var currentViewBox = svg.attr("viewBox");
+			        var currentViewBox = svg.attr("viewBox");
 
-					        if (currentViewBox !== null) {
-					        	var split =  currentViewBox.split(" ");
-					        	if ((split[0] - epsilon > bx) ||
-					        		(split[1] - epsilon > by) ||
-					        		(split[2] + epsilon < bwidth) ||
-					        		(split[3] + epsilon < bheight)) {
-					        		var updatedView = "" + (bx - offset)  +
-					        						  " " + (by - offset) + 
-					        						  " " + (bwidth + offset) + 
-					        						  " " + (bheight + offset);
-							        svg  
-							            .attr("viewBox", updatedView)  
-							            .attr("preserveAspectRatio", "xMidYMid meet")  
-							            .call(zoom);
-					        	}
-					        } else {
-					        	if ((bx + epsilon < 0) ||
-					        		(by + epsilon < 0) ||
-					        		(width < bwidth - epsilon) ||
-					        		(height > bheight - epsilon)) {
-					        		var updatedView = "" + (bx - offset)  +
-					        						  " " + (by - offset) + 
-					        						  " " + (bwidth + offset) + 
-					        						  " " + (bheight + offset);
-					        		svg  
-							            .attr("viewBox", updatedView)  
-							            .attr("preserveAspectRatio", "xMidYMid meet")  
-							            .call(zoom);
-							    }
-					        }
-            		}
+			       var updatedView = "" + bx  +
+	        						  " " + by + 
+	        						  " " + bwidth + 
+	        						  " " + bheight;
+			        svg  
+			            .attr("viewBox", updatedView)  
+			            .attr("preserveAspectRatio", "xMidYMid meet")  
+			            .call(zoom);
 			    } else {
 			    	// do not allow positions out of the bounding box
 			    
@@ -542,6 +570,7 @@ function visualiseGraph(graph, svgId,
 	            .force("link", 
 	            	d3.forceLink()
 	            	  .id(function(d) { return d.id; })
+	            	  .iterations(5)
 	            	  .distance(function(d) {
 	            		if (d.distance) {
 	            			return d.distance; 
@@ -554,8 +583,9 @@ function visualiseGraph(graph, svgId,
 		                	} else {
 		                		return defaultStrength;
 		                	}}))
+	            // .force("x", d3.forceX())
 	            .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
-	            .force("center", d3.forceCenter(width / 2, height / 2))
+	            // .force("center", d3.forceCenter(width / 2, height / 2))
 	            .force("collide",d3.forceCollide().strength(collideStrength).radius(
 		          function(d) {
 		          	if (d.radius) {
@@ -629,11 +659,11 @@ function visualiseGraph(graph, svgId,
 	      .attr("stroke", edgeStroke)
 	   	  .on("dblclick", zoomInArea)
 	   	  .on("click", function(d, i) {
-			if (d3.event.ctrlKey) {
+			if (d3.event.ctrlKey || d3.event.metaKey) {
 		   	  	CTRL_SELECTED_COMPONENTS.push(d.id);
 				// console.log("CTRL detected: ", CTRL_SELECTED_COMPONENTS);
 	   	  		if (CTRL_SELECTED_COMPONENTS.length > 1) {
-		   	  		return multiNodeClick(d, i, this);
+		   	  		return multiNodeClick(d, i, this, CTRL_SELECTED_COMPONENTS);
 		   	  	} else {
 		   	  		return nodeClick(d, i, this);
 		   	  	}
@@ -654,7 +684,6 @@ function visualiseGraph(graph, svgId,
 
 	    if (!simulate) {
 	       ticked();
-	       fitViewBox();
 	    }
 
 
