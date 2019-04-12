@@ -1,12 +1,12 @@
 """."""
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask import current_app as app
-
-from kamistudio.corpus.views import get_corpus
-from kamistudio.model.views import get_model
 
 from regraph import graph_to_d3_json
 
+from kamistudio.corpus.views import get_corpus
+from kamistudio.model.views import get_model
+from kamistudio.utils import authenticate
 
 action_graph_blueprint = Blueprint(
     'action_graph', __name__, template_folder='templates')
@@ -24,8 +24,11 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
     if (knowledge_obj.action_graph):
         data["actionGraph"] = graph_to_d3_json(
             knowledge_obj.action_graph, attrs)
+        data["connectedComponents"] =\
+            knowledge_obj.action_graph.find_connected_components()
     else:
         data["actionGraph"] = {"links": [], "nodes": []}
+        data["connectedComponents"] = {}
 
     data["metaTyping"] = knowledge_obj.get_action_graph_typing()
     data["nodePosition"] = node_positioning
@@ -62,7 +65,7 @@ def get_ag_node_by_type(corpus_id, element_type):
             for k, v in corpus.get_ag_node_data(n).items()
         }
         data["elements"].append(element)
-    return jsonify(data, 200)
+    return jsonify(data), 200
 
 
 @action_graph_blueprint.route(
@@ -75,4 +78,24 @@ def get_ag_node_by_id(corpus_id, element_id):
         for k, v in corpus.get_ag_node_data(
             element_id).items()
     }
-    return jsonify(data, 200)
+    return jsonify(data), 200
+
+
+def merge_ag_nodes(kb, data):
+    kb.merge_ag_nodes(data["nodes"])
+
+
+@action_graph_blueprint.route("/corpus/<corpus_id>/merge-action-graph-nodes",
+                              methods=["POST"])
+@authenticate
+def merge_corpus_ag_nodes(corpus_id):
+    merge_ag_nodes(get_corpus(corpus_id), request.get_json())
+    return jsonify({"success": True}), 200
+
+
+@action_graph_blueprint.route("/model/<model_id>/merge-action-graph-nodes",
+                              methods=["POST"])
+@authenticate
+def merge_model_ag_nodes(model_id):
+    merge_ag_nodes(get_model(model_id), request.get_json())
+    return jsonify({"success": True}), 200

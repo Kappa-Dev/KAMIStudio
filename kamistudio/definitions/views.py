@@ -58,3 +58,18 @@ def fetch_variant_by_uniprot(corpus_id, uniprot_id):
         }
         return jsonify(data), 200
     return jsonify({"success": False}), 404
+
+
+@definitions_blueprint.route("/corpus/<corpus_id>/definitions")
+def get_definitions(corpus_id):
+    raw_defs = app.mongo.db.kami_definitions.find(
+        {"corpus_id": corpus_id})
+
+    definitions = {}
+    for d in raw_defs:
+        definitions[d["id"]] = [
+            d["protoform"]["uniprotid"], list(d["products"].keys())]
+
+    data = {}
+    data["definitions"] = definitions
+    return jsonify(data), 200

@@ -147,7 +147,7 @@ def create_new_corpus():
         backend="neo4j",
         driver=app.neo4j_driver)
     corpus.create_empty_action_graph()
-    add_new_corpus(corpus)
+    add_new_corpus(corpus_id, creation_time, last_modified, annotation)
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
@@ -174,7 +174,7 @@ def create_new_model():
         creation_time, last_modified,
         backend="neo4j",
         driver=app.neo4j_driver)
-    add_new_model(model)
+    add_new_model(model, creation_time, last_modified, annotation)
     return redirect(url_for('model.model_view', model_id=model_id))
 
 
@@ -264,22 +264,23 @@ def imported_corpus(filename, annotation):
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print(path_to_file)
     if os.path.isfile(path_to_file):
         with open(path_to_file, "r+") as f:
             json_data = json.loads(f.read())
             json_data["corpus_id"] = corpus_id
-            try:
-                add_new_corpus(corpus_id, creation_time, last_modified, annotation)
-                corpus = KamiCorpus.from_json(
-                    corpus_id,
-                    json_data,
-                    annotation,
-                    creation_time=creation_time,
-                    last_modified=last_modified,
-                    backend="neo4j",
-                    driver=app.neo4j_driver)
-            except:
-                return render_template("500.html")
+            # try:
+            add_new_corpus(corpus_id, creation_time, last_modified, annotation)
+            corpus = KamiCorpus.from_json(
+                corpus_id,
+                json_data,
+                annotation,
+                creation_time=creation_time,
+                last_modified=last_modified,
+                backend="neo4j",
+                driver=app.neo4j_driver)
+            # except:
+                # return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 

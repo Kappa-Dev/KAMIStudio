@@ -3,20 +3,18 @@ import datetime
 import os
 import json
 
-from flask import (render_template, Blueprint, request, session, redirect,
-                   url_for, send_from_directory, send_file)
+from flask import (render_template, Blueprint, request, redirect,
+                   url_for, send_file)
 from flask import current_app as app
 
-from regraph import graph_to_d3_json
 from regraph.neo4j import Neo4jHierarchy
 
-from kami.aggregation.generators import generate_nugget
-from kami.data_structures.models import KamiModel
-from kami.exporters.old_kami import ag_to_edge_list
+from kami.exporters import kappa_exporters
 
 from kami.data_structures.annotations import CorpusAnnotation
+from kami.data_structures.models import KamiModel
+
 from kamistudio.utils import authenticate
-from kamistudio.corpus.views import get_corpus
 
 model_blueprint = Blueprint('model', __name__, template_folder='templates')
 
@@ -34,6 +32,15 @@ def get_model(model_id):
         definitions = None
         if "definitions" in model_json["origin"].keys():
             definitions = model_json["origin"]["definitions"]
+        default_bnd_rate = None
+        default_brk_rate = None
+        default_mod_rate = None
+        if "default_bnd_rate" in model_json.keys():
+            default_bnd_rate = model_json["default_bnd_rate"]
+        if "default_brk_rate" in model_json.keys():
+            default_brk_rate = model_json["default_brk_rate"]
+        if "default_mod_rate" in model_json.keys():
+            default_mod_rate = model_json["default_mod_rate"]
         return KamiModel(
             model_id,
             annotation=CorpusAnnotation.from_json(model_json["meta_data"]),
@@ -43,7 +50,10 @@ def get_model(model_id):
             seed_genes=seed_genes,
             definitions=definitions,
             backend="neo4j",
-            driver=app.neo4j_driver
+            driver=app.neo4j_driver,
+            default_bnd_rate=default_bnd_rate,
+            default_brk_rate=default_brk_rate,
+            default_mod_rate=default_mod_rate
         )
     else:
         return None
@@ -60,7 +70,9 @@ def updateLastModified(model_id):
 
 
 def add_new_model(model_id, creation_time, last_modified, annotation,
-                  corpus_id=None, seed_genes=None, definitions=None):
+                  corpus_id=None, seed_genes=None, definitions=None,
+                  default_bnd_rate=None, default_brk_rate=None,
+                  default_mod_rate=None):
     """Add new model to the db."""
     json_data = {
         "id": model_id,
@@ -68,7 +80,10 @@ def add_new_model(model_id, creation_time, last_modified, annotation,
         "last_modified": last_modified,
         "meta_data": annotation,
         "origin": {},
-        "kappa_model": []
+        "default_bnd_rate": default_bnd_rate,
+        "default_brk_rate": default_brk_rate,
+        "default_mod_rate": default_mod_rate,
+        "kappa_models": []
     }
     # if corpus_id:
     json_data["origin"]["corpus_id"] = corpus_id
@@ -169,13 +184,13 @@ def delete_model(model_id):
         return render_template("model_not_found.html", model_id=model_id)
 
 
-@model_blueprint.route("/model/<model_id>/add-interaction",
-                       methods=["GET", "POST"])
-@authenticate
-def add_interaction(model_id, add_agents=True,
-                    anatomize=True, apply_semantics=True):
-    """Handle interaction addition."""
-    pass
+# @model_blueprint.route("/model/<model_id>/add-interaction",
+#                        methods=["GET", "POST"])
+# @authenticate
+# def add_interaction(model_id, add_agents=True,
+#                     anatomize=True, apply_semantics=True):
+#     """Handle interaction addition."""
+#     pass
     # model = get_model(model_id)
     # if request.method == 'GET':
     #     return render_template(
@@ -250,12 +265,12 @@ def add_interaction(model_id, add_agents=True,
 
 #     return redirect(url_for('model.model_view', model_id=model_id))
 
-@model_blueprint.route("/model/<model_id>/import-json-interactions",
-                       methods=["GET"])
-@authenticate
-def import_json_interactions(model_id):
-    """Handle import of json interactions."""
-    pass
+# @model_blueprint.route("/model/<model_id>/import-json-interactions",
+#                        methods=["GET"])
+# @authenticate
+# def import_json_interactions(model_id):
+#     """Handle import of json interactions."""
+#     pass
 
 
 @model_blueprint.route("/model/<model_id>/update-ag-node-positioning",
@@ -339,7 +354,7 @@ def update_edge_attrs(model_id):
                        methods=["POST"])
 @authenticate
 def update_meta_data(model_id):
-    """Handle update of edge attrs."""
+    """Handle update of meta data."""
     json_data = request.get_json()
 
     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
@@ -355,3 +370,48 @@ def update_meta_data(model_id):
         {'success': True}), 200, {'ContentType': 'application/json'}
 
     return response
+
+
+@model_blueprint.route("/model/<model_id>/update-rate-data",
+                       methods=["POST"])
+@authenticate
+def update_rate_data(model_id):
+    """Handle update of rate data."""
+    json_data = request.get_json()
+
+    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    if "default_bnd_rate" in json_data:
+        model_json["default_bnd_rate"] = json_data["default_bnd_rate"]
+    if "default_mod_rate" in json_data:
+        model_json["default_mod_rate"] = json_data["default_mod_rate"]
+    if "default_brk_rate" in json_data:
+        model_json["default_brk_rate"] = json_data["default_brk_rate"]
+
+    app.mongo.db.kami_models.update_one(
+        {"_id": model_json["_id"]},
+        {"$set": model_json},
+        upsert=False)
+
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
+    return response
+
+
+@model_blueprint.route("/model/<model_id>/generate-kappa", methods=["GET"])
+def generate_kappa(model_id):
+    """Serve generated Kappa file."""
+    model = get_model(model_id)
+    if model:
+        filename = model_id.replace(" ", "_") + ".kappa"
+        kappa_str = kappa_exporters.generate_kappa(model)
+        print(kappa_str)
+        with open(os.path.join(app.root_path, "uploads/" + filename), "w+") as f:
+            f.write(kappa_str)
+            return send_file(
+                os.path.join(app.root_path, "uploads/" + filename),
+                as_attachment=True,
+                # mimetype='application/json',
+                attachment_filename=filename)
+    else:
+        return render_template("model_not_found.html", model_id=model_id)

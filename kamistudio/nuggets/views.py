@@ -24,6 +24,34 @@ def model_nugget_view(corpus_id, nugget_id):
     return("Lets see the nugget")
 
 
+@nuggets_blueprint.route("/corpus/<corpus_id>/nuggets")
+def get_corpus_nuggets(corpus_id):
+    corpus = get_corpus(corpus_id)
+    nuggets = {}
+    for nugget in corpus.nuggets():
+            nuggets[nugget] = (
+                corpus.get_nugget_desc(nugget),
+                corpus.get_nugget_type(nugget)
+            )
+    data = {}
+    data["nuggets"] = nuggets
+    return jsonify(data), 200
+
+
+@nuggets_blueprint.route("/model/<model_id>/nuggets")
+def get_model_nuggets(model_id):
+    model = get_model(model_id)
+    nuggets = {}
+    for nugget in model.nuggets():
+            nuggets[nugget] = (
+                model.get_nugget_desc(nugget),
+                model.get_nugget_type(nugget)
+            )
+    data = {}
+    data["nuggets"] = nuggets
+    return jsonify(data), 200
+
+
 def get_nugget(knowledge_obj, nugget_id):
     data = {}
     data["nuggetJson"] = graph_to_d3_json(knowledge_obj.nugget[nugget_id])
@@ -84,6 +112,19 @@ def update_corpus_nugget(corpus_id, nugget_id):
         {'success': True}), 200, {'ContentType': 'application/json'}
 
     return response
+
+
+# @nuggets_blueprint.route("/model/<model_id>/nugget/<nugget_id>/update-nugget-desc",
+#                          methods=["POST"])
+# @authenticate
+# def update_model_nugget(model_id, nugget_id):
+#     json_data = request.get_json()
+#     model = get_model(model_id)
+#     model.set_nugget_desc(nugget_id, json_data["desc"])
+#     response = json.dumps(
+#         {'success': True}), 200, {'ContentType': 'application/json'}
+
+#     return response
 
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget-table")

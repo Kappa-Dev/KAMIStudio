@@ -20,6 +20,7 @@ from kami.aggregation.generators import generate_nugget
 
 from kamistudio.utils import authenticate
 from kamistudio.corpus.form_parsing import(parse_interaction)
+from kamistudio.model.views import add_new_model
 
 
 corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
@@ -58,7 +59,7 @@ def get_corpus(corpus_id):
 def updateLastModified(corpus_id):
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     corpus_json["last_modified"] = datetime.datetime.now().strftime(
-        "%d-%m-%Y %H:%M:%S")
+        "%d-%m-%Y %H:%M:%s")
     app.mongo.db.kami_corpora.update_one(
         {"_id": corpus_json["_id"]},
         {"$set": corpus_json},
@@ -89,20 +90,15 @@ def corpus_view(corpus_id):
             uri=app.config["MONGO_URI"])
 
     corpus = get_corpus(corpus_id)
-    gene_adjacency = corpus.get_gene_pairwise_interactions()
+    # gene_adjacency = corpus.get_gene_pairwise_interactions()
 
-    nuggets = {}
     if corpus is not None:
 
-        for nugget in corpus.nuggets():
-            nuggets[nugget] = (
-                corpus.get_nugget_desc(nugget),
-                corpus.get_nugget_type(nugget)
-            )
+        n_nuggets = len(corpus.nuggets())
 
         genes = {}
         for g in corpus.genes():
-            genes[g] = corpus.get_gene_data(g)
+            genes[g] = []
 
         modifications = {}
         for m in corpus.modifications():
@@ -115,21 +111,16 @@ def corpus_view(corpus_id):
         raw_defs = app.mongo.db.kami_definitions.find(
             {"corpus_id": corpus_id})
 
-        definitions = {}
-        for d in raw_defs:
-            definitions[d["id"]] = [
-                d["protoform"]["uniprotid"], list(d["products"].keys())]
+        n_defs = len(list(raw_defs))
 
         return render_template("corpus.html",
                                kb_id=corpus_id,
                                kb=corpus,
-                               nuggets=json.dumps(nuggets),
+                               n_nuggets=n_nuggets,
+                               n_definitons=n_defs,
                                genes=json.dumps(genes),
-                               gene_adjacency=json.dumps(gene_adjacency),
                                bindings=json.dumps(bindings),
                                modifications=json.dumps(modifications),
-                               n_definitons=len(definitions),
-                               definitions=json.dumps(definitions),
                                instantaited=False,
                                readonly=app.config["READ_ONLY"])
     else:
@@ -217,13 +208,25 @@ def instantiate(corpus_id):
             return render_template("403.html")
         else:
             json_data = request.get_json()
+            print(json_data)
             corpus = get_corpus(corpus_id)
 
             if corpus:
                 model_name = json_data["name"]
                 model_desc = json_data["desc"]
 
+                default_bnd_rate = None
+                default_brk_rate = None
+                default_mod_rate = None
+                if "default_bnd_rate" in json_data:
+                    default_bnd_rate = json_data["default_bnd_rate"]
+                if "default_brk_rate" in json_data:
+                    default_brk_rate = json_data["default_brk_rate"]
+                if "default_mod_rate" in json_data:
+                    default_mod_rate = json_data["default_mod_rate"]
+
                 definitions = []
+                definition_ids = []
                 for element in json_data["choices"]:
                     uniprotid = element["uniprotid"]
                     definition_json = app.mongo.db.kami_definitions.find_one({
@@ -231,6 +234,7 @@ def instantiate(corpus_id):
                         "protoform.uniprotid": uniprotid
                     })
                     if definition_json is not None:
+                        definition_ids.append(definition_json["id"])
                         selected_products = element["selectedVariants"]
                         new_def = {
                             "id": definition_json["id"],
@@ -242,16 +246,31 @@ def instantiate(corpus_id):
                             new_def["products"][p] = definition_json["products"][p]
                         definitions.append(Definition.from_json(new_def))
                 model_id = _generate_unique_model_id(corpus._id)
-                corpus.instantiate(
+                annotation = {
+                    "name": model_name,
+                    "desc": model_desc,
+                    "organism": corpus.annotation.organism
+                }
+                model = corpus.instantiate(
                     model_id,
                     definitions,
-                    annotation=CorpusAnnotation.from_json({
-                        "name": model_name,
-                        "desc": model_desc,
-                        "organism": corpus.annotation.organism
-                    })
+                    annotation=CorpusAnnotation.from_json(annotation),
+                    default_bnd_rate=default_bnd_rate,
+                    default_brk_rate=default_brk_rate,
+                    default_mod_rate=default_mod_rate
                 )
-                return redirect(url_for('model.model_view', model_id=model_id))
+                add_new_model(model_id, model.creation_time,
+                              model.last_modified, annotation,
+                              corpus_id=corpus._id,
+                              definitions=definition_ids,
+                              seed_genes=[],
+                              default_bnd_rate=default_bnd_rate,
+                              default_brk_rate=default_brk_rate,
+                              default_mod_rate=default_mod_rate)
+                data = {
+                    "redirect": url_for('model.model_view', model_id=model_id)
+                }
+                return jsonify(data), 200
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-generated-nugget",
@@ -261,6 +280,9 @@ def add_nugget_from_session(corpus_id, add_agents=True,
                             anatomize=True, apply_semantics=True):
     """Add nugget stored in session to the corpus."""
     corpus = get_corpus(corpus_id)
+    if "nugget" not in session:
+        return render_template("session_expired.html")
+
     corpus.add_nugget(
         session["nugget"], session["nugget_type"],
         session["template_rels"],
@@ -282,8 +304,10 @@ def add_nugget_from_session(corpus_id, add_agents=True,
 def import_json_interactions(corpus_id):
     """Handle import of json interactions."""
     if request.method == "GET":
+        corpus = get_corpus(corpus_id)
         return render_template('import_interactions.html',
-                               corpus_id=corpus_id)
+                               corpus_id=corpus_id,
+                               corpus_name=corpus.annotation.name)
     else:
         if 'file' not in request.files:
             raise ValueError('No file part')
