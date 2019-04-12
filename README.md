@@ -1,6 +1,6 @@
 # KAMIStudio
 
-KAMIStudio is a bio-curation environment for modelling cellular signalling based on [KAMI](https://github.com/Kappa-Dev/KAMI) library. It is web-based and can be started as a server locally.
+KAMIStudio is a bio-curation environment for modelling cellular signalling based on the [KAMI](https://github.com/Kappa-Dev/KAMI) library. It is web-based and can be started as a server locally.
 
 
 ## Installation
