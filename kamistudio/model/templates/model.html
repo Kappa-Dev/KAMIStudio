@@ -2,6 +2,7 @@
 
 {% block action_buttons %}
     <div class="kb-action-buttons">
+        <a href="{{ url_for('model.generate_kappa', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-cog"></span> Generate Kappa</a>
         <a href="{{ url_for('model.download_model', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export JSON</a>
         <a {% if not readonly %}href="{{ url_for('model.delete_model', model_id=kb_id) }}"{%endif%} type="button" class="btn btn-primary btn-md panel-button instantiation"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-remove"></span> Delete</a>
     </div>
@@ -10,7 +11,11 @@
 
 {% block sidebar_items %}
 	<h2 class="mb-6 kb-action-brand">Model overview</h2>
-	<div class="highlighted-item instance" id="modelData"></div>
+	<div class="highlighted-item instance" id="modelData">
+    <div id="loadingBlock" class="loading-elements center-block">
+      <div id="loaderModel"></div>
+    </div>  
+  </div>
 {% endblock %}
 
 
@@ -71,7 +76,23 @@
           {% if kb._definitions %}
                 definitions='{{ kb._definitions }}'
           {% endif %}
+          {% if kb.default_bnd_rate %}
+                default_bnd_rate = '{{kb.default_bnd_rate}}'
+          {% endif %}
+          {% if kb.default_brk_rate %}
+                default_brk_rate = '{{kb.default_brk_rate}}'
+          {% endif %}
+          {% if kb.default_mod_rate %}
+                default_mod_rate = '{{kb.default_mod_rate}}'
+          {% endif %}
           onDataUpdate={handleModelUpdate('{{ kb._id }}')}
+          onRateDataUpdate={handleRateInfoUpdate(
+              '{{ kb._id }}',
+              {% if readonly %}
+                  true
+              {% else %}
+                  false
+              {% endif %})}
           proteins='{{ proteins|safe }}' 
           bindings='{{ bindings|safe }}'
           modifications='{{ modifications|safe }}'
@@ -79,6 +100,5 @@
       document.getElementById('modelData')
     );
 
-    renderNuggetList('{{kb_id}}', '{{nuggets|safe}}', true, {% if readonly %}true{% else %}false{% endif %});
   </script>
 {% endblock %}

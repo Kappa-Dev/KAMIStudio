@@ -19,10 +19,10 @@
     <!------------------ Nav tabs --------->
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item active">
-        <a class="nav-link active {% if instantiated %}instantiation-link {% endif %}"  onClick="switchToAG(this);" role="tab">Action graph ({% if kb.empty() %}empty{% else %}{{ kb.action_graph.nodes()|length }} nodes {% endif %})</a>
+        <a id="switchToAGTab" class="nav-link active {% if instantiated %}instantiation-link {% endif %}"  onClick="switchToAG(this);" role="tab">Action graph ({% if kb.empty() %}empty{% else %}{{ kb.action_graph.nodes()|length }} nodes {% endif %})</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {% if instantiated %}instantiation-link {% endif %}" onClick="switchToNuggets(this);" role="tab">Nuggets ({% if kb.empty() %}0{% else %}{{ kb.nuggets()|length }}{% endif %} nuggets)</a>
+        <a id="switchToNuggetsTab" class="nav-link {% if instantiated %}instantiation-link {% endif %}" onClick="loadNuggetsTab(this, '{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{% else %}false{% endif %});" role="tab">Nuggets ({% if kb.empty() %}0{% else %}{{ kb.nuggets()|length }}{% endif %} nuggets)</a>
       </li>
       {% block definitions_tab %}{% endblock %}
     </ul>
@@ -43,9 +43,9 @@
             
             <div class="col-md-9">
             <div class="action-graph-view">
-              <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a>
+              <!-- <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a>
               <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-resize-small"></span> Interaction network</a>
-              <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a>
+              <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a> -->
               <button id="saveLayoutButton" type="button" class="btn btn-primary btn-md panel-button nugget-list-view {% if instantiated %}instantiation{% endif %}" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</button>
             </div>
 
@@ -56,7 +56,7 @@
               </div>
             </div>
 
-            <svg id="actionGraphSvg" style="width: 100%; height: 500px; display: none;"></svg>
+            <svg id="actionGraphSvg" width="850" height="500" style="display: none;"></svg>
             <div class="row">
               <div class="col-sm-6">
                 <p id="ctrlClickMessage" style="margin-left: 10px; display: none;">CTRL+click to select multiple elements</p>
@@ -130,12 +130,12 @@
   
 {% block custom_scripts %}
   <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
-  <script src="{{ url_for('static', filename='js/tabSwitching.js') }}" type="text/javascript">
-  </script>
   <script src="{{ url_for('static', filename='js/info_boxes/InfoBox.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/definitionViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/nuggetTable.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/tabSwitching.js') }}" type="text/javascript">
+  </script>
   <script type="text/babel">
     getActionGraphAndVisualize(
       '{{ kb_id }}',

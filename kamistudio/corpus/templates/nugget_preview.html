@@ -13,10 +13,20 @@
   <div class="row">
     <div class="col-md-7">
       <div id="nuggetViewWidget">
-
+         <div id="loadingBlock" class="loading-elements center-block">
+          <div id="loader"></div>
+        </div>
       </div>
       <div class="row">
-        <a type="button" id="addNuggetToTheModel" class="btn btn-primary btn-lg" {% if not readonly%}href="{{ url_for('corpus.add_nugget_from_session', corpus_id=corpus_id) }}"{%endif%}  {% if readonly %} disabled {%endif%}><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus</a>    
+         <a type="button" onclick="$('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px; ');" id="addNuggetToTheModel" class="btn btn-primary btn-lg" {% if not readonly%}href="{{ url_for('corpus.add_nugget_from_session', corpus_id=corpus_id) }}"{%endif%}  {% if readonly %} disabled {%endif%}><span class="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus</a>
+      </div>   
+      <div class="row">
+        <div id="progressBlock" style="padding-top: 10px; display: none;">
+          <div id="progressMessage">Adding nugget to the corpus...</div>
+          <div id="loadingBlock" class="loading-elements center-block">
+            <div id="loader"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

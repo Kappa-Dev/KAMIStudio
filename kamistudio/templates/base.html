@@ -35,10 +35,19 @@
 {% endblock %}
 
 {% block content %}
+    <div class="row workspace" style="margin-bottom: 0px;">
+      <div class="col-sm-2"></div>
+      <div class="col-sm-8">
+        {% block main_content %}
+        {% endblock %}
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+
     <!-- Workspace -->
     <div class="row workspace"> 
           <!-- Sidebar -->
-          <div class="col-sm-2" id="sidebar-wrapper">
+          <div class="col-sm-3" id="sidebar-wrapper">
             {% block sidebar_items %}
             {% endblock %}
           </div>
@@ -60,7 +69,7 @@
               {% endblock %}
             </div>
           </div>
-          <div class="col-sm-2"></div>
+          <div class="col-sm-1"></div>
           <!-- end of tabs -->
     </div>
     <!-- End of workspace -->

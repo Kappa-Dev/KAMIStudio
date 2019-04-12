@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block panel_buttons %}
-   <h3>Recently modified</h3>
+{% block main_content %}
+  <h3>Recently modified</h3>
    <div class="row">
     {%for i in range(0, 3)%} 
       <div class="col-md-4">
@@ -25,9 +25,7 @@
        </div>
     {% endfor%} 
   </div>
-{% endblock %}
 
-{% block tabs %}
   <div class="row">
     <div class="col-md-6">
       <div class="home-collection">
