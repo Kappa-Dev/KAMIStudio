@@ -490,7 +490,7 @@ table.no-borders > tbody > tr > td {
 }
 
 h3.editable-box {
-	/*margin-top: 0px;*/
+	margin-top: 0px;
 }
 
 .editable-box.right-button {
@@ -570,4 +570,8 @@ ul.selection-items li {
 	padding: 10px;
 	margin: 10px;
 	margin-left: 0pt;
+}
+
+.faded {
+	margin-bottom: 0pt;
 }
