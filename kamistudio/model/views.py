@@ -156,9 +156,9 @@ def download_model(model_id):
     model = get_model(model_id)
     filename = model_id.replace(" ", "_") + ".json"
     model.export_json(
-        os.path.join(app.root_path, "uploads/" + filename))
+       os.path.join(app.config["UPLOAD_FOLDER"] + filename))
     return send_file(
-        os.path.join(app.root_path, "uploads/" + filename),
+        os.path.join(app.config["UPLOAD_FOLDER"] + filename),
         as_attachment=True,
         mimetype='application/json',
         attachment_filename=filename)
@@ -406,10 +406,10 @@ def generate_kappa(model_id):
         filename = model_id.replace(" ", "_") + ".kappa"
         kappa_str = kappa_exporters.generate_kappa(model)
         print(kappa_str)
-        with open(os.path.join(app.root_path, "uploads/" + filename), "w+") as f:
+        with open(os.path.join(app.config["UPLOAD_FOLDER"] + filename), "w+") as f:
             f.write(kappa_str)
             return send_file(
-                os.path.join(app.root_path, "uploads/" + filename),
+                os.path.join(app.config["UPLOAD_FOLDER"] + filename),
                 as_attachment=True,
                 # mimetype='application/json',
                 attachment_filename=filename)

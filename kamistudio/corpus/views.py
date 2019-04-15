@@ -352,9 +352,9 @@ def download_corpus(corpus_id):
     corpus = get_corpus(corpus_id)
     if corpus:
         corpus.export_json(
-            os.path.join(app.root_path, "uploads/" + filename))
+            os.path.join(app.config["UPLOAD_FOLDER"] + filename))
         return send_file(
-            os.path.join(app.root_path, "uploads/" + filename),
+            os.path.join(app.config["UPLOAD_FOLDER"] + filename),
             as_attachment=True,
             mimetype='application/json',
             attachment_filename=filename)
