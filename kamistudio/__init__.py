@@ -32,7 +32,8 @@ def init_neo4j_db():
             app.config["NEO4J_URI"],
             auth=(app.config["NEO4J_USER"], app.config["NEO4J_PWD"])
         )
-    except ServiceUnavailable:
+    except ServiceUnavailable as e:
+        print(e)
         app.neo4j_driver = None
 
 
