@@ -21,8 +21,22 @@ function getMultipleValues(data, attr_name) {
 };
 
 function boolRepresentation(flag) {
-	return flag ? "+" : "-";
+	if (typeof flag === "string") {
+		var els = flag.split(", "),
+			newEls = [];
+		for (var i = els.length - 1; i >= 0; i--) {
+			if (els[i] === "true") {
+				newEls.push("+");
+			} else {
+				newEls.push("-");
+			}
+		}
+		return newEls.join(", ");
+	} else {
+		return flag ? "+" : "-";
+	}
 }
+
 
 class EditableBox extends React.Component {
 
@@ -30,6 +44,7 @@ class EditableBox extends React.Component {
 		super(props);
 
 		this.state = {
+			expanded: props.expanded,
 			editing: false,
 			updatedData: {}
 		};
@@ -37,6 +52,7 @@ class EditableBox extends React.Component {
 		this.handleSaveClick = this.handleSaveClick.bind(this);
 		this.handleCancelClick = this.handleCancelClick.bind(this);
 		this.handleFieldChange = this.handleFieldChange.bind(this);
+		this.handleCollapse = this.handleCollapse.bind(this);
 	}
 
 	handleEditClick() {
@@ -75,72 +91,86 @@ class EditableBox extends React.Component {
 		this.setState(newState);
 	}
 
+	handleCollapse() {
+		let newState = { ...this.state };
+		newState.expanded = !newState.expanded;
+		this.setState(newState);
+	}
+
 	render() {
-		var content;
-		if (this.props.items.length > 0) {
-			if (this.state.editing) {
+		var content = null;
+		if (this.state.expanded) {
+			if (this.props.items.length > 0) {
+				if (this.state.editing) {
 
-				var items = this.props.items.map(
-					(item) =>
-					    !this.props.protected.includes(item[0]) ?
-						    <tr>
-							  	<th scope="row">{item[1]}</th>
-							  	<td>
-							  		<input type="text"
-						          		   className="form-control"
-						          		   name={item[1]}
-						          		   id={item[0]}
-						          		   onChange={this.handleFieldChange(item[0])}
-						          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
-						          	</td>
-							</tr>
-							:
-							<tr>
-							  	<th scope="row">{item[1]}</th>
-							  	<td>{item[2]}</td>
-							</tr>
-				);
+					var items = this.props.items.map(
+						(item, key) =>
+						    !this.props.protected.includes(item[0]) ?
+							    <tr key={key}>
+								  	<th scope="row">{item[1]}</th>
+								  	<td>
+								  		<input type="text"
+							          		   className="form-control"
+							          		   name={item[1]}
+							          		   id={item[0]}
+							          		   onChange={this.handleFieldChange(item[0])}
+							          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
+							          	</td>
+								</tr>
+								:
+								<tr key={key}>
+								  	<th scope="row">{item[1]}</th>
+								  	<td>{item[2]}</td>
+								</tr>
+					);
+				} else {
+					var items = this.props.items.map((item, key) =>
+					    <tr key={key}>
+						  	<th scope="row">{item[1]}</th>
+						  	<td>{item[2]}</td>
+						</tr>
+					);
+				}
+				var borderFlag = "";
+				if (this.props.noBorders) {
+					borderFlag = " no-borders";
+				}
+
+				content =
+					<div className="table-responsive">
+						<table className={"table table info-table" + borderFlag}>
+							<tbody>
+								{items}
+							</tbody>
+						</table>
+					</div>;
 			} else {
-				var items = this.props.items.map((item) =>
-				    <tr>
-					  	<th scope="row">{item[1]}</th>
-					  	<td>{item[2]}</td>
-					</tr>
-				);
+				content = 
+					<p id={this.props.id + "noSelectedElements"}>
+						{this.props.message}
+					</p>;
 			}
-			var borderFlag = "";
-			if (this.props.noBorders) {
-				borderFlag = " no-borders";
-			}
-
-			content =
-				<div className="table-responsive">
-					<table className={"table table info-table" + borderFlag}>
-						<tbody>
-							{items}
-						</tbody>
-					</table>
-				</div>;
-		} else {
-			content = 
-				<p id={this.props.id + "noSelectedElements"}>
-					{this.props.message}
-				</p>;
 		}
 
 		var topButton = null;
-		if (this.props.items.length > 0) {
-			if ((this.props.editable) && (!this.state.editing)) {
-				var disable = false;
-				if (this.props.readonly) {
-					disable = true;
+		if (this.state.expanded) {
+			if (this.props.items.length > 0) {
+				if ((this.props.editable) && (!this.state.editing)) {
+					var disable = false;
+					if (this.props.readonly) {
+						disable = true;
+					}
+					topButton = 
+						<div className="col-md-4">
+							<div style={{"float": "right"}}>
+								<button 
+								   type="button" onClick={this.handleEditClick}
+								   className="btn btn-default btn-sm panel-button editable-box right-button" disabled={disable}>
+								   	<span className="glyphicon glyphicon-pencil"></span> Edit
+								</button>
+							</div>
+						</div>;
 				}
-				topButton = 
-					<button 
-					   type="button" onClick={this.handleEditClick}
-					   className="btn btn-default btn-sm panel-button editable-box right-button" disabled={disable}>
-					   	<span className="glyphicon glyphicon-pencil"></span> Edit
-					</button>;
 			}
 		}
 
@@ -160,16 +190,34 @@ class EditableBox extends React.Component {
 				</button>;
 		}
 
+		var title;
+		if (this.props.expandable) {
+			if (this.state.expanded) {
+				title = 
+					<a className="info-box-title" onClick={this.handleCollapse}>
+						<h3 className="editable-box">
+							<span className="glyphicon glyphicon-menu-down"></span> {this.props.name}
+						</h3>
+					</a>;
+				
+			} else {
+				title =
+					<a className="info-box-title" onClick={this.handleCollapse}>
+						<h3 className="editable-box">
+							<span className="glyphicon glyphicon-menu-right"></span> {this.props.name}
+						</h3>
+					</a>;
+			}
+		} else {
+			title = <h3 className="editable-box">{this.props.name}</h3>;
+		}
+
 		return ([
 			<div className="row">
-				<div className="col-md-7">
-					<h3 className="editable-box">{this.props.name}</h3>
+				<div className={"col-md-" + (topButton ? "8" : "12")}>
+					{title}
 				</div>
-				<div className="col-md-5">
-					<div style={{"float": "right"}}>
-						{topButton}
-					</div>
-				</div>
+				{topButton}
 			</div>,
             <div id={this.props.id}>
             	{content}
@@ -269,11 +317,143 @@ class ElementInfoBox extends React.Component {
 				items={items}
 				message={message}
 				data={{}}
+				expandable={true}
+				expanded={true}
 				editable={this.props.editable}/>
 		);
 	}
 }
 
+
+function generateNodeMetaDataItems(elementId, metaType, attrs) {
+	var message = "",
+		items = [],
+		data = {};
+
+	if (!elementId) {
+		message = "Click on an element to select";
+	} else {
+		if (metaType === "gene") {
+
+			var uniprot = singleValueToString(attrs, "uniprotid"),
+				hgnc = singleValueToString(attrs, "hgnc_symbol"),
+				synonyms = multipleValuesToString(attrs, "synonyms");
+			items = [
+				[
+					"uniprotid",
+					"UniProt AC",
+					<a href={"https://www.uniprot.org/uniprot/" + uniprot}>
+						{uniprot}
+					</a>
+				],
+				["hgnc_symbol", "HGNC Symbol", hgnc],
+				["synonyms", "Synonyms", synonyms]
+			];
+			data["uniprotid"] = getSingleValue(attrs, "uniprotid");
+			data["hgnc_symbol"] = getSingleValue(attrs, "hgnc_symbol");
+			data["synonyms"] = getMultipleValues(attrs, "synonyms");
+
+		} else if ((metaType === "region") || (metaType === "site")) {
+			var name = singleValueToString(attrs, "name"),
+				interproValue = singleValueToString(attrs, "interproid");
+
+			var interpro;
+			if (interproValue[0] != "I") {
+				interpro = interproValue;
+			} else {
+				interpro =
+					<a href={"http://www.ebi.ac.uk/interpro/entry/" + interproValue}>
+						{interproValue}
+					</a> 
+			}
+
+			items = [
+				["name", "Name", name],
+				["interproid", "InterPro ID", interpro]
+			];
+			data["interproid"] = getSingleValue(attrs, "interproid");
+			data["name"] = getSingleValue(attrs, "name");
+		} else if (metaType === "residue") {
+			var aa = multipleValuesToString(attrs, "aa"),
+				test = singleValueToString(attrs, "test");
+			items = [
+				["aa", "Amino Acid", aa],
+				["test", "Test", boolRepresentation(test)]
+			];
+			data["aa"] = getMultipleValues(attrs, "aa");
+			data["test"] = getSingleValue(attrs, "test");
+		} else if (metaType === "state") {
+			var name = singleValueToString(attrs, "name"),
+				test = singleValueToString(attrs, "test");
+			items = [
+				["name", "Name", name],
+				["test", "Test", boolRepresentation(test)]
+			];
+			data["name"] = getSingleValue(attrs, "name");
+			data["test"] = getSingleValue(attrs, "test");
+		} else if (metaType === "mod") {
+			var value = singleValueToString(attrs, "value"),
+				rate = singleValueToString(attrs, "rate");
+			items = [
+				["value", "Value", boolRepresentation(value)],
+				["rate", "Rate", rate],
+			];
+			data["value"] = getSingleValue(attrs, "value");
+			data["rate"] = getSingleValue(attrs, "rate");
+		} else if (metaType === "bnd") {
+			var rate = singleValueToString(attrs, "rate"),
+				test = multipleValuesToString(attrs, "test"),
+				type = multipleValuesToString(attrs, "type");
+			items = [
+				["rate", "Rate", rate],
+				["test", "Test", boolRepresentation(test)],
+				["type", "Type", type]
+			];
+			data["rate"] = getSingleValue(attrs, "rate"),
+			data["test"] = getMultipleValues(attrs, "test");
+			data["type"] = getMultipleValues(attrs, "type");
+		} else {
+			message = "No meta-data available";
+		}
+	}
+	return [message, items, data];
+}
+
+function generateEdgeMetaDataItems(sourceId, targetId,
+								   sourceMetaType, targetMetaType, attrs) {
+	var message = "",
+		items = [],
+		data = {};
+	if ((!sourceId) || (!targetId)) {
+		message = "Click on an element to select";
+	} else {
+		//  region/gene, site/gene, site/region
+		if (((sourceMetaType === "region") && (targetMetaType === "gene")) ||
+			((sourceMetaType === "site") && (targetMetaType === "gene")) ||
+			((sourceMetaType === "site") && (targetMetaType === "region"))) {
+			var start = singleValueToString(attrs, "start"),
+				end = singleValueToString(attrs, "end"),
+				order = singleValueToString(attrs, "order");
+			items = [
+				["start", "Start", start],
+				["end", "End", end],
+				["order", "Order", order]
+			];
+			data["start"] = getSingleValue(attrs, "start");
+			data["end"] = getSingleValue(attrs, "end");
+			data["order"] = getSingleValue(attrs, "order");
+		} else if (sourceMetaType === "residue")  {
+			var loc = singleValueToString(attrs, "loc");
+			items = [
+				["loc", "Location", loc]
+			];
+			data["loc"] = getSingleValue(attrs, "loc");
+		} else {
+			message = "Not available for this element"
+		}
+	}
+	return [message, items, data];
+}
 
 class MetaDataBox extends React.Component {
 	constructor(props) {
@@ -281,142 +461,178 @@ class MetaDataBox extends React.Component {
 	}
 
 	render() {
-		var items = [];
-		var data = {};
-		var message = "";
+		var items = [],
+			data = {},
+			message = "",
+		    result = null;
 		if (this.props.elementType === "node") {
-			if (!this.props.elementId) {
-				message = "Click on an element to select";
-			} else {
-				if (this.props.metaType === "gene") {
-
-					var uniprot = singleValueToString(this.props.attrs, "uniprotid"),
-						hgnc = singleValueToString(this.props.attrs, "hgnc_symbol"),
-						synonyms = multipleValuesToString(this.props.attrs, "synonyms");
-					items = [
-						[
-							"uniprotid",
-							"UniProt AC",
-							<a href={"https://www.uniprot.org/uniprot/" + uniprot}>
-								{uniprot}
-							</a>
-						],
-						["hgnc_symbol", "HGNC Symbol", hgnc],
-						["synonyms", "Synonyms", synonyms]
-					];
-					data["uniprotid"] = getSingleValue(this.props.attrs, "uniprotid");
-					data["hgnc_symbol"] = getSingleValue(this.props.attrs, "hgnc_symbol");
-					data["synonyms"] = getMultipleValues(this.props.attrs, "synonyms");
-
-				} else if ((this.props.metaType === "region") || (this.props.metaType === "site")) {
-					var name = singleValueToString(this.props.attrs, "name"),
-						interproValue = singleValueToString(this.props.attrs, "interproid");
-
-					var interpro;
-					if (interproValue[0] != "I") {
-						interpro = interproValue;
-					} else {
-						interpro =
-							<a href={"http://www.ebi.ac.uk/interpro/entry/" + interproValue}>
-								{interproValue}
-							</a> 
-					}
-
-					items = [
-						["name", "Name", name],
-						["interproid", "InterPro ID", interpro]
-					];
-					data["interproid"] = getSingleValue(this.props.attrs, "interproid");
-					data["name"] = getSingleValue(this.props.attrs, "name");
-				} else if (this.props.metaType === "residue") {
-					var aa = multipleValuesToString(this.props.attrs, "aa"),
-						test = singleValueToString(this.props.attrs, "test");
-					items = [
-						["aa", "Amino Acid", aa],
-						["test", "Test", boolRepresentation(test)]
-					];
-					data["aa"] = getMultipleValues(this.props.attrs, "aa");
-					data["test"] = getSingleValue(this.props.attrs, "test");
-				} else if (this.props.metaType === "state") {
-					var name = singleValueToString(this.props.attrs, "name"),
-						test = singleValueToString(this.props.attrs, "test");
-					items = [
-						["name", "Name", name],
-						["test", "Test", boolRepresentation(test)]
-					];
-					data["name"] = getSingleValue(this.props.attrs, "name");
-					data["test"] = getSingleValue(this.props.attrs, "test");
-				} else if (this.props.metaType === "mod") {
-					var value = singleValueToString(this.props.attrs, "value"),
-						rate = singleValueToString(this.props.attrs, "rate");
-					items = [
-						["value", "Value", boolRepresentation(value)],
-						["rate", "Rate", rate],
-					];
-					data["value"] = getSingleValue(this.props.attrs, "value");
-					data["rate"] = getSingleValue(this.props.attrs, "rate");
-				} else if (this.props.metaType === "bnd") {
-					var rate = singleValueToString(this.props.attrs, "rate"),
-						test = multipleValuesToString(this.props.attrs, "test"),
-						type = multipleValuesToString(this.props.attrs, "type");
-					items = [
-						["rate", "Rate", rate],
-						["test", "Test", boolRepresentation(test)],
-						["type", "Type", type]
-					];
-					data["rate"] = getSingleValue(this.props.attrs, "rate"),
-					data["test"] = getMultipleValues(this.props.attrs, "test");
-					data["type"] = getMultipleValues(this.props.attrs, "type");
-				} else {
-					message = "No meta-data available";
-				}
-			}	
+			result = generateNodeMetaDataItems(
+				this.props.elementId, this.props.metaType, this.props.attrs);
+			
 		} else {
-			if ((!this.props.sourceId) || (!this.props.targetId)) {
-				message = "Click on an element to select";
-			} else {
-				//  region/gene, site/gene, site/region
-				if (((this.props.sourceMetaType === "region") && (this.props.targetMetaType === "gene")) ||
-					((this.props.sourceMetaType === "site") && (this.props.targetMetaType === "gene")) ||
-					((this.props.sourceMetaType === "site") && (this.props.targetMetaType === "region"))) {
-					var start = singleValueToString(this.props.attrs, "start"),
-						end = singleValueToString(this.props.attrs, "end"),
-						order = singleValueToString(this.props.attrs, "order");
-					items = [
-						["start", "Start", start],
-						["end", "End", end],
-						["order", "Order", order]
-					];
-					data["start"] = getSingleValue(this.props.attrs, "start");
-					data["end"] = getSingleValue(this.props.attrs, "end");
-					data["order"] = getSingleValue(this.props.attrs, "order");
-				} else if (this.props.sourceMetaType === "residue")  {
-					var loc = singleValueToString(this.props.attrs, "loc");
-					items = [
-						["loc", "Location", loc]
-					];
-					data["loc"] = getSingleValue(this.props.attrs, "loc");
-				} else {
-					message = "Not available for this element"
-				}
-			}
+			result = generateEdgeMetaDataItems(
+				this.props.sourceId, this.props.targetId,
+				this.props.sourceMetaType, this.props.targetMetaType,
+				this.props.attrs);
 		}
-
+		message = result[0];
+		items = result[1];
+		data = result[2];
 
 		return (
 			<EditableBox id="metaData"
-						 name="Meta-data"
+						 name={this.props.name ? this.props.name : "Meta-data"}
 						 items={items}
 						 message={message}
 						 readonly={this.props.readonly}
 						 editable={this.props.editable}
 						 protected={[]}
-						 data={data} 
+						 data={data}
+						 expandable={true}
+						 expanded={true}
 						 onDataUpdate={this.props.onDataUpdate}
 						 instantiated={this.props.instantiated}/>
 		);
 	}
 }
+
+function SemanticsBox(props) {
+	var items = [],
+		message = "",
+		data = {};
+
+	if (!props.elementId) {
+		message = "Click on an element to select";
+	} else {
+		if (props.elementType === "node") {
+			items = [[
+				"semantics",
+				"Semantics",
+				props.semantics ? props.semantics.join(", ") : <p className="faded">not specified</p>
+			]];
+		} else {
+			message = "Not available for this element";
+		}
+	}
+
+	return (
+		<EditableBox id="semanticData"
+					 name="Semantics"
+					 items={items}
+					 message={message}
+					 readonly={props.readonly}
+					 editable={false}
+					 protected={[]}
+					 data={data}
+					 expandable={true}
+					 expanded={false} />
+	);
+}
+
+function NuggetSemanticBox(props) {
+	var items = [],
+		message = "",
+		data = {};
+
+	if (!props.elementId) {
+		message = "Click on an element to select";
+	} else {
+		if (props.elementType === "node") {
+			if (props.semantics) {
+				for (var k in props.semantics) {
+					items.push([
+						k,
+						k in PRETTY_SEMANTIC_NUGGET_NAMES ? PRETTY_SEMANTIC_NUGGET_NAMES[k] : k,
+						props.semantics[k].map(
+							(item) => item in PRETY_SEMANTIC_NAMES ? PRETY_SEMANTIC_NAMES[item] : item 
+						).join(", ")
+					])
+				}
+			} else {
+				message = "No semantics specified";
+				items = null;
+			}
+		} else {
+			message = "Not available for this element";
+		}
+	}
+
+	return (
+		<EditableBox id="semanticData"
+					 name="Semantics"
+					 items={items}
+					 message={message}
+					 readonly={props.readonly}
+					 editable={false}
+					 protected={[]}
+					 data={data}
+					 expandable={true}
+					 expanded={false} />
+	);
+}
+
+function AGElementBox(props) {
+	if (props.elementType == "node") {
+		var result = generateNodeMetaDataItems(
+				props.agElementId, props.metaType, props.attrs),
+			message = result[0],
+			items = result[1],
+			data = result[2];
+	} else {
+		message = "Not available for this element";
+		items = [];
+		data = {};
+	}
+
+	return (
+		<EditableBox id="agData"
+					 name={"Identification"}
+					 items={items}
+					 message={message}
+					 readonly={props.readonly}
+					 editable={false}
+					 protected={[]}
+					 data={data}
+					 expandable={true}
+					 expanded={false}
+					 onDataUpdate={props.onDataUpdate}
+					 instantiated={props.instantiated}/>
+	);
+}
+
+
+// function NuggetsBox(props) {
+// 	var items = [],
+// 		message = "",
+// 		data = {};
+
+// 	if (!props.elementId) {
+// 		message = "Click on an element to select";
+// 	} else {
+// 		if (props.elementType === "node") {
+// 			items = [[
+// 				"semantics",
+// 				"Semantics",
+// 				props.semantics ? props.semantics.join(", ") : <p className="faded">not specified</p>
+// 			]];
+// 		} else {
+// 			message = "Not available for this element";
+// 		}
+// 	}
+
+// 	return (
+// 		<EditableBox id="nuggetData"
+// 					 name="Associated nuggets"
+// 					 items={items}
+// 					 message={message}
+// 					 readonly={props.readonly}
+// 					 editable={false}
+// 					 protected={[]}
+// 					 data={data}
+// 					 expandable={true}
+// 					 expanded={false} />
+// 	);
+// }
 
 
 function RateDataBox(props) {
@@ -436,6 +652,8 @@ function RateDataBox(props) {
 			 name="Default interaction rates"
 			 items={rateItems}
 			 editable={true}
+			 expandable={false}
+			 expanded={true}
 			 readonly={props.readonly}
 			 onDataUpdate={props.onDataUpdate}
 			 data={rateData}
@@ -476,6 +694,8 @@ class KBMetaDataBox extends React.Component {
 						 onDataUpdate={this.props.onDataUpdate}
 						 data={data}
 						 noBorders={true}
+						 expandable={false}
+						 expanded={true}
 						 protected={this.props.protected}
 						 instantiated={this.props.instantiated}
 						 onDataUpdate={this.props.onDataUpdate}/>);

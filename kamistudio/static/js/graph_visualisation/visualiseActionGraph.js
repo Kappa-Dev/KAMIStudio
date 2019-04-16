@@ -38,6 +38,18 @@ var INSTANCE_META_COLORS = {
 };
 
 
+var PRETY_SEMANTIC_NAMES = {
+	"protein_kinase": "Protein kinase",
+	"sh2_domain": "SH2 domain",
+	"protein_kinase_activity": "Activity state of a protein kinase",
+	"phospho": "Phosphorylation modification",
+	"phospho_state": "Phosphorylation state",
+	"phospho_target_residue": "Phosphorylatable residue",
+	"pY_site": "Phosphotyrosine-binding site",
+	"sh2_domain_pY_bnd": "SH2 Phosphotyrosine binding",
+	"protein_kinase_bnd": "Protein kinase binding"
+}
+
 var HIGHLIGHT_COLOR = "#337ab7";
 var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
 
@@ -70,11 +82,27 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 	    }
 	}).done(function (data) {
 	    var graph = data["actionGraph"],
+	    	semantics = data["semantics"],
 	    	metaTyping = data["metaTyping"],
 	    	nodePos = data["nodePosition"],
 	    	cc = data["connectedComponents"],
 	    	nodePosUpdateUrl = model_id + "/update-ag-node-positioning",
 	    	nodeSizes = computeNodeSizes(graph, metaTyping, AG_META_SIZES);
+
+	    for (var i = graph.nodes.length - 1; i >= 0; i--) {
+	    	if (graph.nodes[i].id in semantics) {
+	    		var pretty = [];
+	    		for (var j = semantics[graph.nodes[i].id].length - 1; j >= 0; j--) {
+	    			if (semantics[graph.nodes[i].id][j] in PRETY_SEMANTIC_NAMES) {
+			    		pretty.push(PRETY_SEMANTIC_NAMES[semantics[graph.nodes[i].id][j]]);
+			    	} else {
+			    		pretty.push(semantics[graph.nodes[i].id][j]);
+			    	}
+			    }
+	    		graph.nodes[i].semantics = pretty;		
+	    	}
+	    }
+
 
 	    var nodeColors;
 	    if (instantiated) {
@@ -329,6 +357,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		      				   items={[]}/>,
 		       <MetaDataBox id="metaData"
 		       				items={[]}/>,
+		       <SemanticsBox id="semantics"
+		       				 items={[]}/>,
 		       button
 		      ],
 		      document.getElementById('graphInfoBoxes')
@@ -356,7 +386,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    // call react func
 		    ReactDOM.render(
 		      [<ElementInfoBox id="graphElement" />,
-		       <MetaDataBox id="metaData" />],
+		       <MetaDataBox id="metaData" />,
+		       <SemanticsBox id="semantics" items={[]}/>],
 		      document.getElementById('graphInfoBoxes')
 		    );
 		};
@@ -399,7 +430,13 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		       				   editable={true}
 		       				   readonly={readonly}
 		       				   instantiated={instantiated}
-		       				   onDataUpdate={updateNodeAttrs(d, i)}/>],
+		       				   onDataUpdate={updateNodeAttrs(d, i)}/>,
+		       <SemanticsBox id="semantics"
+		       				 elementId={d.id}
+ 	       				 	 semantics={d.semantics}
+		       				 elementType="node"
+		       				 editable={false}
+		       				 readonly={readonly}/>],
 		      document.getElementById('graphInfoBoxes')
 		    );
 		};
@@ -446,7 +483,14 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		       				editable={true}
 		       				readonly={readonly}
 		       				instantiated={instantiated}
-		       				onDataUpdate={updateEdgeAttrs(d, i)}/>],
+		       				onDataUpdate={updateEdgeAttrs(d, i)}/>,
+
+		       <SemanticsBox id="semantics"
+		       				 elementId={"dummy"}
+		       				 elementType="edge"
+		       				 editable={false}
+		       				 eadonly={readonly}
+		       				/>],
 		      document.getElementById('graphInfoBoxes')
 		    );
 		};

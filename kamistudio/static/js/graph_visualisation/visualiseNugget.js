@@ -3,6 +3,12 @@
  * 
  */
 
+
+var PRETTY_SEMANTIC_NUGGET_NAMES = {
+  "sh2_pY_binding_semantic_nugget": "SH2 pY binding",
+  "phosphorylation_semantic_nugget": "Phosphorylation"
+};
+
 function htmlToElement(html) {
     var template = document.createElement('template');
     html = html.trim(); // Never return a text node of whitespace as the result
@@ -355,7 +361,7 @@ function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
 }
 
 function handleNuggetNodeClick(modelId, nuggetId, instantiated,
-                               graph, metaTyping, readonly) {
+                               graph, agTyping, semantics, metaTyping, readonly) {
   return function(d, i, el) {
     // deselect all the selected elements
       var svg = d3.select("#nuggetSvg");
@@ -388,17 +394,51 @@ function handleNuggetNodeClick(modelId, nuggetId, instantiated,
           document.getElementById('nuggetGraphElementInfo'));
       ReactDOM.render(
          [<MetaDataBox id="metaData"
-                     elementId={d.id}
-                     elementType="node"
-                     metaType={metaTyping[d.id]}
-                     attrs={d.attrs}
-                     editable={true}
-                     readonly={readonly}
-                     instantiated={instantiated}
-                     onDataUpdate={updateNuggetNodeAttrs(
-                        modelId, nuggetId, instantiated, graph, metaTyping, readonly, d, i)}/>],
+                        elementId={d.id}
+                        elementType="node"
+                        metaType={metaTyping[d.id]}
+                        attrs={d.attrs}
+                        editable={true}
+                        readonly={readonly}
+                        instantiated={instantiated}/>],
           document.getElementById('nuggetGraphMetaModelInfo')
       );
+      ReactDOM.render(
+         [<AGElementBox id="agElement"
+                     agElementId={agTyping[d.id][0]}
+                     elementType="node"
+                     metaType={metaTyping[d.id]}
+                     attrs={agTyping[d.id][1]}
+                     editable={false}
+                     readonly={readonly}
+                     instantiated={instantiated}/>],
+          document.getElementById('nuggetGraphIdentificationInfo')
+      );
+
+      if (!instantiated) {
+
+        var nodeSemantics = {};
+
+        for (var sname in semantics) {
+            for (var node in semantics[sname]) {
+              if (node == d.id) {
+                nodeSemantics[sname] = semantics[sname][node];
+              }
+            }
+        }
+
+        ReactDOM.render(
+           [<NuggetSemanticBox id="nuggetSemantics"
+                       elementId={d.id}
+                       elementType="node"
+                       metaType={metaTyping[d.id]}
+                       semantics={nodeSemantics}
+                       editable={false}
+                       readonly={readonly}/>],
+            document.getElementById('nuggetGraphSemanticsInfo')
+        );
+      }
+
   };
 }
 
@@ -451,6 +491,23 @@ function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
                 onDataUpdate={updateNuggetEdgeAttrs(
                   modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
           document.getElementById('nuggetGraphMetaModelInfo'));
+    ReactDOM.render(
+         [<AGElementBox id="agElement"
+                     elementType="edge"
+                     editable={false}
+                     readonly={readonly}
+                     instantiated={instantiated}
+                     />],
+          document.getElementById('nuggetGraphIdentificationInfo')
+      );
+
+    ReactDOM.render(
+           [<NuggetSemanticBox id="nuggetSemantics"
+                       elementType="edge"
+                       editable={false}
+                       readonly={readonly}/>],
+            document.getElementById('nuggetGraphSemanticsInfo')
+        );
   };
 }
 
@@ -662,12 +719,13 @@ function viewNugget(model_id, instantiated=false, readonly=false) {
             	  nuggetType = data["nuggetType"],
             	  metaTyping = data["metaTyping"],
             	  agTyping = data["agTyping"],
+                semantics = data["semantics"],
             	  templateRelation = data["templateRelation"];
 
             var clickHandlers = {
               "nodeClick": handleNuggetNodeClick(
                   model_id, nugget_id, instantiated,
-                  nuggetGraph, metaTyping, readonly),
+                  nuggetGraph, agTyping, semantics, metaTyping, readonly),
               "edgeClick": handleNuggetEdgeClick(
                   model_id, nugget_id, instantiated,
                   nuggetGraph, metaTyping, readonly),

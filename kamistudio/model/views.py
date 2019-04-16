@@ -405,13 +405,12 @@ def generate_kappa(model_id):
     if model:
         filename = model_id.replace(" ", "_") + ".kappa"
         kappa_str = kappa_exporters.generate_kappa(model)
-        print(kappa_str)
         with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "w+") as f:
             f.write(kappa_str)
+            print(kappa_str)
             return send_file(
                 os.path.join(app.config["UPLOAD_FOLDER"], filename),
                 as_attachment=True,
-                # mimetype='application/json',
                 attachment_filename=filename)
     else:
         return render_template("model_not_found.html", model_id=model_id)

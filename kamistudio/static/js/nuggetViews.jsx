@@ -19,28 +19,66 @@ function NuggetListItem(props) {
     );
 }
 
-function NuggetList(props) {
-    var content = Object.keys(props.items).map(
-        (key, i) => <div id={"nuggetListItem" + key}>
-                        <NuggetListItem
-                            nuggetId={key}
-                            nuggetType={props.items[key][1]}
-                            nuggetDesc={props.items[key][0]}
-                            onClick={props.onItemClick}
-                            instantiated={props.instantiated} />
-                    </div>);
-    return ([
-        <div id="nuggetsListView">
-            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
-                {content}
-            </ul>
-        </div>,
-        <div className="row">
-          <div className="col-md-12">
-            <p style={{"margin-top": "10px"}}>Interaction types: <span className="dot dot-bnd"></span> BND <span className="dot dot-mod"></span> MOD</p> 
-          </div>
-        </div>
-    ]);
+class NuggetList extends React.Component{
+    constructor(props) {
+        super(props);
+
+        this.filterList = this.filterList.bind(this);
+
+        this.state = {
+            initialItems: props.items,
+            items : props.items
+        }
+    }
+
+
+    filterList(event) {
+
+        var state = Object.assign({}, this.state),
+            updatedDict = Object.assign({}, this.state.initialItems);
+
+        var entries = Object.entries(updatedDict).filter(
+                function(item) {
+                    return item.join(", ").toLowerCase().search(
+                        event.target.value.toLowerCase()) !== -1;
+                }
+            );
+        updatedDict = Object.fromEntries(entries);
+
+        state["items"] = updatedDict;
+        this.setState(state);
+    }
+
+    render() {
+
+        var content = Object.keys(this.state.items).map(
+            (key) => <div id={"nuggetListItem" + key}>
+                            <NuggetListItem
+                                nuggetId={key}
+                                nuggetType={this.props.items[key][1]}
+                                nuggetDesc={this.props.items[key][0]}
+                                onClick={this.props.onItemClick}
+                                instantiated={this.props.instantiated} />
+                        </div>);
+
+        return ([
+            <div className="row">  
+                <div className="col-md-12">
+                    <input className="form-control search nugget-search" type="text" placeholder="Search" onChange={this.filterList}/>
+                </div>
+            </div>,
+            <div id="nuggetsListView">
+                <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+                    {content}
+                </ul>
+            </div>,
+            <div className="row">
+              <div className="col-md-12">
+                <p style={{"margin-top": "10px"}}>Interaction types: <span className="dot dot-bnd"></span> BND <span className="dot dot-mod"></span> MOD</p> 
+              </div>
+            </div>
+        ]);
+    }
 }
 
 
@@ -72,7 +110,8 @@ class NuggetPreview extends React.Component {
         var message = null,
             fields,
             svgDisplay = "none",
-            elementInfoBoxes = null;
+            elementInfoBoxes1 = null,
+            elementInfoBoxes2 = null;
         if (!this.props.nuggetId) {
             message = "No nugget selected";
             fields = <EditableBox
@@ -116,7 +155,7 @@ class NuggetPreview extends React.Component {
                         readonly={this.props.readonly}
                         onDataUpdate={this.props.onDataUpdate} />;
             svgDisplay = "inline-block";
-            elementInfoBoxes = [
+            elementInfoBoxes1 = [
                 <div className="col-md-6" id="nuggetGraphElementInfo">
                     <ElementInfoBox id="graphElement" items={[]}/>
                 </div>,
@@ -124,6 +163,20 @@ class NuggetPreview extends React.Component {
                     <MetaDataBox readonly={this.props.readonly} id="metaData" items={[]}/>
                 </div>
             ];
+            elementInfoBoxes2 = [
+                <div className="col-md-6" id="nuggetGraphIdentificationInfo">
+                    <AGElementBox id="agElement"
+                                  readonly={this.props.readonly}
+                                  items={[]}/>
+                </div>,
+                <div className="col-md-6" id="nuggetGraphSemanticsInfo">
+                   <NuggetSemanticBox id="nuggetSemantics"
+                                      elementType="edge"
+                                      editable={false}
+                                      readonly={this.props.readonly}/>
+                </div>
+            ];
+
         }
 
         return(
@@ -131,8 +184,12 @@ class NuggetPreview extends React.Component {
                 {fields}
                 <svg id="nuggetSvg" style={{display: svgDisplay}} width="500" height="200"></svg>
                 <div className="row">
-                    {elementInfoBoxes}
+                    {elementInfoBoxes1}
                 </div>
+                <div className="row">
+                    {elementInfoBoxes2}
+                </div>
+
             </div>
         );
     }
