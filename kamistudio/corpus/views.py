@@ -59,7 +59,7 @@ def get_corpus(corpus_id):
 def updateLastModified(corpus_id):
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     corpus_json["last_modified"] = datetime.datetime.now().strftime(
-        "%d-%m-%Y %H:%M:%s")
+        "%d-%m-%Y %H:%M:%S")
     app.mongo.db.kami_corpora.update_one(
         {"_id": corpus_json["_id"]},
         {"$set": corpus_json},

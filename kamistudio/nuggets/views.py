@@ -6,7 +6,8 @@ from kamistudio.utils import authenticate
 from kamistudio.corpus.views import get_corpus, updateLastModified
 from kamistudio.model.views import get_model
 
-from regraph import graph_to_d3_json
+from regraph import graph_to_d3_json, get_node
+from regraph.utils import attrs_to_json
 
 
 nuggets_blueprint = Blueprint('nuggets', __name__, template_folder='templates')
@@ -60,9 +61,24 @@ def get_nugget(knowledge_obj, nugget_id):
         k: knowledge_obj.get_action_graph_typing()[v]
         for k, v in knowledge_obj.get_nugget_typing(nugget_id).items()
     }
-    data["agTyping"] = knowledge_obj.get_nugget_typing(nugget_id)
+    data["agTyping"] = {}
+    ag_typing = knowledge_obj.get_nugget_typing(nugget_id)
 
+    for k, v in ag_typing.items():
+        attrs = attrs_to_json(get_node(knowledge_obj.action_graph, v))
+        data["agTyping"][k] = [v, attrs]
+
+    semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
+    data["semantics"] = {}
+    for k, v in semantic_nugget_rels.items():
+        data["semantics"][k] = {
+            kk: list(vv)
+            for kk, vv in v.items()
+        }
+        # for k, v in knowledge_obj._hierarchy.get_relation(
+        #      nowledge_obj._action_graph_id, "semantic_action_graph").items()
     data["templateRelation"] = {}
+    print(knowledge_obj.get_nugget_template_rel(nugget_id))
     for k, v in knowledge_obj.get_nugget_template_rel(nugget_id).items():
         for vv in v:
             data["templateRelation"][vv] = k

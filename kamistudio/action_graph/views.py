@@ -26,9 +26,15 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
             knowledge_obj.action_graph, attrs)
         data["connectedComponents"] =\
             knowledge_obj.action_graph.find_connected_components()
+        data["semantics"] = {
+            k: list(v)
+            for k, v in knowledge_obj._hierarchy.get_relation(
+                knowledge_obj._action_graph_id, "semantic_action_graph").items()
+        }
     else:
         data["actionGraph"] = {"links": [], "nodes": []}
         data["connectedComponents"] = {}
+        data["semantics"] = {}
 
     data["metaTyping"] = knowledge_obj.get_action_graph_typing()
     data["nodePosition"] = node_positioning
