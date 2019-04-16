@@ -99,7 +99,11 @@
                     </div>
                   </div>
                 </div>
-                <div id="nuggetView"></div>
+                <div id="nuggetView">
+                    <div id="loadingBlock" class="loading-elements center-block">
+                        <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>
+                    </div>             
+                </div>
             </div>
             <!-- End of nugget list column -->
             <!-- Nugget preview column -->
@@ -129,7 +133,6 @@
 {% if not kb.empty() %}
   
 {% block custom_scripts %}
-  <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/info_boxes/InfoBox.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/definitionViews.jsx') }}" type="text/babel"></script>

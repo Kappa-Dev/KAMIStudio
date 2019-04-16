@@ -71,7 +71,14 @@
           {% else %}
               editable={true}
           {% endif %}
-              id="metaData" items={[]}/>],
+              id="metaData" items={[]}/>,
+          <SemanticsBox
+          {% if readonly %}
+              editable={false}
+          {% else %}
+              editable={true}
+          {% endif %}
+              id="semantics" items={[]}/>],
         document.getElementById('graphInfoBoxes')
       );
     }

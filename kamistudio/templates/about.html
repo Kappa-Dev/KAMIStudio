@@ -1,5 +1,60 @@
 {% extends 'base.html' %}
 
-{% block panel_buttons %}
-<h2 class="mb-6 corpus-action-brand">About the project</h2>
+{% block main_content %}
+	<div class="row">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">
+			<div id="about">
+				<h2 class="mb-6 corpus-action-brand">About the project</h2>
+				<p>
+						KAMIStudio is a bio-curation environment for modelling cellular signalling developed at the ENS de Lyon. 
+
+
+						KAMIStudio is a part of the bio-curation project KAMI and is based on the <a href="https://github.com/Kappa-Dev/KAMI">KAMI (Knowledge Aggregator and Model Instantiator) </a> library. It is also a part of a larger <a href="https://kappalanguage.org/kappasphere">Kappa project</a>.
+					<br>
+
+						KAMI uses graph-based knowledge representation system and allows to curate corpora of de-contextualized cellular signalling knowledge. It provides capabilities for semi-automatic aggregation of individual protein-protein interactions and their instantiation in diffenent contexts. It also allows the user to automatically generate Kappa rules from instantiated signalling model.
+
+					<br>
+						The KAMI meta-model describes the kinds of entities that can be represented in KAMIStudio.
+					<br>
+					<br>
+						<b>KAMI meta-model</b>
+					<br>
+						<svg id="metaModelSvg" width="300" height="300">
+								
+						</svg>
+					<br>
+					<br>
+						You can find more about the knowledge representation system used in KAMI in the following <a href="https://www.ncbi.nlm.nih.gov/pubmed/30908261">article</a>.
+					<br>
+					<br>
+						KAMIStudio is developed as a web-based application and can be run locally. Source code and instuctions for installing locally can be found in the <a href="https://github.com/Kappa-Dev/KAMIStudio">GitHub repository</a>
+
+					<br>
+					<br>
+						<b>Contributors:</b>
+					<br>
+						Eugenia Oshurko
+					<br>
+						Russ Harmer
+					<br>
+						Sébastien Légaré
+					<br>
+						Yves-Stan Le Cornec
+				</p>
+			</div>
+		</div>
+		<div class="col-md-2">
+		</div>
+	</div>
+
+{% endblock %}
+
+
+{% block custom_scripts %}
+	<script type="text/babel">
+	    getMetaModelAndVisualize();
+  	</script>
 {% endblock %}

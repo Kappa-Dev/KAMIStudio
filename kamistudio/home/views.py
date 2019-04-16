@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 
-from flask import render_template, Blueprint, redirect, url_for, request
+from flask import render_template, Blueprint, redirect, url_for, request, jsonify
 from flask import current_app as app
 
 from werkzeug.utils import secure_filename
@@ -13,6 +13,9 @@ from kami import KamiCorpus, KamiModel
 from kamistudio.utils import authenticate
 from kamistudio.corpus.views import add_new_corpus
 from kamistudio.model.views import add_new_model
+
+from regraph import graph_to_d3_json
+from regraph.neo4j import Neo4jHierarchy
 
 
 home_blueprint = Blueprint('home', __name__, template_folder='templates')
@@ -307,3 +310,18 @@ def imported_model(filename, annotation):
             # except:
             #     return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))
+
+
+@home_blueprint.route("/about")
+def about_page():
+    return render_template("about.html")
+
+
+@home_blueprint.route("/raw-meta-model")
+def get_meta_model():
+    h = Neo4jHierarchy(driver=app.neo4j_driver)
+    data = {
+        "graph": graph_to_d3_json(h.get_graph("meta_model")),
+        "node_positioning": {}
+    }
+    return jsonify(data), 200

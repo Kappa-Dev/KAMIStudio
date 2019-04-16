@@ -575,3 +575,27 @@ ul.selection-items li {
 .faded {
 	margin-bottom: 0pt;
 }
+
+
+a.info-box-title {
+	text-decoration: none;
+	cursor: pointer;
+}
+
+input.nugget-search {
+	width: 95%;
+	margin-top: 0pt;
+}
+
+#nuggetPreview {
+	margin-top: 20px;
+}
+
+#about {
+	font-size: 12pt;
+	text-align: center;
+}
+
+#about > p {
+	color: #727272;
+}
