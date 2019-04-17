@@ -64,6 +64,10 @@ function displayHiddenSvg(readonly) {
 	}
 }
 
+function getLabels(d) {
+
+}
+
 function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 									readonly=false) {
   	// use AJAX to send request for retrieving the nugget data
@@ -119,7 +123,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		}
 		initLinkStrengthDistance(graph, metaTyping);
 		initCircleRadius(graph, metaTyping, AG_META_SIZES);
-
+		initNodeLabels(graph, metaTyping);
+		console.log(graph);
 		var simulationConf = {
 			"charge_strength": -400,
 			"collide_strength": 1.8,
@@ -413,8 +418,18 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		      .attr("stroke-width", 2)
 		      .attr("stroke", d3.rgb(highlight));
 
-		    // call react func
+		    // If gene node is selected add Create variant button
+		    var button = null;
+		    if (metaTyping[d.id] == "gene") {
+		    	button =
+	    			<a 
+	    				href={model_id + "/add-variant/" + d.id}
+	    				className="btn btn-default btn-md panel-button add-interaction-button">
+			       			<span class="glyphicon glyphicon-plus"></span> Add variant
+			       	</a>;
+		    }
 
+		    // call react func
 		    ReactDOM.render(
 		      [<ElementInfoBox id="graphElement" 
 		      				   elementId={d.id}
@@ -436,7 +451,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
  	       				 	 semantics={d.semantics}
 		       				 elementType="node"
 		       				 editable={false}
-		       				 readonly={readonly}/>],
+		       				 readonly={readonly}/>,
+		       	button],
 		      document.getElementById('graphInfoBoxes')
 		    );
 		};
@@ -510,4 +526,21 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 	    console.log("Failed to load action graph");
 	});
 
+}
+
+
+function hideAGLabels() {
+	var button = document.getElementById("showLabelsButton");
+	button.innerHTML = "Show labels";
+	button.onclick = showAGLabels;
+	hideLabels("actionGraphSvg");
+}
+
+function showAGLabels() {
+	var button = document.getElementById("showLabelsButton");
+	console.log(button.innerHTML);
+
+	button.innerHTML = "Hide labels";
+	button.onclick = hideAGLabels;
+	displayLabels("actionGraphSvg");
 }

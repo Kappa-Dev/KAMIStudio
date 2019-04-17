@@ -13,6 +13,7 @@ from regraph.neo4j import Neo4jHierarchy
 
 from werkzeug.utils import secure_filename
 
+import kami.data_structures.entities as entities
 from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.definitions import Definition
@@ -37,6 +38,18 @@ def _generate_unique_model_id(corpus_id):
         i = 1
         new_name = name + "_{}".format(i)
         while new_name in existing_models:
+            i += 1
+            new_name = name + "_{}".format(i)
+        return new_name
+
+
+def _generate_unique_variant_name(record, name):
+    if name not in record.keys():
+        return name
+    else:
+        i = 1
+        new_name = name + "_{}".format(i)
+        while new_name in record.keys():
             i += 1
             new_name = name + "_{}".format(i)
         return new_name
@@ -500,3 +513,108 @@ def get_genes(corpus_id):
             data["genes"].append([uniprotid, hgnc, syn])
         response = jsonify(data), 200
     return response
+
+
+def update_protein_definition(corpus_id, uniprot, name, product):
+    """Add new protein def."""
+    existing_def = app.mongo.db.kami_new_definitions.find_one({
+        "corpus_id": corpus_id,
+        "protoform": uniprot
+    })
+    if existing_def:
+        new_name = _generate_unique_variant_name(name)
+        existing_def["products"][new_name] = product
+        app.mongo.db.kami_new_definitions.update_one(
+            {"_id": existing_def["_id"]},
+            {"$set": existing_def},
+            upsert=False)
+    else:
+        d = {
+            "protoform": uniprot,
+            "products": product
+        }
+        app.mongo.db.kami_new_definitions.insert_one(d)
+
+
+@corpus_blueprint.route("/corpus/<corpus_id>/add-variant/<gene_node_id>",
+                        methods=["GET", "POST"])
+def add_variant(corpus_id, gene_node_id):
+    """Handle addition of protein variants."""
+    if request.method == "GET":
+        corpus = get_corpus(corpus_id)
+        graph = graph_to_d3_json(
+            corpus.action_graph,
+            nodes=corpus.subcomponent_nodes(gene_node_id))
+        ag_typing = corpus.get_action_graph_typing()
+        meta_typing = {
+            n["id"]: ag_typing[n["id"]] for n in graph["nodes"]
+        }
+        canonical_sequence = corpus.get_canonical_sequence(
+            gene_node_id)
+        return render_template(
+            "add_variant.html",
+            corpus=corpus,
+            graph_repr=json.dumps(graph),
+            meta_typing_repr=json.dumps(meta_typing),
+            canonical_sequence=canonical_sequence,
+            gene_id=gene_node_id,
+            readonly=app.config["READ_ONLY"])
+    else:
+        if app.config["READ_ONLY"]:
+            return render_template("403.html")
+        else:
+            json_data = request.get_json()
+
+            variant_name = json_data["variant_name"]
+            desc = json_data["desc"]
+            wt = True if json_data["wt"] == "true" else False
+            raw_removed_components = json_data["removedComponents"]
+            raw_selected_aa = json_data["selectedAA"]
+
+            # Create a variant record
+            corpus = get_corpus(corpus_id)
+            gene_uniprot = corpus.get_uniprot(gene_node_id)
+
+            components = {
+                "regions": [],
+                "sites": [],
+                "residues": [],
+                "states": []
+            }
+
+            # TODO: think about removal of states
+            for [c_id, c, c_type] in raw_removed_components:
+                attrs = {k: v["data"] for k, v in c.items()}
+                if c_type == "region":
+                    components["regions"].append(attrs)
+                elif c_type == "site":
+                    components["sites"].append(attrs)
+                elif c_type == "residue":
+                    loc = corpus.get_residue_location(c_id)
+                    if loc is not None:
+                        attrs["loc"] = loc
+                    components["residues"].append(attrs)
+
+            residues = []
+            for [c_id, c, aa] in raw_selected_aa:
+                attrs = {k: v["data"] for k, v in c.items()}
+                loc = corpus.get_residue_location(c_id)
+                if loc is not None:
+                    attrs["loc"] = loc
+                attrs["aa"] = aa
+                residues.append(attrs)
+
+            product = {
+                "desc": desc,
+                "wild_type": wt,
+                "removed_components": components,
+                "residues": residues
+            }
+
+            update_protein_definition(
+                corpus_id, gene_uniprot, variant_name, product)
+
+            data = {
+                "redirect": url_for('corpus.corpus_view', corpus_id=corpus_id)
+            }
+            return jsonify(data), 200

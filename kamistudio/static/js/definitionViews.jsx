@@ -192,7 +192,10 @@ function updateProductEdgeAttrs(modelId, definitionId, graph, metaTyping, d, i) 
 
 }
 
-function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, readonly) {   
+function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
+							 readonly, modifiable=false,
+							 onRemoveComponent=null,
+							 onSetAA=null) {   
    	var width = 200,
     	height = 200,
     	svgId = graphId + "Svg",
@@ -203,12 +206,12 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
 			graph, metaTyping, META_COLORS),
 		highlight = HIGHLIGHT_COLOR;
 
-    initLinkStrengthDistance(graph, metaTyping, 1);
+    // initLinkStrengthDistance(graph, metaTyping, 1);
 	initCircleRadius(graph, metaTyping, NUGGET_META_SIZES, 0.5);
 
 	var simulationConf = {
 		"charge_strength": -200,
-		"collide_strength": 2.5,
+		"collide_strength": 1,
 		"y_strength": 0
 	}
 
@@ -226,6 +229,52 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
 	          .attr("stroke-width", 2)
 	          .attr("stroke", d3.rgb(highlight));
 
+	      var button = null,
+	      	  residueSelector = [];
+	      if (modifiable) {
+		      if (metaTyping[d.id] != "gene") {
+		      	button = <button 
+						onClick={
+							function(e) {
+								e.preventDefault();
+								removeComponent(d)
+							}
+						}
+						className="btn btn-default btn-md panel-button add-interaction-button">
+			       			<span class="glyphicon glyphicon-minus"></span> Remove component
+			       	</button>;
+				if (metaTyping[d.id] == "residue") {
+			    	if ("aa" in d.attrs) {
+			    		var aa = d.attrs["aa"].data.concat(["test"]);
+			    		var choices = aa.map(
+			    			function(val) {
+			    				var checked = false,
+			    					suffix = "";
+			    				if ((d.canonical_aa) && d.canonical_aa == val) {
+			    					checked = true;
+			    					suffix = " (Wild Type)";
+			    				}
+			    				return [
+			    					<input onChange={() => onSetAA(d, val)}
+			    						   type="radio"
+			    						   name="aa"
+			    						   value={val}
+			    						   defaultChecked={checked}/>,
+			    					" " + val + suffix,
+			    					<br/>
+			    				];
+			    			}
+			    		);
+			    		residueSelector = 
+			    			<div>
+			    				<h4>Select the key residue</h4>
+			    				{choices}
+			    			</div>;
+			    	}
+			    }
+		      }
+		  }
+
 	      // call react func
 	      ReactDOM.render(
 	          [<ElementInfoBox id={graphId + "GraphElement"}
@@ -241,9 +290,33 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping, 
 	                     editable={true}
 	                     readonly={readonly}
 	                     onDataUpdate={updateProductNodeAttrs(
-	                        modelId, definitionId, graph, metaTyping, d, i)}/>],
+	                        modelId, definitionId, graph, metaTyping, d, i)}/>,
+	            residueSelector, 
+	            <br/>,
+	            button],
 	          document.getElementById(svgId + "InfoBoxes")
 	      );
+
+	      function removeComponent(d) {
+	      	var componentId = d.id;
+	      	var subcomponents = getAllComponents(graph, metaTyping, componentId);
+	      	const target = (el) => el == componentId || subcomponents.includes(el);
+
+	      	svg.selectAll(".node")
+	      	   .filter((d) => target(d.id))
+	      	   .remove();
+	      	graph.nodes.filter(
+	      		(d) => target(d.id));
+
+	      	svg.selectAll(".link")
+	      		.filter((d) => target(d.source.id) || target(d.target.id))
+	      		.remove();
+	      	graph.links.filter(
+	      		(d) => target(d.source.id) || target(d.target.id));
+	      	if (onRemoveComponent) {
+		      	onRemoveComponent(d, metaTyping[componentId]);
+		    }
+	      }
 	}
 
 	function handleEdgeClick(d, i, el) {
@@ -403,6 +476,162 @@ function renderDefinitionList(modelId, readonly) {
     }).fail(function (e) {
         console.log("Failed to load nuggets");
     });
+}
 
 
+class VariantForm extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+        	variant_name: null,
+        	desc: null,
+        	removedComponents: [],
+        	selectedAA: [],
+        	wt: false
+        }
+    }
+
+    componentDidMount() {
+    	console.log("here", d3.select("#protoformSvg"));
+    	this.showInteractiveProtoform();
+    	 	// this,
+    	 	// this.props.corpus_id,
+    	 	// this.props.graphRepr,
+    	 	// this.props.metaTypingRepr,
+    	 	// this.props.canonicalSequence,
+    	 	// this.props.readonly);
+    }
+
+    showInteractiveProtoform() {
+		var graph = JSON.parse(this.props.graphRepr),
+			metaTyping = JSON.parse(this.props.metaTypingRepr),
+			canonical_sequence = this.props.canonicalSequence;
+
+		for (var i = graph.nodes.length - 1; i >= 0; i--) {
+			if (metaTyping[graph.nodes[i].id] == "residue") {
+				// find edge to the gene with location
+				for (var j = graph.links.length - 1; j >= 0; j--) {
+					if ((graph.links[j].source == graph.nodes[i].id) &&
+						(metaTyping[graph.links[j].target] == "gene")) {
+						if ("loc" in graph.links[j].attrs) {
+							var loc = graph.links[j].attrs["loc"].data[0];
+							graph.nodes[i].canonical_aa = canonical_sequence[loc - 1];
+						}
+					}
+				}
+			}
+		}
+
+		drawDefinitionGraph(
+			this.props.corpusId,
+			null, 
+			"protoform",
+			graph, 
+			metaTyping,
+			this.props.readonly,
+			true,
+			(c, type) => this.onRemoveComponent(c, type),
+			(c, aa) => this.onSetAA(c, aa));
+	}
+
+	onRemoveComponent(component, metaType) {
+		var newState = Object.assign({}, this.state);
+		newState.removedComponents.push([component.id, component.attrs, metaType]);
+		this.setState(newState);
+	}
+
+	onSetAA(component, aa) {
+		var newState = Object.assign({}, this.state);
+		newState.selectedAA.push([component.id, component.attrs, aa]);
+		this.setState(newState);
+	}
+
+	onSubmit(e) {
+		e.preventDefault();
+		if (!this.props.readonly) {
+	        // get our form data out of state
+	        const data = this.state;
+	        const url = "/corpus/" + this.props.corpusId + "/add-variant/" + this.props.geneId;
+	        $.ajax({
+			    url: url,
+			    type: 'post',
+			    dataType: "json",
+			    contentType: 'application/json',
+			    data:  JSON.stringify(data),
+			}).done(function (data) {
+				window.location.href = data["redirect"];
+			}).fail(function (e) {
+			    console.log("Failed to create a variant");
+			});
+		}
+	}
+
+    handleFieldChange = (field) => (event, value, selectedKey) => {
+		var val;
+		if (event) {
+			val = event.target.value;
+		} else {
+			val = value;
+		}
+
+		let newState = { ...this.state };
+		newState[field] = val;
+		this.setState(newState);
+	}
+
+	handleSetWt(e) {
+		var newState = Object.assign({}, this.state);
+		newState.wt = document.getElementById('wtCheckBox').checked;
+		this.setState(newState);
+	}
+
+    render() {
+    	return (
+    		<form id="variantForm">
+				<div class="col-md-8">
+				    <div class="model-input-form-block">
+    					<div class="row form-row">
+						    <label for="default_mod_rate">Variant name</label>
+						    <input type="text" class="form-control" name="variant_name"
+						    	   placeholder=""
+						    	   value={this.state.variant_name}
+						    	   id="variant_name"
+						    	   onChange={this.handleFieldChange("variant_name")}/>
+						</div>
+						<div class="row form-row">
+						    <label for="default_mod_rate">Variant description</label>
+						    <input type="text" class="form-control" name="desc"
+						    	   placeholder=""
+						    	   value={this.state.desc}
+						    	   id="desc"
+						    	   onChange={this.handleFieldChange("desc")}/>
+						</div>
+						<div class="row form-row">
+							<input 
+								onChange={(e) => this.handleSetWt(e)}
+								type="checkbox" name="wt" value="wt" id="wtCheckBox"/> Set as a wild type<br/>
+						</div>
+						<div class="row form-row">
+							<div class="col-md-6" style={{"overflow-x": "scroll"}}>
+						      <svg id="protoformSvg" width="300" height="300"></svg>
+						    </div>
+						    <div class="col-md-6">
+						      <div id="protoformSvgInfoBoxes"></div>
+						    </div>
+						</div>
+						<div className="row form-row" style={{"text-align": "right"}}>
+							<button className="btn btn-primary btn-lg" 
+									name="importForm"
+									disabled={this.props.readonly}
+									onClick={(e) => this.onSubmit(e)}>
+									<span className="glyphicon glyphicon-plus"></span> Add variant
+							</button> 
+						</div>
+					</div>
+				</div>
+			</form>
+    	);
+    }
 }

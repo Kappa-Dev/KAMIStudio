@@ -19,6 +19,24 @@ function getMetaModelAndVisualize() {
 	    	metaTyping = {};
 
 	    console.log(graph);
+	    var displayedNodes = [
+	    	"gene",
+	    	"region",
+	    	"site",
+	    	"residue",
+	    	"state",
+	    	"mod",
+	    	"bnd"
+	    ];
+
+	    graph.nodes = graph.nodes.filter(
+	    	(d) => displayedNodes.includes(d.id));
+	    graph.links = graph.links.filter(
+	    	(d) => displayedNodes.includes(d.source) && displayedNodes.includes(d.target));
+	    
+	    for (var i = graph.nodes.length - 1; i >= 0; i--) {
+	    	graph.nodes[i].label = graph.nodes[i].id;
+	    }
 
 	    for (var i = graph.nodes.length - 1; i >= 0; i--) {
 	    	metaTyping[graph.nodes[i].id] = graph.nodes[i].id;
@@ -27,22 +45,25 @@ function getMetaModelAndVisualize() {
 	    console.log(metaTyping);
 
 	    var nodeSizes = computeNodeSizes(
-	    	graph, metaTyping, AG_META_SIZES);
+	    	graph, metaTyping, NUGGET_META_SIZES);
 
 
 	    var nodeColors = computeNodeColors(
 	    	graph, metaTyping, META_COLORS);
 
-	    
+
 
 		initNodePosition(graph, nodePos, Object.keys(nodePos));
 
-		initLinkStrengthDistance(graph, metaTyping);
-		initCircleRadius(graph, metaTyping, AG_META_SIZES);
+		// initLinkStrengthDistance(graph, metaTyping);
+		initCircleRadius(graph, metaTyping, NUGGET_META_SIZES);
 
 		var simulationConf = {
-			"charge_strength": -400,
-			"collide_strength": 1.8,
+			"charge_strength": -300,
+			"collide_strength": 1,
+			"strength": 0.1,
+			"distance": 120,
+
 		};
 
 		var progressConf = {};
@@ -71,17 +92,12 @@ function getMetaModelAndVisualize() {
                      	clickHandlers,
                      	handleDragStarted,
                     	300,
+                    	false,
+                    	null,
                     	true);
 
 		function handleDragStarted(d_id) {
-			if ((metaTyping[d_id] != "state") &&
-				(metaTyping[d_id] != "bnd") && 
-				(metaTyping[d_id] != "mod")) {
-				return getAllComponents(
-					graph, metaTyping, d_id).concat([d_id]);
-			} else {
-				return [d_id];
-			}
+			return [d_id];
 		};
 
 	}).fail(function (e) {

@@ -534,13 +534,14 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
         nuggetGraph,
         positions[0],
         positions[1]);
-      initLinkStrengthDistance(nuggetGraph, metaTyping, 1);
+      initLinkStrengthDistance(nuggetGraph, metaTyping, 1.5);
       initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
+      initNodeLabels(nuggetGraph, metaTyping);
 
       var simulationConf = {
-        "charge_strength": -200,
-        "collide_strength": 2.5,
-        "y_strength": 0.2
+        "charge_strength": -300,
+        "collide_strength": 1,
+        "y_strength": 0.4
       }
 
 
@@ -564,7 +565,9 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
                      clickHandlers,
                      handleDragStarted,
                      100,
-                     false)
+                     false,
+                     null,
+                     true)
 
      function handleDragStarted(d_id) {
       if ((metaTyping[d_id] != "state") &&

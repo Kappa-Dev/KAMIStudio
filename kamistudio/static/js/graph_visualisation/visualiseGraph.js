@@ -9,7 +9,7 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	    d.distance = baseDistance;
 	    if (metaTyping[d.target] == "gene") {
 	      if (metaTyping[d.source] == "region") {
-	        factor = baseStrengthFactor * 0.9;
+	        factor = baseStrengthFactor * 0.5;
 	        d.distance = baseDistance * 0.4;
 	      } else if (metaTyping[d.source] == "site") {
 	        factor = baseStrengthFactor * 0.3;
@@ -142,6 +142,30 @@ function initCCPositions(graph, cc, svgId) {
 
 }
 
+function initNodeLabels(graph, metaTyping) {
+	for (var i = graph.nodes.length - 1; i >= 0; i--) {
+		if (metaTyping[graph.nodes[i].id] == "gene") {
+			if ("hgnc_symbol" in graph.nodes[i].attrs) {
+				graph.nodes[i].label = graph.nodes[i].attrs["hgnc_symbol"].data[0];
+			} else {
+				graph.nodes[i].label = graph.nodes[i].attrs["uniprotid"].data[0];
+			}
+		} else if ((metaTyping[graph.nodes[i].id] == "region") ||
+				   (metaTyping[graph.nodes[i].id] == "site")) {
+			if ("name" in graph.nodes[i].attrs) {
+				graph.nodes[i].label = graph.nodes[i].attrs["name"].data[0];
+			}
+		} else if (metaTyping[graph.nodes[i].id] == "residue") {
+			if ("aa" in graph.nodes[i].attrs) {
+				graph.nodes[i].label = graph.nodes[i].attrs["aa"].data.join(", ");
+			}
+		} else if (metaTyping[graph.nodes[i].id] == "state") {
+			if ("name" in graph.nodes[i].attrs) {
+				graph.nodes[i].label = graph.nodes[i].attrs["name"].data[0];
+			}
+		}
+	}
+}
 
 function computeNodeSizes(graph, metaTyping, scheme, scale=1) {
 	var nodeSizes = {};
@@ -184,6 +208,31 @@ function mapEdgesToObjects(graph) {
 }
 
 
+function displayLabels(svgId) {
+	var svg = d3.select("#" + svgId),
+		node = svg.selectAll(".node");
+
+	node.append("text")
+	  .attr("class", "label")
+      .attr("dy", function(d) { 
+      	return  -(d.radius + 5);
+      } )
+      // .attr("dx", ".35em")
+      .text(function(d) { 
+      	if (d.label) {
+      		return d.label.slice(0, 20); }
+      	})
+      .style("fill", "#3e3d3d")
+      .style("font-size", "10pt");
+}
+
+function hideLabels(svgId) {
+	var svg = d3.select("#" + svgId),
+		node = svg.selectAll(".node");
+
+	node.selectAll("text").remove();
+}
+
 
 function visualiseGraph(graph, svgId, 
 						nodeColors, nodeSizes,
@@ -197,7 +246,8 @@ function visualiseGraph(graph, svgId,
                      	onNodeDragStarted=null,
                      	threshold=null,
                      	zoom=true,
-                     	saveLayoutButton=null) {
+                     	saveLayoutButton=null,
+                     	showLabels=false) {
 
 	// initialise default simulation params
 	var defaultRadius;
@@ -245,6 +295,7 @@ function visualiseGraph(graph, svgId,
 	// array of current components to drag (for group dragging) 
 	var CURRENT_DRAG_COMPONENTS = [];
 	var CTRL_SELECTED_COMPONENTS = [];
+
 
 	// select svg canvas
 	var svg = d3.select("#" + svgId),
@@ -487,40 +538,6 @@ function visualiseGraph(graph, svgId,
 				});
 	}
 
-	// function fitViewBox() {
-	// 	var boundaries = container.node().getBBox(),
- //            bx = boundaries.x,
- //            by = boundaries.y,
- //            bheight = boundaries.height,
- //            bwidth = boundaries.width;
-
- //        var currentViewBox = svg.attr("viewBox");
- //        if (currentViewBox !== null) {
- //        	var split =  currentViewBox.split(" ");
- //        	if ((split[0] > bx) ||
- //        		(split[1] > by) ||
- //        		(split[2] < bwidth) ||
- //        		(split[3] < bheight)) {
- //        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-	// 	        svg  
-	// 	            .attr("viewBox", updatedView)  
-	// 	            .attr("preserveAspectRatio", "xMidYMid meet")  
-	// 	            .call(zoom);
- //        	}
- //        } else {
- //        	if ((bx < 0) ||
- //        		(by < 0) ||
- //        		(width < bwidth) ||
- //        		(height > bheight)) {
- //        		var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
-	// 	        svg  
-	// 	            .attr("viewBox", updatedView)  
-	// 	            .attr("preserveAspectRatio", "xMidYMid meet")  
-	// 	            .call(zoom);
-	// 	    }
- //        }
-	// }
-
 	function ticked() {
 		// Set positions of nodes and links corresponding to one tick of simulations
 	  	var node = svg.selectAll(".node"),
@@ -585,7 +602,7 @@ function visualiseGraph(graph, svgId,
 		                	}}))
 	            // .force("x", d3.forceX())
 	            .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
-	            // .force("center", d3.forceCenter(width / 2, height / 2))
+	            .force("center", d3.forceCenter(width / 2, height / 2))
 	            .force("collide",d3.forceCollide().strength(collideStrength).radius(
 		          function(d) {
 		          	if (d.radius) {
@@ -681,6 +698,10 @@ function visualiseGraph(graph, svgId,
 
 	   	node.append("title")
 	      .text(function(d) { return d.id; });
+
+	    if (showLabels) {
+	    	displayLabels(svgId);
+	    }
 
 	    if (!simulate) {
 	       ticked();

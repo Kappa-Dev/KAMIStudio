@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block panel_buttons %}
+  <div class="row">
+    <div class="col-md-12">
+    <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: new variant</h2>
+    </div>
+  </div>
+{% endblock %}
+
+{% block tabs %}
+  <p>Interact with the protoform graph to create a variant. You can remove nodes and specify key residue values.</p>
+
+  <div id="variantFormContainer">
+    <div id="loadingBlock"  class="col-md-6 loading-elements center-block">
+        <p>Loading...</p>
+      <div id="loader"></div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block custom_scripts %}
+  <script type="text/babel">
+    ReactDOM.render(
+        <VariantForm
+            corpusId='{{ corpus._id | safe }}'
+            graphRepr='{{ graph_repr | safe }}'
+            metaTypingRepr='{{ meta_typing_repr | safe }}'
+            canonicalSequence='{{ canonical_sequence }}'
+            readonly={% if readonly %}{true}{%else%}{false}{%endif%}
+            geneId='{{gene_id}}'
+            />,
+        document.getElementById("variantFormContainer")
+    );
+  </script>
+{% endblock %}

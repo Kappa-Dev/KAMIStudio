@@ -48,8 +48,15 @@ def init_mongo_db(add_test=False):
             app.mongo.db.create_collection("kami_models")
             app.mongo.db.kami_models.create_index("id", unique=True)
 
+        if "kami_definitions" not in app.mongo.db.collection_names():
+            app.mongo.db.create_collection("kami_definitions")
+            app.mongo.db.kami_definitions.create_index("id", unique=True)
+
+        if "kami_new_definitions" not in app.mongo.db.collection_names():
+            app.mongo.db.create_collection("kami_new_definitions")
+
         if add_test is True:
-            pass
+            app.mongo.db.kami_new_definitions.remove({})
             # app.mongo.db.kami_corpora.remove({})
             # if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
             #     with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
