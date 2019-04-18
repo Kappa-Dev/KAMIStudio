@@ -98,7 +98,13 @@ def add_new_model(model_id, creation_time, last_modified, annotation,
 @check_dbs
 def model_view(model_id):
     """View model."""
-    model = get_model(model_id)
+    try:
+        model = get_model(model_id)
+    except:
+        return render_template(
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
     nuggets = {}
     if model is not None:
         corpus = None
@@ -319,10 +325,9 @@ def generate_kappa(model_id):
         kappa_str = kappa_exporters.generate_kappa(model)
         with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "w+") as f:
             f.write(kappa_str)
-            print(kappa_str)
-            return send_file(
-                os.path.join(app.config["UPLOAD_FOLDER"], filename),
-                as_attachment=True,
-                attachment_filename=filename)
+        return send_file(
+            os.path.join(app.config["UPLOAD_FOLDER"], filename),
+            as_attachment=True,
+            attachment_filename=filename)
     else:
         return render_template("model_not_found.html", model_id=model_id)
