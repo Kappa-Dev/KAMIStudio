@@ -6,12 +6,14 @@ function htmlToElement(html) {
 }
 
 
-function showLoader() {
-	var form = document.getElementById("modelImportForm");
+function showLoader(evt) {
+	console.log("here", evt);
+	// evt.preventDefault();
+	// var form = document.getElementByTagName("form");
 	var loader = document.getElementById("loadingBlock");
 	if (loader) {
 		loader.style.display = 'initial';
-		form.submit();
+		// form.submit();
 	}
 	// loader.style.display = 'none';
 }

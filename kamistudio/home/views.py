@@ -177,7 +177,8 @@ def create_new_model():
         creation_time, last_modified,
         backend="neo4j",
         driver=app.neo4j_driver)
-    add_new_model(model, creation_time, last_modified, annotation)
+    model.create_empty_action_graph()
+    add_new_model(model_id, creation_time, last_modified, annotation)
     return redirect(url_for('model.model_view', model_id=model_id))
 
 
