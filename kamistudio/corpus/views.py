@@ -19,7 +19,7 @@ from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.definitions import Definition
 from kami.aggregation.generators import generate_nugget
 
-from kamistudio.utils import authenticate
+from kamistudio.utils import authenticate, check_dbs
 from kamistudio.corpus.form_parsing import(parse_interaction)
 from kamistudio.model.views import add_new_model
 
@@ -57,7 +57,10 @@ def _generate_unique_variant_name(record, name):
 
 def get_corpus(corpus_id):
     """Retreive corpus from the db."""
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    try:
+        corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    except:
+        corpus_json = None
     if corpus_json and app.neo4j_driver:
         return KamiCorpus(
             corpus_id,
@@ -90,6 +93,7 @@ def add_new_corpus(corpus_id, creation_time, last_modified, annotation):
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>")
+@check_dbs
 def corpus_view(corpus_id):
     """View corpus."""
     if app.neo4j_driver is None:
@@ -143,6 +147,7 @@ def corpus_view(corpus_id):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-interaction",
                         methods=["GET", "POST"])
+@check_dbs
 def add_interaction(corpus_id, add_agents=True,
                     anatomize=True, apply_semantics=True):
     """Handle interaction addition."""
@@ -163,6 +168,7 @@ def add_interaction(corpus_id, add_agents=True,
 
 @corpus_blueprint.route("/corpus/<corpus_id>/nugget-preview",
                         methods=["POST"])
+@check_dbs
 def preview_nugget(corpus_id):
     """Generate nugget, store in the session and redirect to nugget preview."""
     interaction = parse_interaction(request.form)
@@ -208,6 +214,7 @@ def preview_nugget(corpus_id):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/instantiate",
                         methods=["GET", "POST"])
+@check_dbs
 def instantiate(corpus_id):
     """Handle corpus instantiation."""
     if request.method == "GET":
@@ -288,6 +295,7 @@ def instantiate(corpus_id):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-generated-nugget",
                         methods=["GET"])
+@check_dbs
 @authenticate
 def add_nugget_from_session(corpus_id, add_agents=True,
                             anatomize=True, apply_semantics=True):
@@ -313,6 +321,7 @@ def add_nugget_from_session(corpus_id, add_agents=True,
 
 @corpus_blueprint.route("/corpus/<corpus_id>/import-json-interactions",
                         methods=["GET", "POST"])
+@check_dbs
 @authenticate
 def import_json_interactions(corpus_id):
     """Handle import of json interactions."""
@@ -359,15 +368,17 @@ def imported_interactions(filename, corpus_id):
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/download", methods=["GET"])
+@check_dbs
 def download_corpus(corpus_id):
     """Handle corpus download."""
     filename = corpus_id.replace(" ", "_") + ".json"
     corpus = get_corpus(corpus_id)
     if corpus:
         corpus.export_json(
-            os.path.join(app.config["UPLOAD_FOLDER"] + filename))
+            os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        print(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         return send_file(
-            os.path.join(app.config["UPLOAD_FOLDER"] + filename),
+            os.path.join(app.config["UPLOAD_FOLDER"], filename),
             as_attachment=True,
             mimetype='application/json',
             attachment_filename=filename)
@@ -379,6 +390,7 @@ def download_corpus(corpus_id):
 @corpus_blueprint.route("/corpus/<corpus_id>/update-ag-node-positioning",
                         methods=["POST"])
 @authenticate
+@check_dbs
 def update_ag_node_positioning(corpus_id):
     """Retrieve node positioning from post request."""
     json_data = request.get_json()
@@ -406,6 +418,7 @@ def update_ag_node_positioning(corpus_id):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/delete")
 @authenticate
+@check_dbs
 def delete_corpus(corpus_id):
     """Handle removal of the corpus."""
     corpus = get_corpus(corpus_id)
@@ -428,6 +441,7 @@ def delete_corpus(corpus_id):
 @corpus_blueprint.route("/corpus/<corpus_id>/update-node-attrs",
                         methods=["POST"])
 @authenticate
+@check_dbs
 def update_node_attrs(corpus_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
@@ -452,6 +466,7 @@ def update_node_attrs(corpus_id):
 @corpus_blueprint.route("/corpus/<corpus_id>/update-edge-attrs",
                         methods=["POST"])
 @authenticate
+@check_dbs
 def update_edge_attrs(corpus_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
@@ -477,6 +492,7 @@ def update_edge_attrs(corpus_id):
 @corpus_blueprint.route("/corpus/<corpus_id>/update-meta-data",
                         methods=["POST"])
 @authenticate
+@check_dbs
 def update_meta_data(corpus_id):
     """Handle update of edge attrs."""
     json_data = request.get_json()
@@ -538,6 +554,7 @@ def update_protein_definition(corpus_id, uniprot, name, product):
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-variant/<gene_node_id>",
                         methods=["GET", "POST"])
+@check_dbs
 def add_variant(corpus_id, gene_node_id):
     """Handle addition of protein variants."""
     if request.method == "GET":

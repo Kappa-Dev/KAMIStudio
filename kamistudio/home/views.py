@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 from kami import KamiCorpus, KamiModel
 
-from kamistudio.utils import authenticate
+from kamistudio.utils import authenticate, check_dbs
 from kamistudio.corpus.views import add_new_corpus
 from kamistudio.model.views import add_new_model
 
@@ -23,18 +23,9 @@ home_blueprint = Blueprint('home', __name__, template_folder='templates')
 
 @home_blueprint.route('/')
 @home_blueprint.route('/home')
+@check_dbs
 def index():
     """Handler of index page."""
-    if app.neo4j_driver is None:
-        return render_template(
-            "neo4j_connection_failure.html",
-            uri=app.config["NEO4J_URI"],
-            user=app.config["NEO4J_USER"])
-    if app.mongo.db is None:
-        return render_template(
-            "mongo_connection_failure.html",
-            uri=app.config["MONGO_URI"])
-
     corpora = []
     models = []
     recent = [None, None, None]
@@ -81,7 +72,6 @@ def index():
         recent=recent,
         readonly=app.config["READ_ONLY"])
 
-
 def _generate_unique_corpus_id(name):
     existing_corpora = [
         el["id"] for el in app.mongo.db.kami_corpora.find(
@@ -95,7 +85,6 @@ def _generate_unique_corpus_id(name):
             i += 1
             new_name = name + "_{}".format(i)
         return new_name
-
 
 def _generate_unique_model_id(name):
     existing_models = [
@@ -114,6 +103,7 @@ def _generate_unique_model_id(name):
 
 @home_blueprint.route("/new-corpus", methods=["GET"])
 @authenticate
+@check_dbs
 def new_corpus():
     """New corpus handler."""
     return render_template("new_corpus.html")
@@ -121,6 +111,7 @@ def new_corpus():
 
 @home_blueprint.route("/new-model", methods=["GET"])
 @authenticate
+@check_dbs
 def new_model():
     """New model handler."""
     return render_template("new_model.html")
@@ -128,6 +119,7 @@ def new_model():
 
 @home_blueprint.route("/new-corpus", methods=["POST"])
 @authenticate
+@check_dbs
 def create_new_corpus():
     """Handler for creation of a new corpus."""
     annotation = {}
@@ -156,6 +148,7 @@ def create_new_corpus():
 
 @home_blueprint.route("/new-model", methods=["POST"])
 @authenticate
+@check_dbs
 def create_new_model():
     """Handler for creation of a new corpus."""
     annotation = {}
@@ -184,6 +177,7 @@ def create_new_model():
 
 @home_blueprint.route("/import-corpus", methods=['GET', 'POST'])
 @authenticate
+@check_dbs
 def import_corpus():
     """Handler of model import."""
     if request.method == "GET":
@@ -218,6 +212,7 @@ def import_corpus():
 
 @home_blueprint.route("/import-model", methods=['GET', 'POST'])
 @authenticate
+@check_dbs
 def import_model():
     """Handler of model import."""
     if request.method == "GET":
@@ -247,19 +242,6 @@ def import_model():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return imported_model(filename, annotation)
-
-
-@home_blueprint.route("/delete-models", methods=['GET', 'POST'])
-@authenticate
-def delete_models():
-    if request.method == "GET":
-        return("Are you sure?")
-    else:
-        h_ids = json.loads(request.get_data().decode('utf-8'))
-        for h in h_ids:
-            if h in app.models.keys():
-                del app.models[h]
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 def imported_corpus(filename, annotation):
@@ -314,6 +296,7 @@ def imported_model(filename, annotation):
 
 
 @home_blueprint.route("/about")
+@check_dbs
 def about_page():
     return render_template("about.html")
 

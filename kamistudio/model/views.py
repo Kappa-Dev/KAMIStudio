@@ -14,14 +14,17 @@ from kami.exporters import kappa_exporters
 from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.models import KamiModel
 
-from kamistudio.utils import authenticate
+from kamistudio.utils import authenticate, check_dbs
 
 model_blueprint = Blueprint('model', __name__, template_folder='templates')
 
 
 def get_model(model_id):
     """Retreive corpus from the db."""
-    model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    try:
+        model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    except:
+        model_json = None
     if model_json and app.neo4j_driver:
         corpus_id = None
         if "corpus_id" in model_json["origin"].keys():
@@ -55,11 +58,11 @@ def get_model(model_id):
             default_brk_rate=default_brk_rate,
             default_mod_rate=default_mod_rate
         )
-    else:
-        return None
 
 
-def updateLastModified(model_id):
+@check_dbs
+def update_last_modified(model_id):
+    """Update Lasti modified field of the model."""
     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
     model_json["last_modified"] = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
@@ -85,25 +88,16 @@ def add_new_model(model_id, creation_time, last_modified, annotation,
         "default_mod_rate": default_mod_rate,
         "kappa_models": []
     }
-    # if corpus_id:
     json_data["origin"]["corpus_id"] = corpus_id
-    # if seed_genes:
     json_data["origin"]["seed_genes"] = seed_genes
-    # if definitions:
     json_data["origin"]["definitions"] = definitions
-
     app.mongo.db.kami_models.insert_one(json_data)
 
 
 @model_blueprint.route("/model/<model_id>")
+@check_dbs
 def model_view(model_id):
     """View model."""
-    if app.neo4j_driver is None:
-        return render_template(
-            "neo4j_connection_failure.html",
-            uri=app.config["NEO4J_URI"],
-            user=app.config["NEO4J_USER"])
-
     model = get_model(model_id)
     nuggets = {}
     if model is not None:
@@ -166,6 +160,7 @@ def download_model(model_id):
 
 @model_blueprint.route("/model/<model_id>/delete")
 @authenticate
+@check_dbs
 def delete_model(model_id):
     """Handle removal of the model."""
     model = get_model(model_id)
@@ -184,98 +179,10 @@ def delete_model(model_id):
         return render_template("model_not_found.html", model_id=model_id)
 
 
-# @model_blueprint.route("/model/<model_id>/add-interaction",
-#                        methods=["GET", "POST"])
-# @authenticate
-# def add_interaction(model_id, add_agents=True,
-#                     anatomize=True, apply_semantics=True):
-#     """Handle interaction addition."""
-#     pass
-    # model = get_model(model_id)
-    # if request.method == 'GET':
-    #     return render_template(
-    #         "add_model_interaction.html",
-    #         model_id=model_id)
-    # elif request.method == 'POST':
-    #     interaction = parse_interaction(request.form)
-    #     nugget, nugget_type = generate_nugget(
-    #         model, interaction)
-    #     model.add_nugget(
-    #         nugget, nugget_type,
-    #         add_agents=add_agents,
-    #         anatomize=anatomize,
-    #         apply_semantics=apply_semantics)
-    #     return redirect(url_for('model.model_view', model_id=model_id))
-
-
-# @model_blueprint.route("/model/<model_id>/nugget-preview",
-#                        methods=["POST"])
-# def preview_nugget(model_id):
-#     """Generate nugget, store in the session and redirect to nugget preview."""
-#     model = get_model(model_id)
-#     interaction = parse_interaction(request.form)
-#     nugget, nugget_type = generate_nugget(
-#         model, interaction)
-
-#     session["nugget"] = nugget
-#     session["nugget_type"] = nugget_type
-#     session.modified = True
-
-#     template_relation = {}
-#     for k, v in nugget.template_rel.items():
-#         for vv in v:
-#             template_relation[vv] = k
-
-#     desc = interaction.desc
-#     rate = interaction.rate
-
-#     return render_template(
-#         "nugget_preview.html",
-#         new_nugget=True,
-#         model_id=model_id,
-#         models=app.models,
-#         nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
-#         nugget_type=nugget_type,
-#         nugget_meta_typing=json.dumps(nugget.meta_typing),
-#         nugget_meta_typing_json=nugget.meta_typing,
-#         nugget_ag_typing=json.dumps(nugget.ag_typing),
-#         nugget_template_rel=json.dumps(template_relation),
-#         nugget_desc=desc,
-#         nugget_rate=rate,
-#         nugget_nodes=nugget.graph.nodes(),
-#         nugget_ag_typing_dict=nugget.ag_typing)
-
-
-# @model_blueprint.route("/model/<model_id>/add-generated-nugget",
-#                        methods=["GET"])
-# def add_nugget_from_session(model_id, add_agents=True,
-#                             anatomize=True, apply_semantics=True):
-#     """Add nugget stored in session to the model."""
-#     model = get_model(model_id)
-#     model.add_nugget(
-#         session["nugget"], session["nugget_type"],
-#         add_agents=add_agents,
-#         anatomize=anatomize,
-#         apply_semantics=apply_semantics)
-
-#     if "nugget" in session.keys():
-#         session.pop("nugget", None)
-#     if "nugget_type" in session.keys():
-#         session.pop("nugget_type", None)
-
-#     return redirect(url_for('model.model_view', model_id=model_id))
-
-# @model_blueprint.route("/model/<model_id>/import-json-interactions",
-#                        methods=["GET"])
-# @authenticate
-# def import_json_interactions(model_id):
-#     """Handle import of json interactions."""
-#     pass
-
-
 @model_blueprint.route("/model/<model_id>/update-ag-node-positioning",
                        methods=["POST"])
 @authenticate
+@check_dbs
 def update_ag_node_positioning(model_id):
     """Retrieve node positioning from post request."""
     json_data = request.get_json()
@@ -296,7 +203,7 @@ def update_ag_node_positioning(model_id):
         app.mongo.db.kami_models.update(
             {'id': model_id},
             {'$set': {'node_positioning': position_dict}})
-    updateLastModified(model_id)
+    update_last_modified(model_id)
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
 
@@ -304,6 +211,7 @@ def update_ag_node_positioning(model_id):
 @model_blueprint.route("/model/<model_id>/update-node-attrs",
                        methods=["POST"])
 @authenticate
+@check_dbs
 def update_node_attrs(model_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
@@ -319,7 +227,7 @@ def update_node_attrs(model_id):
                 model.action_graph.set_node_attrs_from_json(node_id, node_attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                updateLastModified(model_id)
+                update_last_modified(model_id)
             except:
                 pass
     return response
@@ -328,6 +236,7 @@ def update_node_attrs(model_id):
 @model_blueprint.route("/model/<model_id>/update-edge-attrs",
                        methods=["POST"])
 @authenticate
+@check_dbs
 def update_edge_attrs(model_id):
     """Handle update of edge attrs."""
     json_data = request.get_json()
@@ -344,7 +253,7 @@ def update_edge_attrs(model_id):
                 model.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                updateLastModified(model_id)
+                update_last_modified(model_id)
             except:
                 pass
     return response
@@ -353,6 +262,7 @@ def update_edge_attrs(model_id):
 @model_blueprint.route("/model/<model_id>/update-meta-data",
                        methods=["POST"])
 @authenticate
+@check_dbs
 def update_meta_data(model_id):
     """Handle update of meta data."""
     json_data = request.get_json()
@@ -375,6 +285,7 @@ def update_meta_data(model_id):
 @model_blueprint.route("/model/<model_id>/update-rate-data",
                        methods=["POST"])
 @authenticate
+@check_dbs
 def update_rate_data(model_id):
     """Handle update of rate data."""
     json_data = request.get_json()
@@ -399,6 +310,7 @@ def update_rate_data(model_id):
 
 
 @model_blueprint.route("/model/<model_id>/generate-kappa", methods=["GET"])
+@check_dbs
 def generate_kappa(model_id):
     """Serve generated Kappa file."""
     model = get_model(model_id)

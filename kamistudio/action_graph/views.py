@@ -24,8 +24,11 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
     if (knowledge_obj.action_graph):
         data["actionGraph"] = graph_to_d3_json(
             knowledge_obj.action_graph, attrs)
-        data["connectedComponents"] =\
-            knowledge_obj.action_graph.find_connected_components()
+        try:
+            data["connectedComponents"] =\
+                knowledge_obj.action_graph.find_connected_components()
+        except:
+            data["connectedComponents"] = {}
         data["semantics"] = {
             k: list(v)
             for k, v in knowledge_obj._hierarchy.get_relation(

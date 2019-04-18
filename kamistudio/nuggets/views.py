@@ -67,18 +67,19 @@ def get_nugget(knowledge_obj, nugget_id):
     for k, v in ag_typing.items():
         attrs = attrs_to_json(get_node(knowledge_obj.action_graph, v))
         data["agTyping"][k] = [v, attrs]
-
-    semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
     data["semantics"] = {}
-    for k, v in semantic_nugget_rels.items():
-        data["semantics"][k] = {
-            kk: list(vv)
-            for kk, vv in v.items()
-        }
-        # for k, v in knowledge_obj._hierarchy.get_relation(
-        #      nowledge_obj._action_graph_id, "semantic_action_graph").items()
+    try:
+        semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
+        for k, v in semantic_nugget_rels.items():
+            data["semantics"][k] = {
+                kk: list(vv)
+                for kk, vv in v.items()
+            }
+    except:
+        pass
+
     data["templateRelation"] = {}
-    print(knowledge_obj.get_nugget_template_rel(nugget_id))
+
     for k, v in knowledge_obj.get_nugget_template_rel(nugget_id).items():
         for vv in v:
             data["templateRelation"][vv] = k
