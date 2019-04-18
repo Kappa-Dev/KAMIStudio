@@ -1,5 +1,7 @@
 {% extends "knowledge_base.html" %}
 
+{% block title %}Model: {{ kb.annotation.name }}{% endblock %}
+
 {% block action_buttons %}
     <div class="kb-action-buttons">
         <a href="{{ url_for('model.generate_kappa', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-cog"></span> Generate Kappa</a>

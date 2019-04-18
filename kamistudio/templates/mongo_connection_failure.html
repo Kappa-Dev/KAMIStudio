@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 
+{% block title %}Cannot connect to MongoDB{% endblock %}
+
 {% block panel_buttons %}
 <h2 class="mb-6 corpus-action-brand">Internal server error 500</h2>
 {% endblock %}
 
 {% block tabs %}
-<h4>Failed to establish connection with MongoDB server at '{{uri}}'</h4>
+<h4>Failed to establish connection with MongoDB server at '{{uri}}'.</h4>
+<p>Check the status of your Neo4j DB and try restarting it.</p>
 {% endblock %}
