@@ -60,7 +60,7 @@ def configure(argdict):
             "SECRET_KEY = {}".format(os.urandom(24)),
             "UPLOAD_FOLDER = '{}'".format(os.path.join(uploads, "uploads")),
             "SESSION_FILE_DIR = '{}'".format(os.path.join(session, "flask_session")),
-            "READ_ONLY = True"
+            "READ_ONLY = False"
         ]
         for c in confs:
             f.write(c + "\n")

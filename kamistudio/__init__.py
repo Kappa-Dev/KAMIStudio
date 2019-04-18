@@ -16,30 +16,30 @@ from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
 from kamistudio.definitions.views import definitions_blueprint
 
-from neo4j.v1 import GraphDatabase
 from neobolt.exceptions import ServiceUnavailable
 from pymongo.errors import ServerSelectionTimeoutError
 
-from regraph.neo4j import Neo4jHierarchy
+from neo4j.v1 import GraphDatabase
 
-# pymongo.errors.AutoReconnect
+from regraph.neo4j import Neo4jHierarchy
 
 
 def init_neo4j_db():
-    """Init connection tot Neo4j db."""
+    """Init connection to the Neo4j db."""
     try:
         app.neo4j_driver = GraphDatabase.driver(
             app.config["NEO4J_URI"],
             auth=(app.config["NEO4J_USER"], app.config["NEO4J_PWD"])
         )
     except ServiceUnavailable as e:
-        print(e)
         app.neo4j_driver = None
 
 
-def init_mongo_db(add_test=False):
-    """Initialize mongo DB."""
-    if app.mongo.db is not None:
+def init_mongo_db():
+    """Init connection to the Mongo DB."""
+    try:
+        app.mongo.cx.server_info()
+        app.mongo.db = app.mongo.cx["kamistudio"]
         if "kami_corpora" not in app.mongo.db.collection_names():
             app.mongo.db.create_collection("kami_corpora")
             app.mongo.db.kami_corpora.create_index("id", unique=True)
@@ -55,38 +55,47 @@ def init_mongo_db(add_test=False):
         if "kami_new_definitions" not in app.mongo.db.collection_names():
             app.mongo.db.create_collection("kami_new_definitions")
 
-        if add_test is True:
-            app.mongo.db.kami_new_definitions.remove({})
-            # app.mongo.db.kami_corpora.remove({})
-            # if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-            #     with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
-            #         test_corpora = json.load(f)
-            #         for d in test_corpora:
-            #             # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
-            #             app.mongo.db.kami_corpora.insert_one(d)
-            # app.mongo.db.kami_models.remove({})
-            # if len(list(app.mongo.db.kami_models.find({}))) == 0:
-            #     with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
-            #         test_models = json.load(f)
-            #         for d in test_models:
-            #             # if not app.mongo.db.kami_models.find({"id": d["id"]}):
-            #             app.mongo.db.kami_models.insert_one(d)
-            # app.mongo.db.kami_definitions.remove({})
-            # if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
-            #     with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
-            #         test_definitions = json.load(f)
-            #         for d in test_definitions:
-            #             # if not app.mongo.db.kami_definitions.find(
-            #                     # {"id": d["id"]}):
-            #             app.mongo.db.kami_definitions.insert_one(d)
+    except ServerSelectionTimeoutError as e:
+        app.mongo.db = None
 
-        # if app.neo4j_driver is not None:
-        #     h = Neo4jHierarchy(driver=app.neo4j_driver)
-        #     h._clear()
-        #     # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
-        #     Neo4jHierarchy.load(
-        #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
-        #         driver=app.neo4j_driver)
+
+
+# def init_mongo_db(add_test=False):
+#     """Initialize mongo DB."""
+    
+#         if add_test is True:
+#             pass
+#             # app.mongo.db.kami_new_definitions.remove({})
+#             # app.mongo.db.kami_corpora.remove({})
+#         #     if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+#         #         with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
+#         #             test_corpora = json.load(f)
+#         #             for d in test_corpora:
+#         #                 # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
+#         #                 app.mongo.db.kami_corpora.insert_one(d)
+#             # app.mongo.db.kami_models.remove({})
+#         #     if len(list(app.mongo.db.kami_models.find({}))) == 0:
+#         #         with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
+#         #             test_models = json.load(f)
+#         #             for d in test_models:
+#         #                 # if not app.mongo.db.kami_models.find({"id": d["id"]}):
+#         #                 app.mongo.db.kami_models.insert_one(d)
+#             # app.mongo.db.kami_definitions.remove({})
+#         #     if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
+#         #         with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
+#         #             test_definitions = json.load(f)
+#         #             for d in test_definitions:
+#         #                 # if not app.mongo.db.kami_definitions.find(
+#         #                         # {"id": d["id"]}):
+#         #                 app.mongo.db.kami_definitions.insert_one(d)
+
+#         # if app.neo4j_driver is not None:
+#         #     h = Neo4jHierarchy(driver=app.neo4j_driver)
+#         #     h._clear()
+#         #     # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
+#         #     Neo4jHierarchy.load(
+#         #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
+#         #         driver=app.neo4j_driver)d
 
 
 class KAMIStudio(Flask):
@@ -113,15 +122,9 @@ if os.environ.get('KAMISTUDIO_SETTINGS'):
 # Session config
 Session(app)
 
-app.mongo = PyMongo(app, serverSelectionTimeoutMS=10)
-try:
-    app.mongo.cx.server_info()
-    app.mongo.db = app.mongo.cx["kamistudio"]
-except ServerSelectionTimeoutError:
-    app.mongo.db = None
-
+app.mongo = PyMongo(app, serverSelectionTimeoutMS=100)
+init_mongo_db()
 init_neo4j_db()
-init_mongo_db(True)
 
 app.new_nugget = None
 app.new_nugget_type = None
