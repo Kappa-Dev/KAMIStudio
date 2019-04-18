@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 import kami.data_structures.entities as entities
 from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
-from kami.data_structures.definitions import Definition
+from kami.data_structures.definitions import NewDefinition
 from kami.aggregation.generators import generate_nugget
 
 from kamistudio.utils import authenticate, check_dbs
@@ -105,8 +105,13 @@ def corpus_view(corpus_id):
         return render_template(
             "mongo_connection_failure.html",
             uri=app.config["MONGO_URI"])
-
-    corpus = get_corpus(corpus_id)
+    try:
+        corpus = get_corpus(corpus_id)
+    except:
+        return render_template(
+            "neo4j_connection_failure.html",
+            uri=app.config["NEO4J_URI"],
+            user=app.config["NEO4J_USER"])
     # gene_adjacency = corpus.get_gene_pairwise_interactions()
 
     if corpus is not None:
@@ -125,7 +130,7 @@ def corpus_view(corpus_id):
         for b in corpus.bindings():
             bindings[b] = []
 
-        raw_defs = app.mongo.db.kami_definitions.find(
+        raw_defs = app.mongo.db.kami_new_definitions.find(
             {"corpus_id": corpus_id})
 
         n_defs = len(list(raw_defs))
@@ -228,7 +233,6 @@ def instantiate(corpus_id):
             return render_template("403.html")
         else:
             json_data = request.get_json()
-            print(json_data)
             corpus = get_corpus(corpus_id)
 
             if corpus:
@@ -249,22 +253,22 @@ def instantiate(corpus_id):
                 definition_ids = []
                 for element in json_data["choices"]:
                     uniprotid = element["uniprotid"]
-                    definition_json = app.mongo.db.kami_definitions.find_one({
+                    definition_json = app.mongo.db.kami_new_definitions.find_one({
                         "corpus_id": corpus_id,
-                        "protoform.uniprotid": uniprotid
+                        "protoform": uniprotid
                     })
                     if definition_json is not None:
-                        definition_ids.append(definition_json["id"])
+                        # definition_ids.append([definition_json["id"]])
                         selected_products = element["selectedVariants"]
                         new_def = {
-                            "id": definition_json["id"],
                             "corpus_id": definition_json["corpus_id"],
                             "protoform": definition_json["protoform"],
                             "products": {}
                         }
                         for p in selected_products:
                             new_def["products"][p] = definition_json["products"][p]
-                        definitions.append(Definition.from_json(new_def))
+                        definitions.append(NewDefinition.from_json(new_def))
+                print(definitions)
                 model_id = _generate_unique_model_id(corpus._id)
                 annotation = {
                     "name": model_name,
@@ -376,7 +380,6 @@ def download_corpus(corpus_id):
     if corpus:
         corpus.export_json(
             os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        print(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         return send_file(
             os.path.join(app.config["UPLOAD_FOLDER"], filename),
             as_attachment=True,
@@ -538,7 +541,7 @@ def update_protein_definition(corpus_id, uniprot, name, product):
         "protoform": uniprot
     })
     if existing_def:
-        new_name = _generate_unique_variant_name(name)
+        new_name = _generate_unique_variant_name(existing_def, name)
         existing_def["products"][new_name] = product
         app.mongo.db.kami_new_definitions.update_one(
             {"_id": existing_def["_id"]},
@@ -546,8 +549,11 @@ def update_protein_definition(corpus_id, uniprot, name, product):
             upsert=False)
     else:
         d = {
+            "corpus_id": corpus_id,
             "protoform": uniprot,
-            "products": product
+            "products": {
+                name: product
+            }
         }
         app.mongo.db.kami_new_definitions.insert_one(d)
 
@@ -566,8 +572,11 @@ def add_variant(corpus_id, gene_node_id):
         meta_typing = {
             n["id"]: ag_typing[n["id"]] for n in graph["nodes"]
         }
-        canonical_sequence = corpus.get_canonical_sequence(
-            gene_node_id)
+        try:
+            canonical_sequence = corpus.get_canonical_sequence(
+                gene_node_id)
+        except:
+            canonical_sequence = None
         return render_template(
             "add_variant.html",
             corpus=corpus,
