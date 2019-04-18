@@ -7,15 +7,17 @@ function htmlToElement(html) {
 
 
 function showLoader(evt) {
-	console.log("here", evt);
-	// evt.preventDefault();
-	// var form = document.getElementByTagName("form");
 	var loader = document.getElementById("loadingBlock");
 	if (loader) {
 		loader.style.display = 'initial';
-		// form.submit();
 	}
-	// loader.style.display = 'none';
+}
+
+function showLoaderAndSubmit(formId) {
+	showLoader();
+	var form = document.getElementById(formId);
+	console.log(form);
+	form.submit();
 }
 
 

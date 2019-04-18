@@ -192,10 +192,14 @@ class EditableBox extends React.Component {
 
 		var title;
 		if (this.props.expandable) {
+			var suffix = "";
+			if (this.props.instantiated) {
+				suffix = " instantiation-link";
+			}
 			if (this.state.expanded) {
 				title = 
 					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h3 className="editable-box">
+						<h3 className={"editable-box" + suffix}>
 							<span className="glyphicon glyphicon-menu-down"></span> {this.props.name}
 						</h3>
 					</a>;
@@ -203,7 +207,7 @@ class EditableBox extends React.Component {
 			} else {
 				title =
 					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h3 className="editable-box">
+						<h3 className={"editable-box" + suffix}>
 							<span className="glyphicon glyphicon-menu-right"></span> {this.props.name}
 						</h3>
 					</a>;
@@ -319,6 +323,7 @@ class ElementInfoBox extends React.Component {
 				data={{}}
 				expandable={true}
 				expanded={true}
+				instantiated={this.props.instantiated}
 				editable={this.props.editable}/>
 		);
 	}
@@ -572,6 +577,7 @@ function NuggetSemanticBox(props) {
 }
 
 function AGElementBox(props) {
+	console.log(props.agElementId, props.elementType);
 	if (props.elementType == "node") {
 		var result = generateNodeMetaDataItems(
 				props.agElementId, props.metaType, props.attrs),
@@ -595,6 +601,7 @@ function AGElementBox(props) {
 					 data={data}
 					 expandable={true}
 					 expanded={false}
+					 instantiated={props.instantiated}
 					 onDataUpdate={props.onDataUpdate}
 					 instantiated={props.instantiated}/>
 	);

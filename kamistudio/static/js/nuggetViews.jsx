@@ -8,9 +8,13 @@ function NuggetListItem(props) {
     if (props.instantiated) {
         suffix = " instantiation-link";
     }
+    var selected = "not-selected";
+    if (props.active) {
+        selected = "selected";
+    }
 
     return (
-        <li className="not-selected">
+        <li className={selected + suffix}>
           <a className={"nugget-selector" + suffix}
              onClick={() => props.onClick(props.nuggetId, props.nuggetDesc, props.nuggetType)}>
              {dot} {props.nuggetId} <div className="nugget-desc"><p>{props.nuggetDesc}</p></div>
@@ -26,6 +30,7 @@ class NuggetList extends React.Component{
         this.filterList = this.filterList.bind(this);
 
         this.state = {
+            selected: null,
             initialItems: props.items,
             items : props.items
         }
@@ -49,15 +54,23 @@ class NuggetList extends React.Component{
         this.setState(state);
     }
 
+    onClick(id, desc, type) {
+        var state = Object.assign({}, this.state);
+        state.selected = id;
+        this.setState(state);
+        this.props.onItemClick(id, desc, type);
+    }
+
     render() {
 
         var content = Object.keys(this.state.items).map(
-            (key) => <div id={"nuggetListItem" + key}>
+            (key) => <div key={key} id={"nuggetListItem" + key}>
                             <NuggetListItem
                                 nuggetId={key}
+                                active={key == this.state.selected ? true: false}
                                 nuggetType={this.props.items[key][1]}
                                 nuggetDesc={this.props.items[key][0]}
-                                onClick={this.props.onItemClick}
+                                onClick={(id, desc, type) => this.onClick(id, desc, type)}
                                 instantiated={this.props.instantiated} />
                         </div>);
 
@@ -163,18 +176,24 @@ class NuggetPreview extends React.Component {
                     <MetaDataBox readonly={this.props.readonly} id="metaData" items={[]}/>
                 </div>
             ];
+            var semantics = null;
+            if (!this.props.instantiated) {
+                semantics = 
+                    <div className="col-md-6" id="nuggetGraphSemanticsInfo">
+                       <NuggetSemanticBox id="nuggetSemantics"
+                                          elementType="edge"
+                                          editable={false}
+                                          readonly={this.props.readonly}/>
+                    </div>;
+            }
+
             elementInfoBoxes2 = [
                 <div className="col-md-6" id="nuggetGraphIdentificationInfo">
                     <AGElementBox id="agElement"
                                   readonly={this.props.readonly}
                                   items={[]}/>
                 </div>,
-                <div className="col-md-6" id="nuggetGraphSemanticsInfo">
-                   <NuggetSemanticBox id="nuggetSemantics"
-                                      elementType="edge"
-                                      editable={false}
-                                      readonly={this.props.readonly}/>
-                </div>
+                semantics
             ];
 
         }
@@ -182,7 +201,8 @@ class NuggetPreview extends React.Component {
         return(
             <div id="nuggetPreview">
                 {fields}
-                <svg id="nuggetSvg" style={{display: svgDisplay}} width="500" height="200"></svg>
+                <svg id="nuggetSvg" style={{display: svgDisplay}} preserveAspectRatio="xMinYMin meet"
+    viewBox="0 0 500 200" ></svg>
                 <div className="row">
                     {elementInfoBoxes1}
                 </div>

@@ -1,59 +1,3 @@
-var AG_META_SIZES = {
-  "gene":25,
-  "region":15,
-  "site":10,
-  "residue":7,
-  "state":5,
-  "mod":15,
-  "bnd":15
-};
-
-var META_COLORS = {
-  // "gene":"#FFA19E",
-  "gene":"#8db1d1",
-  // "gene": "#ed757a",
-  "region":"#ffb080",
-  "site":"#ffd780",
-  "residue": "#F68EA0",
-  // "residue":"#ccb3ff",
-  "state":"#A3DEFF",
-  // "mod":"#9DAEFD",
-  "mod": "#b775ed",
-  // "bnd":"#9EFFC5"
-  "bnd": "#7CCC9C",
-};
-
-var INSTANCE_META_COLORS = {
-  // "gene":"#FFA19E",
-  "gene": "#ed757a",
-  "region":"#ffb080",
-  "site":"#ffd780",
-  "residue": "#F68EA0",
-  // "residue":"#ccb3ff",
-  "state":"#A3DEFF",
-  // "mod":"#9DAEFD",
-  "mod": "#b775ed",
-  // "bnd":"#9EFFC5"
-  "bnd": "#7CCC9C",
-};
-
-
-var PRETY_SEMANTIC_NAMES = {
-	"protein_kinase": "Protein kinase",
-	"sh2_domain": "SH2 domain",
-	"protein_kinase_activity": "Activity state of a protein kinase",
-	"phospho": "Phosphorylation modification",
-	"phospho_state": "Phosphorylation state",
-	"phospho_target_residue": "Phosphorylatable residue",
-	"pY_site": "Phosphotyrosine-binding site",
-	"sh2_domain_pY_bnd": "SH2 Phosphotyrosine binding",
-	"protein_kinase_bnd": "Protein kinase binding"
-}
-
-var HIGHLIGHT_COLOR = "#337ab7";
-var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
-
-
 function displayHiddenSvg(readonly) {
 	return function() {
 		document.getElementById("actionGraphSvg").style.display = "initial";
@@ -164,7 +108,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 						nodePosUpdateUrl,
                      	clickHandlers,
                      	handleDragStarted,
-                    	300,
+                    	50,
                     	true,
                     	"saveLayoutButton");
 
@@ -356,19 +300,26 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 			       	</button>;
 		    }
 
+		    var semantics = null;
+		    if (!instantiated) {
+		    	semantics = <SemanticsBox id="semantics"
+		       				 items={[]}/>;
+		    }
+
 		    // call react func
 		    ReactDOM.render(
 		      [<ElementInfoBox id="graphElement" 
+		      				   instantiated={instantiated}
 		      				   items={[]}/>,
 		       <MetaDataBox id="metaData"
+		       			    instantiated={instantiated}
 		       				items={[]}/>,
-		       <SemanticsBox id="semantics"
-		       				 items={[]}/>,
+		       semantics,
 		       button
 		      ],
 		      document.getElementById('graphInfoBoxes')
 		    );
-		};
+		}
 
 		function handleUnselectNodeClick(d, i, el) {
 			// deselect all the selected elements
@@ -387,15 +338,22 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    svg.selectAll("circle")
 		      .attr("stroke-width", 0);
 
+		    var semantics = null;
+		    if (!instantiated) {
+		    	semantics = <SemanticsBox id="semantics" items={[]}/>;
+		    }
 
 		    // call react func
 		    ReactDOM.render(
-		      [<ElementInfoBox id="graphElement" />,
-		       <MetaDataBox id="metaData" />,
-		       <SemanticsBox id="semantics" items={[]}/>],
+		      [<ElementInfoBox id="graphElement"
+		      				   instantiated={instantiated}/>,
+		       <MetaDataBox id="metaData"
+		       				instantiated={instantiated}/>,
+		       semantics
+		       ],
 		      document.getElementById('graphInfoBoxes')
 		    );
-		};
+		}
 
 		function handleNodeClick(d, i, el) {
 			// deselect all the selected elements
@@ -429,6 +387,16 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 			       	</a>;
 		    }
 
+		    var semantics = null;
+		    if (!instantiated) {
+		    	semantics = <SemanticsBox id="semantics"
+		       				 elementId={d.id}
+ 	       				 	 semantics={d.semantics}
+		       				 elementType="node"
+		       				 editable={false}
+		       				 readonly={readonly}/>;
+		    }
+
 		    // call react func
 		    ReactDOM.render(
 		      [<ElementInfoBox id="graphElement" 
@@ -446,16 +414,11 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		       				   readonly={readonly}
 		       				   instantiated={instantiated}
 		       				   onDataUpdate={updateNodeAttrs(d, i)}/>,
-		       <SemanticsBox id="semantics"
-		       				 elementId={d.id}
- 	       				 	 semantics={d.semantics}
-		       				 elementType="node"
-		       				 editable={false}
-		       				 readonly={readonly}/>,
+		       	semantics,
 		       	button],
 		      document.getElementById('graphInfoBoxes')
 		    );
-		};
+		}
 
 
 		function handleEdgeClick(d, i, el) {
@@ -479,6 +442,17 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		      .select(".arrow")
 		      .style("stroke", d3.rgb(highlight))
 		      .attr("marker-end", "url(#actionGraphSvgarrow-selected)");
+
+		    var semantics = null;
+		    if (!instantiated) {
+		    	semantics = <SemanticsBox id="semantics"
+		       				 elementId={"dummy"}
+		       				 elementType="edge"
+		       				 editable={false}
+		       				 eadonly={readonly}
+		       				/>;
+		    }
+
 		    // call react func
 		    ReactDOM.render(
 		      [<ElementInfoBox id="graphElement"
@@ -500,16 +474,11 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		       				readonly={readonly}
 		       				instantiated={instantiated}
 		       				onDataUpdate={updateEdgeAttrs(d, i)}/>,
-
-		       <SemanticsBox id="semantics"
-		       				 elementId={"dummy"}
-		       				 elementType="edge"
-		       				 editable={false}
-		       				 eadonly={readonly}
-		       				/>],
+		       	semantics
+		       ],
 		      document.getElementById('graphInfoBoxes')
 		    );
-		};
+		}
 
 		function handleDragStarted(d_id) {
 			if ((metaTyping[d_id] != "state") &&
@@ -520,7 +489,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 			} else {
 				return [d_id];
 			}
-		};
+		}
 
 	}).fail(function (e) {
 	    console.log("Failed to load action graph");

@@ -16,27 +16,6 @@ function htmlToElement(html) {
     return template.content.firstChild;
 }
 
-// global vars defining default visualisation configs for different types of nodes
-var NUGGET_META_SIZES = {
-  "gene":35,
-  "region":30,
-  "site":15,
-  "residue":10,
-  "state":10,
-  "mod":25,
-  "bnd":25
-};
-
-var META_LABEL_DY = {
-  "gene":"-3.5em",
-  "region":"-3em",
-  "site":"-2em",
-  "residue":"-2em",
-  "state":"-2em",
-  "mod":"-2.5em",
-  "bnd":"-2.5em"
-}
-
 
 function computeFixedPositions(width, height, graph, nuggetType, templateRelation) {
   var fixedPositions = {},
@@ -437,6 +416,8 @@ function handleNuggetNodeClick(modelId, nuggetId, instantiated,
                        readonly={readonly}/>],
             document.getElementById('nuggetGraphSemanticsInfo')
         );
+      } else {
+        ReactDOM.render(null, document.getElementById('nuggetGraphSemanticsInfo'));
       }
 
   };
@@ -534,7 +515,7 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
         nuggetGraph,
         positions[0],
         positions[1]);
-      initLinkStrengthDistance(nuggetGraph, metaTyping, 1.5);
+      // initLinkStrengthDistance(nuggetGraph, metaTyping, 1.5);
       initCircleRadius(nuggetGraph, metaTyping, NUGGET_META_SIZES, 0.5);
       initNodeLabels(nuggetGraph, metaTyping);
 
@@ -632,8 +613,25 @@ function previewNugget(modelId, desc, type,
                        instantiated={false}
                        onDataUpdate={updateNuggetPreviewNodeAttrs(
                           graph, metaTyping, d, i)}/>],
-            document.getElementById('nuggetGraphMetaModelInfo')
-      );
+            document.getElementById('nuggetGraphMetaModelInfo'));
+
+        ReactDOM.render(
+           [<AGElementBox id="agElement"
+                       elementType="node"
+                       agElementId={agTyping[d.id]}
+                       editable={false}
+                       instantiated={instantiated}
+                       />],
+            document.getElementById('nuggetGraphIdentificationInfo')
+        );
+
+        ReactDOM.render(
+             [<NuggetSemanticBox id="nuggetSemantics"
+                         elementType="node"
+                         editable={false} />],
+              document.getElementById('nuggetGraphSemanticsInfo')
+          );
+  
     };
   }
 
@@ -709,6 +707,7 @@ function viewNugget(model_id, instantiated=false, readonly=false) {
             nuggetDesc={nugget_desc}
             nuggetType={nugget_type}
             editable={true}
+            instantiated={instantiated}
             readonly={readonly}
             onDataUpdate={updateNuggetDesc(model_id, nugget_id, instantiated, readonly)}/>,
         document.getElementById('nuggetViewWidget')

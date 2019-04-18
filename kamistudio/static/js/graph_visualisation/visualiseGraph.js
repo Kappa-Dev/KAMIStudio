@@ -1,3 +1,80 @@
+// global vars defining default visualisation configs for different types of nodes
+var NUGGET_META_SIZES = {
+  "gene":35,
+  "region":30,
+  "site":15,
+  "residue":10,
+  "state":10,
+  "mod":25,
+  "bnd":25
+};
+
+var META_LABEL_DY = {
+  "gene":"-3.5em",
+  "region":"-3em",
+  "site":"-2em",
+  "residue":"-2em",
+  "state":"-2em",
+  "mod":"-2.5em",
+  "bnd":"-2.5em"
+}
+
+var AG_META_SIZES = {
+  "gene":25,
+  "region":15,
+  "site":10,
+  "residue":7,
+  "state":5,
+  "mod":15,
+  "bnd":15
+};
+
+var META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene":"#8db1d1",
+  // "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
+
+var INSTANCE_META_COLORS = {
+  // "gene":"#FFA19E",
+  "gene": "#ed757a",
+  "region":"#ffb080",
+  "site":"#ffd780",
+  "residue": "#F68EA0",
+  // "residue":"#ccb3ff",
+  "state":"#A3DEFF",
+  // "mod":"#9DAEFD",
+  "mod": "#b775ed",
+  // "bnd":"#9EFFC5"
+  "bnd": "#7CCC9C",
+};
+
+
+var PRETY_SEMANTIC_NAMES = {
+	"protein_kinase": "Protein kinase",
+	"sh2_domain": "SH2 domain",
+	"protein_kinase_activity": "Activity state of a protein kinase",
+	"phospho": "Phosphorylation modification",
+	"phospho_state": "Phosphorylation state",
+	"phospho_target_residue": "Phosphorylatable residue",
+	"pY_site": "Phosphotyrosine-binding site",
+	"sh2_domain_pY_bnd": "SH2 Phosphotyrosine binding",
+	"protein_kinase_bnd": "Protein kinase binding"
+}
+
+var HIGHLIGHT_COLOR = "#337ab7";
+var INSTANCE_HIGHLIGHT_COLOR = "#a11117";
+
+
 function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	// Initialize link strength depending on node meta-types
 
@@ -299,8 +376,9 @@ function visualiseGraph(graph, svgId,
 
 	// select svg canvas
 	var svg = d3.select("#" + svgId),
-    	width = +svg.attr("width"),
-      	height = +svg.attr("height"),
+		viewBox = svg.attr("viewBox").split(" "),
+    	width = +viewBox[2],
+      	height = +viewBox[3],
 		active = d3.select(null);
 
 	// define arrow markers for graph links

@@ -297,6 +297,7 @@ h2.collection-brand {
 }
 
 a.instantiation-link {
+	cursor: pointer;
 	color: #a11117;
 	/*border-color: #8d0e14;*/
 }
@@ -443,6 +444,11 @@ table.no-borders > tbody > tr > td {
   background-color: #dae3ec;
 }
 
+.nuggets-nav li.selected.instantiation-link {
+  background-color: #f5e5e6;
+}
+
+
 .nuggets-nav li a:hover,
 .nuggets-nav li a:active,
 .nuggets-nav li a:focus,
@@ -452,6 +458,17 @@ table.no-borders > tbody > tr > td {
     /*color: #dae3ec;*/
     text-decoration: none;
     background-color: #dae3ec;
+}
+
+.nuggets-nav li.instantiation-link a:hover,
+.nuggets-nav li.instantiation-link a:active,
+.nuggets-nav li.instantiation-link a:focus,
+.nuggets-nav li.open.instantiation-link a:hover,
+.nuggets-nav li.open.instantiation-link a:active
+.nuggets-nav li.open.instantiation-link a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #f5e5e6;
 }
 
 .nuggets-nav li a p {
@@ -598,4 +615,12 @@ input.nugget-search {
 
 #about > p {
 	color: #727272;
+}
+
+.nav-link {
+	cursor: pointer;
+}
+
+#interactionsButtons {
+	text-align: center;
 }
