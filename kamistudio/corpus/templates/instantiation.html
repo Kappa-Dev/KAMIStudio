@@ -21,6 +21,7 @@
 {% endblock %}
 
 {% block custom_scripts %}
+  <script type="text/babel" src="{{ url_for('static', filename='js/variantSelection.jsx') }}"></script>
   <script type="text/babel">
  	ReactDOM.render(
         <InstantiationForm id="variants"

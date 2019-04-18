@@ -10,7 +10,7 @@
 
 {% block tabs %}
 
-<form id="modelImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
+<form id="corpusImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 			<div class="row form-row">
@@ -43,7 +43,7 @@
 					</div>
 				</div>
 				<div class="col-md-3" style="text-align: right;">
-					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoader()">Import</a> 
+					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoaderAndSubmit('corpusImportForm');">Import</a> 
 				</div>
 			</div>
 		</div>

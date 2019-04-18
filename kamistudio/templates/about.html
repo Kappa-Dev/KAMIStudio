@@ -54,6 +54,9 @@
 
 
 {% block custom_scripts %}
+   <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseGraph.js') }}" type="text/babel"></script>
+	<script src="{{ url_for('static', filename='js/graph_visualisation/visualiseMetaModel.js') }}" type="text/babel"></script>
 	<script type="text/babel">
 	    getMetaModelAndVisualize();
   	</script>
