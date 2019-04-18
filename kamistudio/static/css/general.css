@@ -384,6 +384,7 @@ table.no-borders > tbody > tr > td {
     line-height: 20px;
     display: inline-block;
     width: 100%;
+    cursor: pointer;
 }
 
 .nuggets-nav li:last-child {
@@ -624,3 +625,11 @@ input.nugget-search {
 #interactionsButtons {
 	text-align: center;
 }
+/*
+button {
+	cursor: pointer;
+}
+
+svg {
+	cursor: grab;
+}*/

@@ -87,8 +87,8 @@ class DefinitionList extends React.Component {
 	                        <DefinitionListItem
 	                            id={key}
 	                            active={this.state.selected === key}
-	                            protoformGene={this.props.items[key][0]}
-	                            productNames={this.props.items[key][1]}
+	                            protoformGene={key}
+	                            productNames={this.props.items[key]}
 	                            onClick={this.onItemClick}
 	                            onItemClick={this.state.subitemClick} />
 	                    </div>);
@@ -105,7 +105,8 @@ class DefinitionList extends React.Component {
 
 function DefinitionGraphView(props) {
 	return ([
-		<svg id={props.svgId} style={{"display": props.svgDisplay}} width="200" height="200"></svg>,
+		<svg id={props.svgId} style={{"display": props.svgDisplay}} preserveAspectRatio="xMinYMin meet"
+    viewBox="0 0 300 300"></svg>,
         <div id={props.svgId + "InfoBoxes"}>
         	<ElementInfoBox style={{"display": props.svgDisplay}} id={props.elementInfoBoxId} items={[]}/>
         	<MetaDataBox style={{"display": props.svgDisplay}} id={props.metaDataBoxId} items={[]}/>
@@ -211,6 +212,8 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 	var simulationConf = {
 		"charge_strength": -200,
+		"distance": 30,
+		"strength": 0.5,
 		"collide_strength": 1,
 		"y_strength": 0
 	}
@@ -257,7 +260,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 			    				return [
 			    					<input onChange={() => onSetAA(d, val)}
 			    						   type="radio"
-			    						   name="aa"
+			    						   name={"aa" + d.id}
 			    						   value={val}
 			    						   defaultChecked={checked}/>,
 			    					" " + val + suffix,
@@ -395,7 +398,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 function viewDefinition(modelId, readonly) {
 	return function(definitionId, protoformGene, productNames, callback) {
-		var url = "/corpus/" + modelId + "/raw-definition/" + definitionId;
+		var url = "/corpus/" + modelId + "/raw-definition/" + protoformGene;
 		$.ajax({
 		    url: url,
 		    type: 'get',
@@ -510,7 +513,9 @@ class VariantForm extends React.Component {
 						(metaTyping[graph.links[j].target] == "gene")) {
 						if ("loc" in graph.links[j].attrs) {
 							var loc = graph.links[j].attrs["loc"].data[0];
-							graph.nodes[i].canonical_aa = canonical_sequence[loc - 1];
+							if (canonical_sequence) {
+								graph.nodes[i].canonical_aa = canonical_sequence[loc - 1];
+							}
 						}
 					}
 				}

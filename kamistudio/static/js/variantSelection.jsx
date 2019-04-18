@@ -38,7 +38,7 @@ class SelectionItem extends React.Component {
 		var message = Object.keys(this.props.subitems).length > 0 ? "" : "No variants specified, Wild Type is selected by default";
 		return (
 			<li>
-				{this.props.selectionId} {message}
+				{this.props.selectionId} (Wild type if no variants selected) {message}
 				<br/>
 				{subitems}
 			</li>
@@ -86,8 +86,8 @@ class FilteredList extends React.Component {
           				<li className="not-selected">
           					<a onClick={() => this.props.onItemClick(item[0], item[1])}>
 	          					{item[0]}
-	          					<div style={{"float": "right"}}>{item[1]}</div>
-	          					<div style={{"float": "right"}}>{item[2]}</div>
+	          					<div style={{"float": "right", "margin-left": "5pt"}}>{item[1]}</div>
+	          					<div style={{"float": "right"}}>{item[2] ? item[2].join(", ") : ""}</div>
 	          				</a>
           				</li>
         		),
@@ -204,6 +204,7 @@ class InstantiationForm extends React.Component {
 	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
 
 	        const data = this.state;
+	        console.log(data);
 	        const url = "/corpus/" + this.props.modelId + "/instantiate";
 	        $.ajax({
 			    url: url,

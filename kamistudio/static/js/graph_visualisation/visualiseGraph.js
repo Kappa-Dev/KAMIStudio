@@ -625,7 +625,7 @@ function visualiseGraph(graph, svgId,
 	  	node.attr(
             "transform", 
             function(d) {
-            	if (zoom) {
+            	if (zoom && graph.nodes.length > 15) {
     				// zoom to fit the bounding box
 		          	var boundaries = container.node().getBBox(),
 			            bx = boundaries.x,
