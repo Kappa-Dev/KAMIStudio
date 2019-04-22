@@ -613,8 +613,7 @@ class VariantForm extends React.Component {
 						</div>
 						<div class="row form-row">
 							<div class="col-md-6" style={{"overflow-x": "scroll"}}>
-						      <svg id="protoformSvg" preserveAspectRatio="xMinYMin meet"
-    viewBox="0 0 300 300"></svg>
+						      <svg id="protoformSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"></svg>
 						    </div>
 						    <div class="col-md-6">
 						      <div id="protoformSvgInfoBoxes"></div>
