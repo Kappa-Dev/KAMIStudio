@@ -268,7 +268,7 @@ def instantiate(corpus_id):
                         for p in selected_products:
                             new_def["products"][p] = definition_json["products"][p]
                         definitions.append(NewDefinition.from_json(new_def))
-                print(definitions)
+
                 model_id = _generate_unique_model_id(corpus._id)
                 annotation = {
                     "name": model_name,
@@ -536,6 +536,11 @@ def get_genes(corpus_id):
 
 def update_protein_definition(corpus_id, uniprot, name, product):
     """Add new protein def."""
+    if name is None:
+        name = "no_name"
+    if product["desc"] is None:
+        product["desc"] = ""
+
     existing_def = app.mongo.db.kami_new_definitions.find_one({
         "corpus_id": corpus_id,
         "protoform": uniprot
@@ -593,7 +598,7 @@ def add_variant(corpus_id, gene_node_id):
 
             variant_name = json_data["variant_name"]
             desc = json_data["desc"]
-            wt = True if json_data["wt"] == "true" else False
+            wt = json_data["wt"]
             raw_removed_components = json_data["removedComponents"]
             raw_selected_aa = json_data["selectedAA"]
 

@@ -35,7 +35,7 @@ def init_neo4j_db():
         app.neo4j_driver = None
 
 
-def init_mongo_db():
+def init_mongo_db(add_test=False):
     """Init connection to the Mongo DB."""
     try:
         app.mongo.cx.server_info()
@@ -55,39 +55,38 @@ def init_mongo_db():
         if "kami_new_definitions" not in app.mongo.db.collection_names():
             app.mongo.db.create_collection("kami_new_definitions")
 
+        # if add_test:
+        #     prepopulate()
+
     except ServerSelectionTimeoutError as e:
         app.mongo.db = None
 
 
-
-# def init_mongo_db(add_test=False):
-#     """Initialize mongo DB."""
-    
-#         if add_test is True:
-#             pass
-#             # app.mongo.db.kami_new_definitions.remove({})
-#             # app.mongo.db.kami_corpora.remove({})
-#         #     if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-#         #         with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
-#         #             test_corpora = json.load(f)
-#         #             for d in test_corpora:
-#         #                 # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
-#         #                 app.mongo.db.kami_corpora.insert_one(d)
-#             # app.mongo.db.kami_models.remove({})
-#         #     if len(list(app.mongo.db.kami_models.find({}))) == 0:
-#         #         with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
-#         #             test_models = json.load(f)
-#         #             for d in test_models:
-#         #                 # if not app.mongo.db.kami_models.find({"id": d["id"]}):
-#         #                 app.mongo.db.kami_models.insert_one(d)
-#             # app.mongo.db.kami_definitions.remove({})
-#         #     if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
-#         #         with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
-#         #             test_definitions = json.load(f)
-#         #             for d in test_definitions:
-#         #                 # if not app.mongo.db.kami_definitions.find(
-#         #                         # {"id": d["id"]}):
-#         #                 app.mongo.db.kami_definitions.insert_one(d)
+def prepopulate():
+    """Prepopulate mongo DB."""
+    app.mongo.db.kami_new_definitions.remove({})
+    app.mongo.db.kami_corpora.remove({})
+    if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+        with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
+            test_corpora = json.load(f)
+            for d in test_corpora:
+                # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
+                app.mongo.db.kami_corpora.insert_one(d)
+    app.mongo.db.kami_models.remove({})
+    if len(list(app.mongo.db.kami_models.find({}))) == 0:
+        with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
+            test_models = json.load(f)
+            for d in test_models:
+                # if not app.mongo.db.kami_models.find({"id": d["id"]}):
+                app.mongo.db.kami_models.insert_one(d)
+    app.mongo.db.kami_definitions.remove({})
+    if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
+        with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
+            test_definitions = json.load(f)
+            for d in test_definitions:
+                # if not app.mongo.db.kami_definitions.find(
+                        # {"id": d["id"]}):
+                app.mongo.db.kami_definitions.insert_one(d)
 
 #         # if app.neo4j_driver is not None:
 #         #     h = Neo4jHierarchy(driver=app.neo4j_driver)
@@ -123,7 +122,7 @@ if os.environ.get('KAMISTUDIO_SETTINGS'):
 Session(app)
 
 app.mongo = PyMongo(app, serverSelectionTimeoutMS=100)
-init_mongo_db()
+init_mongo_db(True)
 init_neo4j_db()
 
 app.new_nugget = None
