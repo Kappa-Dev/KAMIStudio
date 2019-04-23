@@ -22,10 +22,7 @@ def fetch_definition(corpus_id, gene_id):
 
     if corpus is not None and definition_json is not None:
         definition = NewDefinition.from_json(definition_json)
-        print(definition)
-        # protoform_graph, _, product_graphs = definition._generate_graphs(
-        #     corpus.action_graph,
-        #     corpus.get_action_graph_typing())
+
         protoform_graph, gene_node = definition._generate_protoform_graph(
             corpus.action_graph, corpus.get_action_graph_typing())
         product_graphs = {}
@@ -46,7 +43,6 @@ def fetch_definition(corpus_id, gene_id):
         for k, v in product_graphs.items():
             data["product_graphs"][k] = graph_to_d3_json(v.graph)
             data["product_graphs_meta_typing"][k] = v.meta_typing
-        print(data)
 
         return jsonify(data), 200
     return jsonify({"success": False}), 404
@@ -76,7 +72,10 @@ def get_definitions(corpus_id):
 
     definitions = {}
     for d in raw_defs:
-        definitions[d["protoform"]] = list(d["products"].keys())
+        definitions[d["protoform"]] = [
+            [k, v["desc"], v["wild_type"]]
+            for k, v in d["products"].items()
+        ]
 
     data = {}
     data["definitions"] = definitions
