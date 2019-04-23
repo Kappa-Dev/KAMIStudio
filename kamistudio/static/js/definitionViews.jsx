@@ -127,6 +127,7 @@ class DefinitionPreview extends React.Component {
 
     render() {
         var message = null,
+        	loader = null,
             svgDisplay = "none",
             elementInfoBoxes = null,
             protoform = null,
@@ -134,61 +135,69 @@ class DefinitionPreview extends React.Component {
             productMessage = null,
             content = null,
             removeButton = null;
-        if (!this.props.id) {
-            message = "No definition selected";
+        if (this.props.loading) {
+        	loader = 
+	        	<div id="loadingBlock" className="loading-elements center-block">
+	                <div id="loader"></div>
+	             </div>;
         } else {
-
-            svgDisplay = "inline-block";
-           
-            protoform = 
-            	<DefinitionGraphView
-            		svgId="protoformSvg"
-            		svgDisplay={svgDisplay}
-            		elementInfoBoxId="protoformGraphElementInfo"
-            		metaDataBoxId="protoformGraphMetaModelInfo"/>;
-
-        	if (this.props.productId) {
-        		product =
-        			<DefinitionGraphView
-	            		svgId="productSvg"
-	            		svgDisplay={svgDisplay}
-	            		elementInfoBoxId="productGraphElementInfo"
-	            		metaDataBoxId="productGraphMetaModelInfo"/>;
+	        if (!this.props.id) {
+	            message = "No definition selected";
 	        } else {
-	        	productMessage = "No product selected";
-	        	product =
-        			<DefinitionGraphView
-	            		svgId="productSvg"
-	            		svgDisplay={"none"}
-	            		elementInfoBoxId="productGraphElementInfo"
-	            		metaDataBoxId="productGraphMetaModelInfo"/>;
+
+	            svgDisplay = "inline-block";
+	           
+	            protoform = 
+	            	<DefinitionGraphView
+	            		svgId="protoformSvg"
+	            		svgDisplay={svgDisplay}
+	            		elementInfoBoxId="protoformGraphElementInfo"
+	            		metaDataBoxId="protoformGraphMetaModelInfo"/>;
+
+	        	if (this.props.productId) {
+	        		product =
+	        			<DefinitionGraphView
+		            		svgId="productSvg"
+		            		svgDisplay={svgDisplay}
+		            		elementInfoBoxId="productGraphElementInfo"
+		            		metaDataBoxId="productGraphMetaModelInfo"/>;
+		        } else {
+		        	productMessage = "No product selected";
+		        	product =
+	        			<DefinitionGraphView
+		            		svgId="productSvg"
+		            		svgDisplay={"none"}
+		            		elementInfoBoxId="productGraphElementInfo"
+		            		metaDataBoxId="productGraphMetaModelInfo"/>;
+		        }
+		        var wt = this.props.wildType ? " (WT)" : "";
+		        content = 
+		        	<div className="row">
+	                	<div className="col-md-6">
+	                		<h4>Protoform</h4>
+			                {protoform}
+	                	</div>
+	                	<div className="col-md-6">
+	                		<h4>{"Product" + wt}</h4>
+	                		{productMessage}
+			                {product}
+			            </div>
+	                </div>;
+	          //   removeButton = 
+	        		// <a href="#"
+	        		//    type="button"
+	        		//    className="btn btn-default btn-md panel-button" 
+	        		//    disabled={this.props.readonly}>
+	        		// 	<span class="glyphicon glyphicon-remove"></span> Delete
+	        		// </a>;
 	        }
-	        var wt = this.props.wildType ? " (WT)" : "";
-	        content = 
-	        	<div className="row">
-                	<div className="col-md-6">
-                		<h4>Protoform</h4>
-		                {protoform}
-                	</div>
-                	<div className="col-md-6">
-                		<h4>{"Product" + wt}</h4>
-                		{productMessage}
-		                {product}
-		            </div>
-                </div>;
-          //   removeButton = 
-        		// <a href="#"
-        		//    type="button"
-        		//    className="btn btn-default btn-md panel-button" 
-        		//    disabled={this.props.readonly}>
-        		// 	<span class="glyphicon glyphicon-remove"></span> Delete
-        		// </a>;
-        }
+	    }
 
         return([
         	<h3 className="editable-box" style={{"display": "inline"}}>Definition preview</h3>,
         	removeButton,
             <div id="definitionPreview">
+            	{loader}
             	{message}
                 {content}
             </div>
@@ -416,6 +425,12 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 function viewDefinition(modelId, readonly) {
 	return function(definitionId, protoformGene, products, callback) {
+
+		ReactDOM.render(
+			<DefinitionPreview
+			 	loading={true}/>,
+			document.getElementById("definitionViewWidget"));
+
 		var url = "/corpus/" + modelId + "/raw-definition/" + protoformGene;
 		$.ajax({
 		    url: url,
