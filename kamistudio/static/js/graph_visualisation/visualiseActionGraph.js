@@ -378,7 +378,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 
 		    // If gene node is selected add Create variant button
 		    var button = null;
-		    if (metaTyping[d.id] == "gene") {
+		    if (!instantiated && metaTyping[d.id] == "gene") {
 		    	button =
 	    			<a 
 	    				href={model_id + "/add-variant/" + d.id}
