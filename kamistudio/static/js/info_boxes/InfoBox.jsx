@@ -380,13 +380,13 @@ function generateNodeMetaDataItems(elementId, metaType, attrs) {
 			data["name"] = getSingleValue(attrs, "name");
 		} else if (metaType === "residue") {
 			var aa = multipleValuesToString(attrs, "aa"),
-				test = singleValueToString(attrs, "test");
+				test = multipleValuesToString(attrs, "test");
 			items = [
 				["aa", "Amino Acid", aa],
 				["test", "Test", boolRepresentation(test)]
 			];
 			data["aa"] = getMultipleValues(attrs, "aa");
-			data["test"] = getSingleValue(attrs, "test");
+			data["test"] = getMultipleValues(attrs, "test");
 		} else if (metaType === "state") {
 			var name = singleValueToString(attrs, "name"),
 				test = singleValueToString(attrs, "test");
