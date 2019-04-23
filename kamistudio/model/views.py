@@ -322,11 +322,13 @@ def generate_kappa(model_id):
     model = get_model(model_id)
     if model:
         filename = model_id.replace(" ", "_") + ".kappa"
-        kappa_str = kappa_exporters.generate_kappa(model)
-        with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "w+") as f:
-            f.write(kappa_str)
+        path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        if not os.path.isfile(path) or not app.config["READ_ONLY"]:
+            kappa_str = kappa_exporters.generate_kappa(model)
+            with open(path, "w+") as f:
+                f.write(kappa_str)
         return send_file(
-            os.path.join(app.config["UPLOAD_FOLDER"], filename),
+            path,
             as_attachment=True,
             attachment_filename=filename)
     else:
