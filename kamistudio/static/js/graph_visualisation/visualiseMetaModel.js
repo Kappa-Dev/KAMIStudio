@@ -1,3 +1,14 @@
+var META_SIZES = {
+  "gene": 35 * 0.5,
+  "region":30 * 0.5,
+  "site":15 * 0.5,
+  "residue":10 * 0.5,
+  "state":10 * 0.5,
+  "mod":25 * 0.5,
+  "bnd":25 * 0.5
+};
+
+
 function getMetaModelAndVisualize() {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
@@ -45,7 +56,7 @@ function getMetaModelAndVisualize() {
 	    console.log(metaTyping);
 
 	    var nodeSizes = computeNodeSizes(
-	    	graph, metaTyping, NUGGET_META_SIZES);
+	    	graph, metaTyping, META_SIZES);
 
 
 	    var nodeColors = computeNodeColors(
@@ -56,7 +67,7 @@ function getMetaModelAndVisualize() {
 		initNodePosition(graph, nodePos, Object.keys(nodePos));
 
 		// initLinkStrengthDistance(graph, metaTyping);
-		initCircleRadius(graph, metaTyping, NUGGET_META_SIZES);
+		initCircleRadius(graph, metaTyping, META_SIZES);
 
 		var simulationConf = {
 			"charge_strength": -300,

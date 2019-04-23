@@ -464,6 +464,7 @@ function visualiseGraph(graph, svgId,
 			  links: graph.links,
 			  width: width,
 			  height: height,
+			  noPositionNodes: noPositionNodes,
 			  collideStrength: collideStrength, 
 			  chargeStrength: chargeStrength,
 			  defaultDistance: defaultDistance,
@@ -658,6 +659,8 @@ function visualiseGraph(graph, svgId,
 
 	function draw(nodes, links, simulate) {
 		if (simulate) {
+			// if (noPositionNodes == )
+
 	        // defines forces between nodes and edges
 	        var simulation = d3.forceSimulation()
 	            .force("charge", d3.forceManyBody().strength(
@@ -680,7 +683,6 @@ function visualiseGraph(graph, svgId,
 		                	}}))
 	            // .force("x", d3.forceX())
 	            .force('y', d3.forceY().y(0.5 * height).strength(yStrength))
-	            .force("center", d3.forceCenter(width / 2, height / 2))
 	            .force("collide",d3.forceCollide().strength(collideStrength).radius(
 		          function(d) {
 		          	if (d.radius) {
@@ -700,6 +702,9 @@ function visualiseGraph(graph, svgId,
 	            		// }
 	    				updateNodePositions(nodes, nodePosUpdateUrl);
 					});
+	        if (noPositionNodes.length == graph.nodes.length) {
+	        	simulation.force("center", d3.forceCenter(width / 2, height / 2));
+	        }
 	        // applies forces on nodes and edges
 	        simulation.nodes(nodes);
 	        simulation.force("link").links(links);

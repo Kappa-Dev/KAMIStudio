@@ -803,8 +803,8 @@ class ModelDataBox extends React.Component {
 		              {originCorpus}
 		            </td>
 		          </tr>
-		          <DropDownRow name="Seed genes" items={seedGenes} />
-		          <DropDownRow name="Definitions" items={definitions} />
+		         {/* <DropDownRow name="Seed genes" items={seedGenes} />
+		          <DropDownRow name="Definitions" items={definitions} />*/}
 		        </tbody>
 		      </table> 
     		</div>,

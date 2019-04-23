@@ -23,9 +23,12 @@ class DefinitionListItem extends React.Component {
     }
 
     render() {
-		var items = this.props.productNames.map((item, key) =>
-				<li class={item === this.state.selected ? "selected" : "not-selected"}>
-					<a onClick={() => this.onItemClick(item)} class="inner-selector">Variant {item}</a>
+		var items = this.props.products.map((item, key) =>
+				<li className={item[0] === this.state.selected ? "selected" : "not-selected"}>
+					<a onClick={() => this.onItemClick(item[0])} className="inner-selector">
+						Variant {item[0]} {" " + (item[2] ? "(Wild type)" : "")} 
+						<p style={{"display": "inline", "float": "right"}}>{item[1]}</p>
+					</a>
 				</li>
 			),
 			itemClass = this.props.active ? "selected" : "not-selected",
@@ -34,10 +37,10 @@ class DefinitionListItem extends React.Component {
 	    return (
 	        <li className="not-selected">
 	          <a className="nugget-selector" style={{"padding-left": "10pt"}}
-	             onClick={() => this.props.onClick(this.props.id, this.props.protoformGene, this.props.productNames)}>
-	             <span class={spanClass}></span> Gene {this.props.protoformGene}<div className="nugget-desc"></div>
+	             onClick={() => this.props.onClick(this.props.id, this.props.protoformGene, this.props.products)}>
+	             <span className={spanClass}></span> Gene {this.props.protoformGene}<div className="nugget-desc"></div>
 	          </a>
-	          <ul class="inner-list-unstyled" style={display}>
+	          <ul className="inner-list-unstyled" style={display}>
 	          	{items}
 	          </ul>
 	        </li>
@@ -65,7 +68,7 @@ class DefinitionList extends React.Component {
     	this.setState(state);
     }
 
-    onItemClick(id, protoformGene, productNames) {
+    onItemClick(id, protoformGene, products) {
     	if (id === this.state.selected) {
     		this.setState({
 	    		selected: null,
@@ -73,7 +76,7 @@ class DefinitionList extends React.Component {
 	    	});
     	} else {
     		var onSubitemClick = this.props.onItemClick(
-	    		id, protoformGene, productNames, this.setSubitemClick);
+	    		id, protoformGene, products, this.setSubitemClick);
 	    	this.setState({
 	    		selected: id
 	    	});
@@ -82,13 +85,14 @@ class DefinitionList extends React.Component {
     }
 
     render() {
+    	console.log(this.props.items);
 	    var content = Object.keys(this.props.items).map(
 	        (key, i) => <div id={"definitionListItem" + key}>
 	                        <DefinitionListItem
 	                            id={key}
 	                            active={this.state.selected === key}
 	                            protoformGene={key}
-	                            productNames={this.props.items[key]}
+	                            products={this.props.items[key]}
 	                            onClick={this.onItemClick}
 	                            onItemClick={this.state.subitemClick} />
 	                    </div>);
@@ -127,7 +131,9 @@ class DefinitionPreview extends React.Component {
             elementInfoBoxes = null,
             protoform = null,
             product = null,
-            productMessage = null, content = null;
+            productMessage = null,
+            content = null,
+            removeButton = null;
         if (!this.props.id) {
             message = "No definition selected";
         } else {
@@ -159,21 +165,29 @@ class DefinitionPreview extends React.Component {
 	        }
 	        var wt = this.props.wildType ? " (WT)" : "";
 	        content = 
-	        	<div class="row">
-                	<div class="col-md-6">
+	        	<div className="row">
+                	<div className="col-md-6">
                 		<h4>Protoform</h4>
 		                {protoform}
                 	</div>
-                	<div class="col-md-6">
+                	<div className="col-md-6">
                 		<h4>{"Product" + wt}</h4>
                 		{productMessage}
 		                {product}
 		            </div>
                 </div>;
+          //   removeButton = 
+        		// <a href="#"
+        		//    type="button"
+        		//    className="btn btn-default btn-md panel-button" 
+        		//    disabled={this.props.readonly}>
+        		// 	<span class="glyphicon glyphicon-remove"></span> Delete
+        		// </a>;
         }
 
         return([
-        	<h3 className="editable-box">Definition preview</h3>,
+        	<h3 className="editable-box" style={{"display": "inline"}}>Definition preview</h3>,
+        	removeButton,
             <div id="definitionPreview">
             	{message}
                 {content}
@@ -212,8 +226,8 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 	var simulationConf = {
 		"charge_strength": -200,
-		"distance": 30,
-		"strength": 0.5,
+		"distance": 35,
+		"strength": 0.2,
 		"collide_strength": 1,
 		"y_strength": 0
 	}
@@ -244,24 +258,28 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 							}
 						}
 						className="btn btn-default btn-md panel-button add-interaction-button">
-			       			<span class="glyphicon glyphicon-minus"></span> Remove component
+			       			<span className="glyphicon glyphicon-minus"></span> Remove component
 			       	</button>;
 				if (metaTyping[d.id] == "residue") {
 			    	if ("aa" in d.attrs) {
-			    		var aa = d.attrs["aa"].data.concat(["test"]);
+			    		var aa = d.attrs["aa"].data;
+
 			    		var choices = aa.map(
 			    			function(val) {
 			    				var checked = false,
 			    					suffix = "";
-			    				if ((d.canonical_aa) && d.canonical_aa == val) {
+			    				if (d.canonical_aa && d.canonical_aa == val) {
 			    					checked = true;
 			    					suffix = " (Wild Type)";
+			    				}
+			    				if (aa.length == 1) {
+			    					checked = true;
 			    				}
 			    				return [
 			    					<input onChange={() => onSetAA(d, val)}
 			    						   type="radio"
 			    						   name={"aa" + d.id}
-			    						   value={val}
+			    						   value={"aa" + d.id + val}
 			    						   defaultChecked={checked}/>,
 			    					" " + val + suffix,
 			    					<br/>
@@ -397,7 +415,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 
 function viewDefinition(modelId, readonly) {
-	return function(definitionId, protoformGene, productNames, callback) {
+	return function(definitionId, protoformGene, products, callback) {
 		var url = "/corpus/" + modelId + "/raw-definition/" + protoformGene;
 		$.ajax({
 		    url: url,
@@ -412,7 +430,7 @@ function viewDefinition(modelId, readonly) {
 				            id={definitionId}
 				            productId={productName}
 				            protoformGene={protoformGene}
-				            productNames={productNames}
+				            productNames={products.map((item) => item[0])}
 				            editable={false}
 				            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
 				    	document.getElementById("definitionViewWidget"));
@@ -432,7 +450,7 @@ function viewDefinition(modelId, readonly) {
 			        	wildType={false}
 			            id={definitionId}
 			            protoformGene={protoformGene}
-			            productNames={productNames}
+			            productNames={products.map((item) => item[0])}
 			            editable={false}
 			            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
 			        document.getElementById('definitionViewWidget')
@@ -464,7 +482,6 @@ function renderDefinitionList(modelId, readonly) {
         dataType: "json",
     }).done(function (data) {
         var definitionList = data["definitions"];
-        console.log(definitionList);
         ReactDOM.render(
         <DefinitionList 
             items={definitionList}
@@ -588,34 +605,34 @@ class VariantForm extends React.Component {
     render() {
     	return (
     		<form id="variantForm">
-				<div class="col-md-8">
-				    <div class="model-input-form-block">
-    					<div class="row form-row">
+				<div className="col-md-8">
+				    <div className="model-input-form-block">
+    					<div className="row form-row">
 						    <label for="default_mod_rate">Variant name</label>
-						    <input type="text" class="form-control" name="variant_name"
+						    <input type="text" className="form-control" name="variant_name"
 						    	   placeholder=""
 						    	   value={this.state.variant_name}
 						    	   id="variant_name"
 						    	   onChange={this.handleFieldChange("variant_name")}/>
 						</div>
-						<div class="row form-row">
+						<div className="row form-row">
 						    <label for="default_mod_rate">Variant description</label>
-						    <input type="text" class="form-control" name="desc"
+						    <input type="text" className="form-control" name="desc"
 						    	   placeholder=""
 						    	   value={this.state.desc}
 						    	   id="desc"
 						    	   onChange={this.handleFieldChange("desc")}/>
 						</div>
-						<div class="row form-row">
+						<div className="row form-row">
 							<input 
 								onChange={(e) => this.handleSetWt(e)}
 								type="checkbox" name="wt" value="wt" id="wtCheckBox"/> Set as a wild type<br/>
 						</div>
-						<div class="row form-row">
-							<div class="col-md-6" style={{"overflow-x": "scroll"}}>
+						<div className="row form-row">
+							<div className="col-md-6" style={{"overflow-x": "scroll"}}>
 						      <svg id="protoformSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"></svg>
 						    </div>
-						    <div class="col-md-6">
+						    <div className="col-md-6">
 						      <div id="protoformSvgInfoBoxes"></div>
 						    </div>
 						</div>
