@@ -1,0 +1,58 @@
+// Automatically generated from KAMI-model 'egfr_model' 23-04-2019 17:23:28
+
+// Signatures
+
+%agent: STAT3(phosphorylation{0 1},activity{0 1},activity_1{0 1},phosphorylation_1{0 1})
+%agent: EGFR(variant{p60 WT},p60_phosphorylation{0 1},WT_activity{0 1},WT_phosphorylation{0 1},p60_site_pY,WT_site_pY,WT_site,WT_site_1)
+%agent: SRC(activity{0 1})
+%agent: EGF(site)
+%agent: GRB2(variant{noSH2 S90D WT},S90D_SH2_site,WT_SH2_site)
+%agent: SHC1(phosphorylation{0 1},activity{0 1},site_pY)
+%agent: JAK2(activity{0 1},phosphorylation{0 1},activity_1{0 1},activity_2{0 1})
+
+// Rules 
+
+'rule 1' EGF(site[.]), EGFR(variant{p60},WT_site[.]) -> EGF(site[1]), EGFR(variant{p60},WT_site[1]) @ 'default_bnd_rate' //EGF binds EGFR
+
+'rule 2' EGF(site[.]), EGFR(variant{WT},WT_site[.]) -> EGF(site[1]), EGFR(variant{WT},WT_site[1]) @ 'default_bnd_rate' //EGF binds EGFR
+
+'rule 3' SRC(activity{1}), STAT3(activity{1},phosphorylation) -> SRC(activity{1}), STAT3(activity{1},phosphorylation{1})  @ 'default_mod_rate'  //SRC phosphorylates STAT3
+
+'rule 4' EGFR(variant{p60},WT_site_1[.]), EGFR(variant{p60},WT_site_1[.]) -> EGFR(variant{p60},WT_site_1[1]), EGFR(variant{p60},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimerization
+
+'rule 5' EGFR(variant{p60},WT_site_1[.]), EGFR(variant{WT},WT_site_1[.]) -> EGFR(variant{p60},WT_site_1[1]), EGFR(variant{WT},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimerization
+
+'rule 6' EGFR(variant{WT},WT_site_1[.]), EGFR(variant{p60},WT_site_1[.]) -> EGFR(variant{WT},WT_site_1[1]), EGFR(variant{p60},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimerization
+
+'rule 7' EGFR(variant{WT},WT_site_1[.]), EGFR(variant{WT},WT_site_1[.]) -> EGFR(variant{WT},WT_site_1[1]), EGFR(variant{WT},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimerization
+
+'rule 8' SRC(activity{1}), JAK2(activity_2{1},phosphorylation) -> SRC(activity{1}), JAK2(activity_2{1},phosphorylation{1})  @ 'default_mod_rate'  //SRC phosphorylates JAK2
+
+'rule 9' EGFR(variant{WT},WT_activity{1},WT_phosphorylation{1}WT_site_1[1]), EGFR(variant{p60},WT_activity{1},WT_site_1[1],p60_phosphorylation) -> EGFR(variant{WT},WT_activity{1},WT_phosphorylation{1}WT_site_1[1]), EGFR(variant{p60},WT_activity{1},WT_site_1[1],p60_phosphorylation{1})  @ 'default_mod_rate'  //EGFR homodimer phosphorylation
+
+'rule 10' EGFR(variant{WT},WT_activity{1},WT_phosphorylation{1}WT_site_1[1]), EGFR(variant{WT},WT_activity{1},WT_site_1[1],WT_phosphorylation) -> EGFR(variant{WT},WT_activity{1},WT_phosphorylation{1}WT_site_1[1]), EGFR(variant{WT},WT_activity{1},WT_site_1[1],WT_phosphorylation{1})  @ 'default_mod_rate'  //EGFR homodimer phosphorylation
+
+'rule 11' JAK2(activity_1{1}), STAT3(activity_1{1},phosphorylation) -> JAK2(activity_1{1}), STAT3(activity_1{1},phosphorylation{1})  @ 'default_mod_rate'  //JAK2 phosphorylates STAT3
+
+'rule 12' JAK2(phosphorylation{1},activity_1) -> JAK2(phosphorylation{1},activity_1{1})  @ 'default_mod_rate'  //Activity definition of JAK2 PK
+
+'rule 13' SRC(activity{1}), SHC1(activity{1},phosphorylation) -> SRC(activity{1}), SHC1(activity{1},phosphorylation{1})  @ 'default_mod_rate'  //SRC phosphorylates SHC
+
+'rule 14' EGFR(variant{p60},WT_site_1[.]), EGFR(variant{p60},WT_site_1[.]) -> EGFR(variant{p60},WT_site_1[1]), EGFR(variant{p60},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimer
+
+'rule 15' EGFR(variant{p60},WT_site_1[.]), EGFR(variant{WT},WT_site_1[.]) -> EGFR(variant{p60},WT_site_1[1]), EGFR(variant{WT},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimer
+
+'rule 16' EGFR(variant{WT},WT_site_1[.]), EGFR(variant{p60},WT_site_1[.]) -> EGFR(variant{WT},WT_site_1[1]), EGFR(variant{p60},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimer
+
+'rule 17' EGFR(variant{WT},WT_site_1[.]), EGFR(variant{WT},WT_site_1[.]) -> EGFR(variant{WT},WT_site_1[1]), EGFR(variant{WT},WT_site_1[1]) @ 'default_bnd_rate' //EGFR homodimer
+
+'rule 18' SHC1(phosphorylation{1},site_pY[.]), GRB2(variant{S90D},S90D_SH2_site[.]) -> SHC1(phosphorylation{1},site_pY[1]), GRB2(variant{S90D},S90D_SH2_site[1]) @ 'default_bnd_rate' //GRB2 binds SHC1 pY349
+
+'rule 19' SHC1(phosphorylation{1},site_pY[.]), GRB2(variant{WT},WT_SH2_site[.]) -> SHC1(phosphorylation{1},site_pY[1]), GRB2(variant{WT},WT_SH2_site[1]) @ 'default_bnd_rate' //GRB2 binds SHC1 pY349
+
+
+// variables 
+
+%var: 'default_bnd_rate' 0.0001
+%var: 'default_brk_rate' 0.01
+%var: 'default_mod_rate'  0.0001

@@ -629,3 +629,7 @@ input.nugget-search {
 button {
 	cursor: pointer;
 }
+
+ol.pale {
+	color: #727272;
+}

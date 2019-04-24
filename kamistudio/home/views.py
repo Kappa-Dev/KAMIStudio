@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 
-from flask import render_template, Blueprint, redirect, url_for, request, jsonify
+from flask import render_template, Blueprint, redirect, url_for, request, jsonify, send_file
 from flask import current_app as app
 
 from werkzeug.utils import secure_filename
@@ -309,3 +309,21 @@ def get_meta_model():
         "node_positioning": {}
     }
     return jsonify(data), 200
+
+
+@home_blueprint.route("/tutorial")
+def tutorial_page():
+    return render_template("tutorial.html")
+
+
+@home_blueprint.route("/tutorial/<file>")
+def serve_tutorial_file(file):
+    path = os.path.join(
+        app.root_path, 'static', 'tutorial', file)
+    if os.path.isfile(path):
+        return send_file(
+            path,
+            as_attachment=True,
+            attachment_filename=file)
+    else:
+        return render_template("404.html")

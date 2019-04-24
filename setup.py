@@ -22,6 +22,7 @@ setup(name='KAMIStudio',
           'kamistudio': ['instance/*'],
           'kamistudio': [
               'templates/*', 'static/*',
+              'static/tutorial/*',
               'static/bootstrap/*', 'static/css/*',
               'static/js/*', 'uploads/*', 'static/img/*'],
           'kamistudio.action_graph': ['templates/*', 'static/*'],
