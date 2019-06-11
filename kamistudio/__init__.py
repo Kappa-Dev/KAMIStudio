@@ -3,6 +3,7 @@ import os
 import json
 import sys
 import datetime
+import subprocess
 
 from flask import Flask, url_for, render_template
 from flask_session import Session
@@ -35,7 +36,7 @@ def init_neo4j_db():
         app.neo4j_driver = None
 
 
-def init_mongo_db(add_test=False):
+def init_mongo_db():
     """Init connection to the Mongo DB."""
     try:
         app.mongo.cx.server_info()
@@ -55,9 +56,6 @@ def init_mongo_db(add_test=False):
         if "kami_new_definitions" not in app.mongo.db.collection_names():
             app.mongo.db.create_collection("kami_new_definitions")
 
-        # if add_test:
-        #     prepopulate()
-
     except ServerSelectionTimeoutError as e:
         app.mongo.db = None
 
@@ -67,34 +65,30 @@ def prepopulate():
     app.mongo.db.kami_new_definitions.remove({})
     app.mongo.db.kami_corpora.remove({})
     if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-        with open(os.path.join(os.getcwd(), "examples/corpora.json")) as f:
-            test_corpora = json.load(f)
-            for d in test_corpora:
-                # if not app.mongo.db.kami_corpora.find({"id": d["id"]}):
-                app.mongo.db.kami_corpora.insert_one(d)
+        subprocess.run([
+            "mongoimport", "--db", "kamistudio",
+            "--collection", "kami_corpora", "--file",
+            "examples/kami_corpora.json", "--drop"])
     app.mongo.db.kami_models.remove({})
     if len(list(app.mongo.db.kami_models.find({}))) == 0:
-        with open(os.path.join(os.getcwd(), "examples/models.json")) as f:
-            test_models = json.load(f)
-            for d in test_models:
-                # if not app.mongo.db.kami_models.find({"id": d["id"]}):
-                app.mongo.db.kami_models.insert_one(d)
+        subprocess.run([
+            "mongoimport", "--db", "kamistudio",
+            "--collection", "kami_models", "--file",
+            "examples/kami_models.json", "--drop"])
     app.mongo.db.kami_definitions.remove({})
     if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
-        with open(os.path.join(os.getcwd(), "examples/definitions.json")) as f:
-            test_definitions = json.load(f)
-            for d in test_definitions:
-                # if not app.mongo.db.kami_definitions.find(
-                        # {"id": d["id"]}):
-                app.mongo.db.kami_definitions.insert_one(d)
+        subprocess.run([
+            "mongoimport", "--db", "kamistudio",
+            "--collection", "kami_new_definitions", "--file",
+            "examples/kami_definitions.json", "--drop"])
 
-#         # if app.neo4j_driver is not None:
-#         #     h = Neo4jHierarchy(driver=app.neo4j_driver)
-#         #     h._clear()
-#         #     # h.export("/home/eugenia/Work/Notebooks/kamistudio_demo/demo_hierarchy.json")
-#         #     Neo4jHierarchy.load(
-#         #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
-#         #         driver=app.neo4j_driver)d
+    if app.neo4j_driver is not None:
+        h = Neo4jHierarchy(driver=app.neo4j_driver)
+        h._clear()
+
+        Neo4jHierarchy.load(
+            os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
+            driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):
@@ -122,8 +116,9 @@ if os.environ.get('KAMISTUDIO_SETTINGS'):
 Session(app)
 
 app.mongo = PyMongo(app, serverSelectionTimeoutMS=100)
-init_mongo_db(True)
+init_mongo_db()
 init_neo4j_db()
+# prepopulate()
 
 app.new_nugget = None
 app.new_nugget_type = None

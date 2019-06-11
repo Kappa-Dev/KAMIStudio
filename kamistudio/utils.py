@@ -9,6 +9,7 @@ from neo4j.v1 import GraphDatabase
 
 def reconnect_neo4j_db():
     """Init connection to the Neo4j db."""
+    print("Reconnecting to Neo4j")
     success = False
     try:
         current_app.neo4j_driver = GraphDatabase.driver(
@@ -66,15 +67,14 @@ def check_dbs(f):
                 return render_template(
                     "mongo_connection_failure.html",
                     uri=current_app.config["MONGO_URI"])
-        elif current_app.neo4j_driver is None:
+        if current_app.neo4j_driver is None:
             # Try reconnecting
             if not reconnect_neo4j_db():
                 return render_template(
                     "neo4j_connection_failure.html",
                     uri=current_app.config["NEO4J_URI"],
                     user=current_app.config["NEO4J_USER"])
-        else:
-            return f(*args, **kwargs)
+        return f(*args, **kwargs)
     return decorated_function
 
 

@@ -43,9 +43,9 @@
             
             <div class="col-md-8" style="overflow-x: scroll; overflow-y: hidden;">
             <div class="action-graph-view">
-              <!-- <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a>
+             <!--  <a type="button" class="btn btn-default btn-md panel-button nugget-table-view active"><span class="glyphicon glyphicon-resize-full"></span> Action graph</a> -->
               <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-resize-small"></span> Interaction network</a>
-              <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a> -->
+<!--               <a type="button" class="btn btn-default btn-md panel-button nugget-list-view"><span class="glyphicon glyphicon-record"></span> Chord diagram</a> -->
               <button id="showLabelsButton" onClick="showAGLabels();" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style="float: right;">Show labels</button>
               <button id="saveLayoutButton" type="button" class="btn btn-primary btn-md panel-button nugget-list-view {% if instantiated %}instantiation{% endif %}" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</button>
             </div>
@@ -95,8 +95,18 @@
                   </div>
                   <div class="col-sm-6">
                     <div class="nuggets-view">
-                      <!-- <a type="button" id="selectNuggetListView" class="btn btn-default btn-md panel-button nugget-list-view active" onclick="renderNuggetList('{{ kb_id }}', '{{nuggets}}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%})"><span class="glyphicon glyphicon-list"></span> List view</a> -->
-                      <!-- <a type="button" id="selectNuggetTableView" class="btn btn-default btn-md panel-button nugget-table-view" onclick="renderNuggetTable('{{ kb_id }}', '{{ gene_adjacency }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});"><span class="glyphicon glyphicon-equalizer"></span> Table view</a> -->
+                      <!-- <a type="button"
+                         id="selectNuggetListView"
+                         class="btn btn-default btn-md panel-button nugget-list-view active" 
+                         onclick="renderNuggetList('{{ kb_id }}', '{{nuggets}}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%})">
+                         <span class="glyphicon glyphicon-list"></span> List view
+                      </a>
+                      <a type="button"
+                         id="selectNuggetTableView"
+                         class="btn btn-default btn-md panel-button nugget-table-view"
+                         onclick="renderNuggetTable('{{ kb_id }}', '{{ gene_adjacency }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});">
+                         <span class="glyphicon glyphicon-equalizer"></span> Table view
+                      </a> -->
                     </div>
                   </div>
                 </div>
