@@ -3,7 +3,8 @@ import datetime
 import json
 import os
 
-from flask import render_template, Blueprint, redirect, url_for, request, jsonify, send_file
+from flask import (render_template, Blueprint, redirect,
+                   url_for, request, jsonify, send_file)
 from flask import current_app as app
 
 from werkzeug.utils import secure_filename
@@ -72,6 +73,7 @@ def index():
         recent=recent,
         readonly=app.config["READ_ONLY"])
 
+
 def _generate_unique_corpus_id(name):
     existing_corpora = [
         el["id"] for el in app.mongo.db.kami_corpora.find(
@@ -85,6 +87,7 @@ def _generate_unique_corpus_id(name):
             i += 1
             new_name = name + "_{}".format(i)
         return new_name
+
 
 def _generate_unique_model_id(name):
     existing_models = [
@@ -303,6 +306,7 @@ def about_page():
 
 @home_blueprint.route("/raw-meta-model")
 def get_meta_model():
+    """Get meta model graph."""
     h = Neo4jHierarchy(driver=app.neo4j_driver)
     data = {
         "graph": graph_to_d3_json(h.get_graph("meta_model")),

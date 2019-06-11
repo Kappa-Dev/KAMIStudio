@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import current_app, render_template
 
-from neobolt.exceptions import ServiceUnavailable
+from neobolt.exceptions import ServiceUnavailable, AuthError
 from pymongo.errors import ServerSelectionTimeoutError
 
 from neo4j.v1 import GraphDatabase
@@ -16,7 +16,7 @@ def reconnect_neo4j_db():
             auth=(current_app.config["NEO4J_USER"], current_app.config["NEO4J_PWD"])
         )
         success = True
-    except ServiceUnavailable as e:
+    except (ServiceUnavailable, AuthError) as e:
         current_app.neo4j_driver = None
     return success
 
@@ -62,13 +62,13 @@ def check_dbs(f):
     def decorated_function(*args, **kwargs):
         if current_app.mongo.db is None:
             # Try reconnecting
-            if reconnect_mongo_db():
+            if not reconnect_mongo_db():
                 return render_template(
                     "mongo_connection_failure.html",
                     uri=current_app.config["MONGO_URI"])
         elif current_app.neo4j_driver is None:
             # Try reconnecting
-            if reconnect_neo4j_db():
+            if not reconnect_neo4j_db():
                 return render_template(
                     "neo4j_connection_failure.html",
                     uri=current_app.config["NEO4J_URI"],
@@ -80,7 +80,7 @@ def check_dbs(f):
 
 def _generate_unique_model_id(name):
     existing_models = [
-        el["id"] for el in app.mongo.db.kami_models.find(
+        el["id"] for el in current_app.mongo.db.kami_models.find(
             {}, {"id": 1, "_id": 0})]
     if name not in existing_models:
         return name

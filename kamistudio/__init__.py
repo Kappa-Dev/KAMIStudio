@@ -16,7 +16,7 @@ from kamistudio.action_graph.views import action_graph_blueprint
 from kamistudio.nuggets.views import nuggets_blueprint
 from kamistudio.definitions.views import definitions_blueprint
 
-from neobolt.exceptions import ServiceUnavailable
+from neobolt.exceptions import ServiceUnavailable, AuthError
 from pymongo.errors import ServerSelectionTimeoutError
 
 from neo4j.v1 import GraphDatabase
@@ -31,7 +31,7 @@ def init_neo4j_db():
             app.config["NEO4J_URI"],
             auth=(app.config["NEO4J_USER"], app.config["NEO4J_PWD"])
         )
-    except ServiceUnavailable as e:
+    except (ServiceUnavailable, AuthError) as e:
         app.neo4j_driver = None
 
 

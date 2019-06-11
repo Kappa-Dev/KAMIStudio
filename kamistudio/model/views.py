@@ -323,6 +323,7 @@ def generate_kappa(model_id):
     if model:
         filename = model_id.replace(" ", "_") + ".kappa"
         path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        print(path)
         if not os.path.isfile(path) or not app.config["READ_ONLY"]:
             kappa_str = kappa_exporters.generate_kappa(model)
             with open(path, "w+") as f:

@@ -48,6 +48,7 @@ class EditableBox extends React.Component {
 			editing: false,
 			updatedData: {}
 		};
+
 		this.handleEditClick = this.handleEditClick.bind(this);
 		this.handleSaveClick = this.handleSaveClick.bind(this);
 		this.handleCancelClick = this.handleCancelClick.bind(this);
@@ -115,7 +116,7 @@ class EditableBox extends React.Component {
 							          		   id={item[0]}
 							          		   onChange={this.handleFieldChange(item[0])}
 							          		   value={item[0] in this.state.updatedData ? this.state.updatedData[item[0]] : this.props.data[item[0]]} />
-							          	</td>
+							          </td>
 								</tr>
 								:
 								<tr key={key}>

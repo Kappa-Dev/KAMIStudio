@@ -281,7 +281,6 @@ function mapEdgesToObjects(graph) {
 		if (typeof graph.links[i].target !== "object") 
 			graph.links[i].target = find(nodeById, graph.links[i].target);
 	}
-
 }
 
 
@@ -625,7 +624,7 @@ function visualiseGraph(graph, svgId,
 	  	translateLinks(link, node);
 	  	node.attr(
             "transform", 
-            function(d) {
+           function(d) {
             	if (zoom && graph.nodes.length > 15) {
     				// zoom to fit the bounding box
 		          	var boundaries = container.node().getBBox(),
