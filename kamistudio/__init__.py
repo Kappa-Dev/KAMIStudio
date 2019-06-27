@@ -32,8 +32,12 @@ def init_neo4j_db():
             app.config["NEO4J_URI"],
             auth=(app.config["NEO4J_USER"], app.config["NEO4J_PWD"])
         )
-    except (ServiceUnavailable, AuthError) as e:
+    except AuthError:
         app.neo4j_driver = None
+        app._neo4j_up = True
+    except ServiceUnavailable:
+        app.neo4j_driver = None
+        app._neo4j_up = False
 
 
 def init_mongo_db():
