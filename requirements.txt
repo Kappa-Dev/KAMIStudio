@@ -6,7 +6,6 @@ Flask-Session==0.3.1
 Flask-Uploads==0.2.1
 greenery==3.1
 indra==1.9.0
-Jinja2==2.10
 JPype1==0.6.3
 lrparsing==1.0.13
 lxml==4.2.5
@@ -18,7 +17,5 @@ networkx==2.3
 numpy==1.15.1
 numpydoc==0.8.0
 pymongo==3.7.2
-requests==2.19.1
 sympy==1.2
-urllib3==1.23
 Werkzeug==0.14.1
