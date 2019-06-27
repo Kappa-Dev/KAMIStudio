@@ -79,7 +79,6 @@ function mergeNodes(graph, nodes) {
 						};
 					}
 				}
-				console.log(i, edge.source.id, edge.target.id);
 				linkIndicesToRemove.push(i);
 			} else if (nodes.includes(edge.target.id)) {
 				if (edge.source.id in inNeighbors) {
@@ -92,7 +91,6 @@ function mergeNodes(graph, nodes) {
 						"strength": edge.strength
 					};
 				}
-				console.log(i, edge.source.id, edge.target.id);
 				linkIndicesToRemove.push(i);
 			}
 		}

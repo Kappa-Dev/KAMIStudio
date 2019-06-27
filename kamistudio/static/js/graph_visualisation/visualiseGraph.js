@@ -802,7 +802,7 @@ function visualiseGraph(graph, svgId,
 	}
 
 	function dragstarted(d) {
-		d3.event.sourceEvent.stopPropagation();
+		// d3.event.sourceEvent.stopPropagation();
 		if (CTRL_SELECTED_COMPONENTS.length > 1) {
 			CURRENT_DRAG_COMPONENTS = [];
 			for (var i=0; i < CTRL_SELECTED_COMPONENTS.length; i++) {

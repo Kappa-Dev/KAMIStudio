@@ -62,13 +62,13 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		}
 
 		initNodePosition(graph, nodePos, Object.keys(nodePos));
-		if (Object.keys(nodePos).length == 0) {
+		if ((Object.keys(nodePos).length == 0) && (Object.keys(cc).length > 0)) {
 			initCCPositions(graph, cc, "actionGraphSvg");
 		}
 		initLinkStrengthDistance(graph, metaTyping);
 		initCircleRadius(graph, metaTyping, AG_META_SIZES);
 		initNodeLabels(graph, metaTyping);
-		console.log(graph);
+
 		var simulationConf = {
 			"charge_strength": -400,
 			"collide_strength": 1.8,
@@ -507,7 +507,6 @@ function hideAGLabels() {
 
 function showAGLabels() {
 	var button = document.getElementById("showLabelsButton");
-	console.log(button.innerHTML);
 
 	button.innerHTML = "Hide labels";
 	button.onclick = hideAGLabels;
