@@ -53,10 +53,10 @@ def configure(argdict):
     print("Writing the following configs to '{}'...".format(file))
     with open(file, "w+") as f:
         confs = [
-            "NEO4J_URI = 'bolt://127.0.0.1:7687'",
+            "NEO4J_URI = 'bolt://neo4jdb:7687'",
             "NEO4J_USER = 'neo4j'",
-            "NEO4J_PWD = 'neo4j'",
-            "MONGO_URI = 'mongodb://127.0.0.1:27017'",
+            "NEO4J_PWD = 'admin'",
+            "MONGO_URI = 'mongodb://mongodb:27017'",
             "SECRET_KEY = {}".format(os.urandom(24)),
             "UPLOAD_FOLDER = '{}'".format(os.path.join(uploads, "uploads")),
             "SESSION_FILE_DIR = '{}'".format(os.path.join(session, "flask_session")),

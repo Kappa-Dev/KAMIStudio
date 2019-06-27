@@ -3,7 +3,7 @@
 KAMIStudio is a bio-curation environment for modelling cellular signalling based on the [KAMI](https://github.com/Kappa-Dev/KAMI) library. It is web-based and can be started as a server locally.
 
 
-## Installation
+## Standard Installation
 
 To store data KAMIStudio uses two noSQL database technologies: Neo4j to store corpora and models and MongoDB to store different kinds of meta-data. Therefore, before using KAMIStudio you need to install the following software:
 
@@ -68,10 +68,19 @@ export FLASK_APP=kamistudio
 export KAMISTUDIO_SETTINGS=/path/of/your/choice/kamistudio.conf
 ```
 
-## Run KAMIStudio
 
 Run the application:
 
 ```
 flask run
 ```
+
+## Installation with a Docker container
+
+Alternatively, KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. To create a container go to the folder with the source of KAMIStudio and run:
+
+```
+docker-compose up
+```
+
+It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). Note that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply reload the page until the connection will be established.

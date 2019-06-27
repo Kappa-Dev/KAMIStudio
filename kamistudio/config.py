@@ -2,7 +2,7 @@
 
 ALLOWED_EXTENSIONS = set(['json'])
 
-DEBUG = True
+DEBUG = False
 
 DOWNLOAD_FOLDER = 'kamistudio/downloads'
 
