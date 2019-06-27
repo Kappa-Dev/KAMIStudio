@@ -13,7 +13,7 @@
 
 {% block tabs %}
 
-<form id="modelImportForm" novalidate="{{ url_for('corpus.import_json_interactions', corpus_id=corpus_id) }}" method="post" enctype="multipart/form-data">
+<form id="interactionImportForm" novalidate="{{ url_for('corpus.import_json_interactions', corpus_id=corpus_id) }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 
@@ -25,14 +25,17 @@
 			</div>
 
 			<div class="row form-row">
-				<div class="col-md-9">
+				<div class="col-md-12">
 					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
 						<p>Importing interactions... It make take a moment.</p>
 						<div id="loader"></div>
 					</div>
 				</div>
-				<div class="col-md-3" style="text-align: right;">
-					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoader()">Import</a> 
+			</div>
+			<div class="row form-row">
+				<div class="col-md-6"></div>
+				<div class="col-md-6" style="text-align: right;">
+					<a type="button" class="btn btn-primary btn-lg" name="importForm" onclick="showLoaderAndSubmit('interactionImportForm')">Import</a> 
 				</div>
 			</div>
 		</div>

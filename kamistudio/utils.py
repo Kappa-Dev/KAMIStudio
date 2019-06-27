@@ -9,7 +9,6 @@ from neo4j.v1 import GraphDatabase
 
 def reconnect_neo4j_db():
     """Init connection to the Neo4j db."""
-    print("Reconnecting to Neo4j")
     success = False
     try:
         current_app.neo4j_driver = GraphDatabase.driver(
@@ -17,8 +16,12 @@ def reconnect_neo4j_db():
             auth=(current_app.config["NEO4J_USER"], current_app.config["NEO4J_PWD"])
         )
         success = True
-    except (ServiceUnavailable, AuthError) as e:
+    except AuthError:
         current_app.neo4j_driver = None
+        current_app._neo4j_up = True
+    except ServiceUnavailable:
+        current_app.neo4j_driver = None
+        current_app._neo4j_up = False
     return success
 
 
@@ -67,13 +70,21 @@ def check_dbs(f):
                 return render_template(
                     "mongo_connection_failure.html",
                     uri=current_app.config["MONGO_URI"])
+
         if current_app.neo4j_driver is None:
             # Try reconnecting
             if not reconnect_neo4j_db():
-                return render_template(
-                    "neo4j_connection_failure.html",
-                    uri=current_app.config["NEO4J_URI"],
-                    user=current_app.config["NEO4J_USER"])
+                if not current_app._neo4j_up:
+                    return render_template(
+                        "neo4j_connection_failure.html",
+                        uri=current_app.config["NEO4J_URI"])
+                else:
+                    return render_template(
+                        "neo4j_auth_failure.html",
+                        uri=current_app.config["NEO4J_URI"],
+                        user=current_app.config["NEO4J_USER"]
+                    )
+
         return f(*args, **kwargs)
     return decorated_function
 

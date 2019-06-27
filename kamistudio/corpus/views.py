@@ -2,6 +2,7 @@
 import datetime
 import json
 import os
+import warnings
 
 from kami.data_structures.corpora import KamiCorpus
 from flask import (render_template, Blueprint, request, session, redirect,
@@ -57,10 +58,10 @@ def _generate_unique_variant_name(record, name):
 
 def get_corpus(corpus_id):
     """Retreive corpus from the db."""
-    try:
-        corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    except:
-        corpus_json = None
+    # try:
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    # except:
+        # corpus_json = None
     if corpus_json and app.neo4j_driver:
         return KamiCorpus(
             corpus_id,
