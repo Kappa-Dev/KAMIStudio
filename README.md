@@ -5,7 +5,7 @@ KAMIStudio is a bio-curation environment for modelling cellular signalling based
 
 ## Installation with a Docker container
 
-KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. On desktop systems like Docker Desktop for Mac and Windows, Docker Compose is included as part of those desktop installs. Then, to create a container, go to the folder with the source of KAMIStudio and run:
+KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. On desktop systems like Docker Desktop for Mac and Windows, Docker Compose is included as part of those desktop installs. 
 
 First of all, clone the KAMIStudio repository:
 
@@ -27,13 +27,17 @@ To lauch the created container with KAMIStudio run:
 sudo docker-compose up
 ```
 
-It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose build` and `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). KAMIStudio can then be accessed at `0.0.0.0:5000`. _Note_ that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply wait until the connection will be established and reload the page.
-
-To run KAMIStudio in detached mode execute:
+It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Launching of KAMIStudio is performed within attached mode, and to run KAMIStudio in detached mode execute:
 
 ```
 sudo docker-compose up -d
 ```
+
+You can now access KAMIStudio using your browser at `0.0.0.0:5000`. _Note_ that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply wait until the connection will be established and reload the page.
+
+Installation of dependencies will be done only on the first `docker-compose build` and `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). 
+
+
 
 
 
