@@ -7,7 +7,17 @@ KAMIStudio is a bio-curation environment for modelling cellular signalling based
 
 KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. On desktop systems like Docker Desktop for Mac and Windows, Docker Compose is included as part of those desktop installs. Then, to create a container, go to the folder with the source of KAMIStudio and run:
 
+First of all, clone the KAMIStudio repository:
+
 ```
+git clone https://github.com/Kappa-Dev/KAMIStudio.git
+```
+
+Then, to create a container, go to the folder with the source of KAMIStudio and build the composed Docker images:
+>>>>>>> README upd
+
+```
+cd KAMIStudio
 sudo docker-compose build
 ```
 
@@ -23,6 +33,11 @@ It will create three containers (one for the KAMIStudio server, one for the Neo4
 
 ## Manual Installation
 
+First of all, clone the KAMIStudio repository:
+
+```
+git clone https://github.com/Kappa-Dev/KAMIStudio.git
+```
 
 ### Dependencies
 
