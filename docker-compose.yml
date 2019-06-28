@@ -13,12 +13,10 @@ services:
     image: neo4j:3.5
     environment:
       - NEO4J_AUTH=neo4j/admin
-      - "NEO4J_dbms_security_procedures_unrestricted: algo.*, apoc.*"
     volumes:
-      - $PWD/neo4j_configs/data:/data
-      - $PWD/neo4j_configs/plugins:/plugins
-      - $PWD/neo4j_configs/conf:/conf
-
+      - ./neo4j_config/data:/data
+      - ./neo4j_config/plugins:/plugins
+      - ./neo4j_config/conf:/conf
     ports:
       - "17474:7474"
       - "7687:7687"

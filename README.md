@@ -77,10 +77,11 @@ flask run
 
 ## Installation with a Docker container
 
-Alternatively, KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. To create a container go to the folder with the source of KAMIStudio and run:
+Alternatively, KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. Then, to create a container, go to the folder with the source of KAMIStudio and run:
 
 ```
-docker-compose up
+sudo docker-compose build
+sudo docker-compose up
 ```
 
-It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). Note that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply reload the page until the connection will be established.
+It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose build` and `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). Note that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply reload the page until the connection will be established.
