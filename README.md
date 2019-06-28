@@ -14,7 +14,7 @@ git clone https://github.com/Kappa-Dev/KAMIStudio.git
 ```
 
 Then, to create a container, go to the folder with the source of KAMIStudio and build the composed Docker images:
->>>>>>> README upd
+
 
 ```
 cd KAMIStudio
