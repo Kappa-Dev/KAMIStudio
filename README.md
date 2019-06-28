@@ -27,7 +27,7 @@ To lauch the created container with KAMIStudio run:
 sudo docker-compose up
 ```
 
-It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Launching of KAMIStudio is performed within attached mode. To run KAMIStudio in detached mode execute:
+It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Launching of KAMIStudio is performed within attached mode (`docker-compose up` does not terminate, but continuously outputs the messages from the launched containers). To run KAMIStudio in detached mode execute:
 
 ```
 sudo docker-compose up -d
