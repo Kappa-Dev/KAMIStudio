@@ -81,6 +81,11 @@ Alternatively, KAMIStudio provides an image for creation of a Docker container w
 
 ```
 sudo docker-compose build
+```
+
+To lauch the created container with KAMIStudio run:
+
+```
 sudo docker-compose up
 ```
 

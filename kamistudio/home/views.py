@@ -255,9 +255,9 @@ def imported_corpus(filename, annotation):
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.isfile(path_to_file):
         with open(path_to_file, "r+") as f:
-            json_data = json.loads(f.read())
-            json_data["corpus_id"] = corpus_id
             try:
+                json_data = json.loads(f.read())
+                json_data["corpus_id"] = corpus_id
                 add_new_corpus(corpus_id, creation_time, last_modified, annotation)
                 corpus = KamiCorpus.from_json(
                     corpus_id,
@@ -280,20 +280,20 @@ def imported_model(filename, annotation):
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.isfile(path_to_file):
         with open(path_to_file, "r+") as f:
-            json_data = json.loads(f.read())
-            json_data["model_id"] = model_id
-            # try:
-            add_new_model(model_id, creation_time, last_modified, annotation)
-            model = KamiModel.load_json(
-                model_id,
-                os.path.join(app.config['UPLOAD_FOLDER'], filename),
-                annotation,
-                creation_time=creation_time,
-                last_modified=last_modified,
-                backend="neo4j",
-                driver=app.neo4j_driver)
-            # except:
-            #     return render_template("500.html")
+            try:
+                json_data = json.loads(f.read())
+                json_data["model_id"] = model_id
+                add_new_model(model_id, creation_time, last_modified, annotation)
+                model = KamiModel.load_json(
+                    model_id,
+                    os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                    annotation,
+                    creation_time=creation_time,
+                    last_modified=last_modified,
+                    backend="neo4j",
+                    driver=app.neo4j_driver)
+            except:
+                return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))
 
 

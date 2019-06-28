@@ -10,3 +10,5 @@ server/kami/__pycache__/*
 tests/__pycache__/*
 *.pyc
 kamistudio/uploads/*
+db/mongo/data/*
+db/neo4j/data/*
