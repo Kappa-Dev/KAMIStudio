@@ -3,7 +3,28 @@
 KAMIStudio is a bio-curation environment for modelling cellular signalling based on the [KAMI](https://github.com/Kappa-Dev/KAMI) library. It is web-based and can be started as a server locally.
 
 
-## Standard Installation
+## Installation with a Docker container
+
+KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. Then, to create a container, go to the folder with the source of KAMIStudio and run:
+
+```
+sudo docker-compose build
+```
+
+To lauch the created container with KAMIStudio run:
+
+```
+sudo docker-compose up
+```
+
+It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose build` and `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). KAMIStudio can then be accessed at `0.0.0.0:5000`. Note that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply wait until the connection will be established and reload the page.
+
+
+
+## Manual Installation
+
+
+### Dependencies
 
 To store data KAMIStudio uses two noSQL database technologies: Neo4j to store corpora and models and MongoDB to store different kinds of meta-data. Therefore, before using KAMIStudio you need to install the following software:
 
@@ -38,7 +59,7 @@ python setup.py install
 
 ```
 
-## Server configuration
+### Server configuration
 
 To configure KAMIStudio server you need to provide three paths: a path to store uploaded files, a path to store session files and a path to save configuration file. It can be done running `configure.py` provided in the KAMIStudio repository as follows:
 
@@ -74,19 +95,3 @@ Run the application:
 ```
 flask run
 ```
-
-## Installation with a Docker container
-
-Alternatively, KAMIStudio provides an image for creation of a Docker container with all the required packages, as well as databases installed and configured. First, you need to make sure that you have installed Docker (https://docs.docker.com/install/#server) and the Docker Compose tool (https://docs.docker.com/compose/install/) on your machine. Then, to create a container, go to the folder with the source of KAMIStudio and run:
-
-```
-sudo docker-compose build
-```
-
-To lauch the created container with KAMIStudio run:
-
-```
-sudo docker-compose up
-```
-
-It will create three containers (one for the KAMIStudio server, one for the Neo4j database and the third one for the Mongo database), fetch all the dependencies, install them (note that it may take some time) and then launch KAMIStudio. Installation of dependencies will be done only on the first `docker-compose build` and `docker-compose up`, all the rest will simply launch KAMIStudio inside the container (therefore, will take significantly less time). Note that Neo4j database has some delay on the start, therefore, if you get an error of connection to Neo4j immediately after lauching KAMIStudio, simply reload the page until the connection will be established.
