@@ -10,6 +10,7 @@ from flask import (render_template, Blueprint, request, session, redirect,
 from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
+from regraph.primitives import attrs_to_json, get_node, get_edge
 from regraph.neo4j import Neo4jHierarchy
 
 from werkzeug.utils import secure_filename
@@ -19,6 +20,8 @@ from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.definitions import NewDefinition
 from kami.aggregation.generators import generate_nugget
+from kami.aggregation.identifiers import EntityIdentifier
+from kami.exceptions import KamiError
 
 from kamistudio.utils import authenticate, check_dbs
 from kamistudio.corpus.form_parsing import(parse_interaction)
@@ -179,43 +182,85 @@ def preview_nugget(corpus_id):
     """Generate nugget, store in the session and redirect to nugget preview."""
     interaction = parse_interaction(request.form)
     corpus = get_corpus(corpus_id)
-    (nugget, nugget_type, template_rels, des) = generate_nugget(
-        corpus, interaction, app.config["READ_ONLY"])
+    try:
+        (nugget, nugget_type, template_rels, des) = generate_nugget(
+            corpus, interaction, app.config["READ_ONLY"])
 
-    session["nugget"] = nugget
-    session["nugget_type"] = nugget_type
-    session["template_rels"] = template_rels
-    session.modified = True
+        session["nugget"] = nugget
+        session["nugget_type"] = nugget_type
+        session["template_rels"] = template_rels
+        session.modified = True
 
-    template_relation = {}
-    template_rel = {}
-    if nugget_type == "mod" and "mod_template" in template_rels:
-        template_rel = template_rels["mod_template"]
-    elif nugget_type == "bnd" and "bnd_template" in template_rels:
-        template_rel = template_rels["bnd_template"]
-    for k, v in template_rel.items():
-        for vv in v:
-            template_relation[vv] = k
+        template_relation = {}
+        template_rel = {}
+        if nugget_type == "mod" and "mod_template" in template_rels:
+            template_rel = template_rels["mod_template"]
+        elif nugget_type == "bnd" and "bnd_template" in template_rels:
+            template_rel = template_rels["bnd_template"]
+        for k, v in template_rel.items():
+            for vv in v:
+                template_relation[vv] = k
 
-    desc = interaction.desc
-    rate = interaction.rate
+        desc = interaction.desc
+        rate = interaction.rate
 
-    return render_template(
-        "nugget_preview.html",
-        new_nugget=True,
-        corpus_id=corpus_id,
-        corpus=corpus,
-        nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
-        nugget_type=nugget_type,
-        nugget_meta_typing=json.dumps(nugget.meta_typing),
-        nugget_meta_typing_json=nugget.meta_typing,
-        nugget_ag_typing=json.dumps(nugget.reference_typing),
-        nugget_template_rel=json.dumps(template_relation),
-        nugget_desc=desc,
-        nugget_rate=rate,
-        nugget_nodes=nugget.graph.nodes(),
-        nugget_ag_typing_dict=nugget.reference_typing,
-        readonly=app.config["READ_ONLY"])
+        ag_typing = {}
+        reference_genes = {}
+        for n in nugget.graph.nodes():
+            if nugget.meta_typing[n] == "mod":
+                reference_genes[n] = []
+                if "enzyme" in template_relation and\
+                   template_relation["enzyme"] in nugget.reference_typing:
+                    reference_genes[n].append(
+                        nugget.reference_typing[template_relation["enzyme"]])
+                nugget_gene = template_relation["substrate"]
+                if nugget_gene and nugget_gene in nugget.reference_typing:
+                    reference_genes[n].append(
+                        nugget.reference_typing[nugget_gene])
+
+            elif nugget.meta_typing[n] == "bnd":
+                reference_genes[n] = []
+                nugget_gene = template_relation["left_partner"]
+                if nugget_gene and nugget_gene in nugget.reference_typing:
+                    reference_genes[n].append(
+                        nugget.reference_typing[nugget_gene])
+                nugget_gene = template_relation["right_partner"]
+                if nugget_gene and nugget_gene in nugget.reference_typing:
+                    reference_genes[n].append(
+                        nugget.reference_typing[nugget_gene])
+            else:
+                identifier = EntityIdentifier(nugget.graph, nugget.meta_typing)
+                nugget_gene = identifier.get_gene_of(n)
+                if nugget_gene and nugget_gene in nugget.reference_typing:
+                    reference_genes[n] = [
+                        nugget.reference_typing[nugget_gene]
+                    ]
+                else:
+                    reference_genes[n] = []
+
+        for k, v in nugget.reference_typing.items():
+            attrs = attrs_to_json(get_node(corpus.action_graph, v))
+            ag_typing[k] = [v, attrs]
+
+        return render_template(
+            "nugget_preview.html",
+            new_nugget=True,
+            corpus_id=corpus_id,
+            corpus=corpus,
+            nugget_graph=json.dumps(graph_to_d3_json(nugget.graph)),
+            nugget_type=nugget_type,
+            nugget_meta_typing=json.dumps(nugget.meta_typing),
+            nugget_meta_typing_json=nugget.meta_typing,
+            nugget_ag_typing=json.dumps(ag_typing),
+            nugget_template_rel=json.dumps(template_relation),
+            nugget_desc=desc,
+            nugget_rate=rate,
+            reference_genes=json.dumps(reference_genes),
+            nugget_nodes=nugget.graph.nodes(),
+            nugget_ag_typing_dict=nugget.reference_typing,
+            readonly=app.config["READ_ONLY"])
+    except KamiError:
+        return jsonify({}), 200
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/instantiate",
@@ -650,3 +695,88 @@ def add_variant(corpus_id, gene_node_id):
                 "redirect": url_for('corpus.corpus_view', corpus_id=corpus_id)
             }
             return jsonify(data), 200
+
+
+@corpus_blueprint.route("/fetch-reference-candidates/<corpus_id>/<element_type>",
+                        methods=["POST"])
+def get_reference_candidates(corpus_id, element_type):
+    """Fetch candidates for the reference node."""
+    json_data = request.get_json()
+
+    reference_genes = json_data["genes"]
+
+    original_ref_el = json_data["originalRefElement"]
+
+    data = {
+        "candidates": {}
+    }
+
+    corpus = get_corpus(corpus_id)
+
+    def format_gene_data(attrs):
+        uniprot = list(attrs["uniprotid"])[0]
+        synonyms = []
+        if "hgnc_symbol" in attrs:
+            synonyms.append(list(attrs["hgnc_symbol"])[0])
+        return "{} ({})".format(uniprot, ", ".join(synonyms))
+
+    def format_fragment_data(node_attrs, edge_attrs):
+        data = []
+        if "name" in node_attrs:
+            data += list(node_attrs["name"])
+        if "interproid" in node_attrs:
+            data += list(node_attrs["interproid"])
+        if "start" in edge_attrs and "end" in edge_attrs:
+            data.append("interval {}-{}".format(
+                list(edge_attrs["start"])[0],
+                list(edge_attrs["end"])[0]))
+        if "order" in edge_attrs:
+            data.append(
+                "order {}".format(list(edge_attrs["order"])[0]))
+        return ", ".join(data)
+
+    for gene in reference_genes:
+        if element_type == "mod":
+            candidates = corpus.get_attached_mod(gene, True)
+            for c in candidates:
+                if c != original_ref_el:
+                    enzymes = corpus.get_enzymes_of_mod(c)
+                    substrates = corpus.get_substrates_of_mod(c)
+                    node_attrs = get_node(corpus.action_graph, c)
+                    data["candidates"][c] = (
+                        "Enzymes: {}, substrates: {}".format(
+                            " / ".join(
+                                format_gene_data(
+                                    get_node(corpus.action_graph, p))
+                                for p in enzymes),
+                            " / ".join(
+                                format_gene_data(
+                                    get_node(corpus.action_graph, p))
+                                for p in substrates)),
+                        attrs_to_json(node_attrs)
+                    )
+        elif element_type == "bnd":
+            candidates = corpus.get_attached_bnd(gene)
+            for c in candidates:
+                if c != original_ref_el:
+                    node_attrs = get_node(corpus.action_graph, c)
+                    partners = corpus.get_genes_of_bnd(c)
+                    data["candidates"][c] = (
+                        "Bindind partners: " + " / ".join(
+                            format_gene_data(
+                                get_node(corpus.action_graph, p))
+                            for p in partners),
+                        attrs_to_json(node_attrs)
+                    )
+        else:
+            candidates = corpus.ag_predecessors_of_type(
+                gene, element_type)
+            for c in candidates:
+                if c != original_ref_el:
+                    node_attrs = get_node(corpus.action_graph, c)
+                    edge_attrs = get_edge(corpus.action_graph, c, gene)
+                    data["candidates"][c] = (
+                        format_fragment_data(node_attrs, edge_attrs),
+                        attrs_to_json(node_attrs))
+
+    return jsonify(data), 200

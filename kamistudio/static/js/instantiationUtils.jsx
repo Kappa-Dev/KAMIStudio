@@ -1,4 +1,30 @@
-class SelectionItem extends React.Component {
+/**
+ * Instantiation form React components and utils
+ */
+
+
+function VariantSelectionDialog(props) {
+	var filteredList = <FilteredList 
+			onFetchItems={props.onFetchItems}
+			onItemClick={props.onItemClick}
+			filterItems={props.filterItems}
+			listComponent={GeneList}
+			itemFilter={
+				(item, value) => item.join(", ").toLowerCase().search(
+		    			value.toLowerCase()) !== -1
+			}/>;
+	return (
+		<Dialog
+			id={props.id}
+			title={props.title}
+			onRemove={props.onRemove}
+			content={filteredList} />
+	);
+}
+
+
+
+class VariantSelectionItem extends React.Component {
 
 	constructor(props) {
 		super(props);
@@ -46,95 +72,69 @@ class SelectionItem extends React.Component {
 	}
 }
 
-class FilteredList extends React.Component {
-	
-	constructor(props) {
-		super(props);
 
-		this.filterList = this.filterList.bind(this);
-		this.componentWillMount = this.componentWillMount.bind(this);
-
-		this.state = {
-			initialItems: [],
-			items : []
-		}
-
-	}
-
-	filterList(event) {
-		var state = Object.assign({}, this.state),
-			updatedList = this.state.initialItems.slice();
-		updatedList = updatedList.filter(
-			function(item){
-		  		return item.join(", ").toLowerCase().search(
-		    		event.target.value.toLowerCase()) !== -1;
-			});
-
-		state["items"] = updatedList;
-		this.setState(state);
-	}
-
-	componentWillMount() {
-		if (this.props.onFetchItems) {
-		    this.props.onFetchItems(this, this.props.filterItems);
-		}
-	}
-  	
-  	render() {
-  		var listItems = this.state.items.map(
-  				(item) =>
-          				<li className="not-selected">
-          					<a onClick={() => this.props.onItemClick(item[0], item[1])}>
-	          					{item[0]}
-	          					<div style={{"float": "right", "margin-left": "5pt"}}>{item[1]}</div>
-	          					<div style={{"float": "right"}}>{item[2] ? item[2].join(", ") : ""}</div>
-	          				</a>
-          				</li>
-        		),
-  			loader;
-  		if (this.state.initialItems.length == 0) {
-			loader = 
-				<div id="loadingBlock" style={{"margin":"auto"}} className="loading-elements center-block" display="none;">
-					<p>Loading...</p>
-					<div id="loader"></div>
-				</div>;
-  		}
-	    return (
-	      <div className="filter-list">
-	      	<div className="row">  
-		        <div className="col-md-12">
-		        	<input className="form-control search" type="text" placeholder="Search" onChange={this.filterList}/>
-	     		</div>
-	     	</div>
-	     	<div className="row">  
-		        <div className="col-md-12">
-		        	{loader}
-			     	<ul className="nav nuggets-nav list-group-striped list-unstyled components">
-			     		{listItems}
-			     	</ul>
-			    </div>
-			</div>
-	      </div>
-	    );
-  	}
+function GeneList(props) {
+	var listItems = props.items.map(
+		(item) =>
+				<li className="not-selected">
+					<a onClick={() => props.onItemClick(item[0], item[1])}>
+  					{item[0]}
+  					<div style={{"float": "right", "margin-left": "5pt"}}>{item[1]}</div>
+  					<div style={{"float": "right"}}>{item[2] ? item[2].join(", ") : ""}</div>
+  				</a>
+				</li>
+    );
+	return <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+	     		{listItems}
+	       </ul>;
 }
 
 
-function SelectionDialog(props) {
-	return (
-		<div className="selection-dialog" id={props.id}>
-			<h2 style={{"display": "inline-block"}} className="selection-dialog-title">{props.title}</h2>
-			<a className="cancel-link"
-				onClick={props.onRemove}>
-				<span className="glyphicon glyphicon-remove"></span>
-			</a>
-			<FilteredList 
-				onFetchItems={props.onFetchItems}
-				onItemClick={props.onItemClick}
-				filterItems={props.filterItems}/>
-		</div>
-	)
+
+
+
+function getGenes(modelId) {
+	return function(el, filterItems) {
+		var url = "/corpus/" + modelId + "/genes";
+		$.ajax({
+		    url: url,
+		    type: 'get',
+		    dataType: "json"
+		}).done(
+			function(data) {
+				el.setState({
+					initialItems: data["genes"].filter(
+						(item) => !filterItems.includes(item[0])),
+					items:   data["genes"].filter(
+						(item) => !filterItems.includes(item[0]))
+				});
+			}
+		).fail(function (e) {
+		    console.log("Failed to load genes");
+		});
+	}
 }
+
+
+function getVariants(modelId) {
+	return function(el, index, uniprotId) {
+		var url = "/corpus/" + modelId + "/variants/uniprot/" + uniprotId;
+		$.ajax({
+		    url: url,
+		    type: 'get',
+		    dataType: "json"
+		}).done(
+			function(data) {
+				var state = Object.assign({}, el.state);
+				state["choices"][index]["variants"] = data["products"];
+				el.setState(state);
+			}
+		).fail(function (e) {
+		    console.log("Failed to load variants");
+		});
+	}
+}
+
 
 class InstantiationForm extends React.Component {
 	constructor(props) {
@@ -235,7 +235,7 @@ class InstantiationForm extends React.Component {
 
 	render() {
 		var content = this.state.choices.map((item, key) =>
-			<SelectionItem selectionId={item["uniprotid"]}
+			<VariantSelectionItem selectionId={item["uniprotid"]}
 						   selectionText={String(item["uniprotid"]) + item["hgnc"]}
 						   subitems={item["variants"]} 
 						   onSubitemChange={this.onSubitemChange}
@@ -243,7 +243,7 @@ class InstantiationForm extends React.Component {
 			dialog = null;
 
 		if (this.state.activeDialog) {
-			dialog = <SelectionDialog
+			dialog = <VariantSelectionDialog
 				id={this.props.id + "SelectionDialog"}
 				modelId={this.props.modelId}
 				title={this.props.selectionDialogTitle}
@@ -343,48 +343,5 @@ class InstantiationForm extends React.Component {
 					</div>
 				</div>
 			</form>);
-	}
-}
-
-
-function getGenes(modelId) {
-	return function(el, filterItems) {
-		var url = "/corpus/" + modelId + "/genes";
-		$.ajax({
-		    url: url,
-		    type: 'get',
-		    dataType: "json"
-		}).done(
-			function(data) {
-				el.setState({
-					initialItems: data["genes"].filter(
-						(item) => !filterItems.includes(item[0])),
-					items:   data["genes"].filter(
-						(item) => !filterItems.includes(item[0]))
-				});
-			}
-		).fail(function (e) {
-		    console.log("Failed to load genes");
-		});
-	}
-}
-
-
-function getVariants(modelId) {
-	return function(el, index, uniprotId) {
-		var url = "/corpus/" + modelId + "/variants/uniprot/" + uniprotId;
-		$.ajax({
-		    url: url,
-		    type: 'get',
-		    dataType: "json"
-		}).done(
-			function(data) {
-				var state = Object.assign({}, el.state);
-				state["choices"][index]["variants"] = data["products"];
-				el.setState(state);
-			}
-		).fail(function (e) {
-		    console.log("Failed to load variants");
-		});
 	}
 }

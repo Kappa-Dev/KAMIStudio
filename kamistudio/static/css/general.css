@@ -378,6 +378,11 @@ table.no-borders > tbody > tr > td {
 }
 
 
+.nuggets-nav {
+	height: 350pt;
+    overflow-y: scroll;
+}
+
 .nuggets-nav li {
 	border-bottom: 1pt solid #ddd;
     position: relative; 
@@ -397,7 +402,6 @@ table.no-borders > tbody > tr > td {
     top: 0;
     left: 0;
     z-index: -1;
-    height: 100%;
     width: 0px;
 }
 
@@ -534,16 +538,25 @@ svg {
 
 }
 
-.selection-dialog {
+.dialog {
 	border-radius: 15px;
 	border: 2px solid #ddd;
 	/*background: #dae3ec;*/
 	background: white;
-	width: 400pt;
-	height: 450pt;
 	z-index: 100;
 	position: fixed;
 	top: 15%;
+}
+
+.ag-selection-dialog {
+	width: 50vw;
+	height: 400pt;
+	left: 25%;
+}
+
+.selection-dialog {
+	width: 30vw;
+	height: 400pt;
 	left: 33%;
 }
 
@@ -561,7 +574,7 @@ svg {
 }
 
 input.search {
-	width: 80%;
+	width: 94%;
 	margin: auto;
 	margin-top: 15pt;
 	margin-bottom: 15pt;
@@ -598,6 +611,7 @@ ul.selection-items li {
 a.info-box-title {
 	text-decoration: none;
 	cursor: pointer;
+	display: inline-block;
 }
 
 input.nugget-search {
@@ -632,4 +646,49 @@ button {
 
 ol.pale {
 	color: #727272;
+}
+
+.info-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.info-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 300px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 10px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -150px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.info-tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.info-tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+
+span.glyphicon-question-sign {
+	margin: 5pt;
+	color: #337ab7;
 }

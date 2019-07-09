@@ -342,7 +342,6 @@ function updateNuggetEdgeAttrs(model_id, nugget_id, instantiated, graph, metaTyp
 function handleNuggetNodeClick(modelId, nuggetId, instantiated,
                                graph, agTyping, semantics, metaTyping, readonly) {
   return function(d, i, el) {
-    // deselect all the selected elements
       var svg = d3.select("#nuggetSvg");
 
       var highlight;
@@ -362,7 +361,6 @@ function handleNuggetNodeClick(modelId, nuggetId, instantiated,
           .attr("stroke-width", 2)
           .attr("stroke", d3.rgb(highlight));
 
-      // call react func
       ReactDOM.render(
           [<ElementInfoBox id="graphElement" 
                      elementId={d.id}
@@ -383,7 +381,8 @@ function handleNuggetNodeClick(modelId, nuggetId, instantiated,
           document.getElementById('nuggetGraphMetaModelInfo')
       );
       ReactDOM.render(
-         [<AGElementBox id="agElement"
+         [<ReferenceElementBox
+                     id="agElement"
                      agElementId={agTyping[d.id][0]}
                      elementType="node"
                      metaType={metaTyping[d.id]}
@@ -473,7 +472,7 @@ function handleNuggetEdgeClick(modelId, nuggetId, instantiated,
                   modelId, nuggetId, instantiated, graph, metaTyping, d, i)}/>],
           document.getElementById('nuggetGraphMetaModelInfo'));
     ReactDOM.render(
-         [<AGElementBox id="agElement"
+         [<ReferenceElementBox id="agElement"
                      elementType="edge"
                      editable={false}
                      readonly={readonly}
@@ -565,7 +564,8 @@ function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelat
 
 
 function previewNugget(modelId, desc, type,
-                       graph, metaTyping, agTyping, templateRel) {
+                       graph, metaTyping, agTyping, templateRel,
+                       referenceGenes) {
   function updateNuggetPreviewDesc() {
 
   }
@@ -576,6 +576,31 @@ function previewNugget(modelId, desc, type,
 
   function updateNuggetPreviewEdgeAttrs(graph, metaTyping, d, i) {
 
+  }
+
+  function onFetchCandidates(elementId, metaType) {
+    return function(el) {
+        var url = "/fetch-reference-candidates/" + modelId + "/" + metaType;
+        $.ajax({
+            url: url,
+            type: "post",
+            data: JSON.stringify({
+              "originalRefElement": (elementId in agTyping) ? agTyping[elementId] : null,
+              "genes": referenceGenes[elementId]
+            }),
+            dataType: "json",
+            contentType: 'application/json',
+        }).done(
+          function(data) {
+            var state = {
+              "candidates": data["candidates"]
+            };
+            el.setState(state);
+          }
+        ).fail(function (e) {
+            console.log("Failed to load genes");
+        });
+    }
   }
 
 
@@ -603,6 +628,7 @@ function previewNugget(modelId, desc, type,
                        editable={false}
                        instantiated={false}/>],
             document.getElementById('nuggetGraphElementInfo'));
+
         ReactDOM.render(
            [<MetaDataBox id="metaData"
                        elementId={d.id}
@@ -616,11 +642,16 @@ function previewNugget(modelId, desc, type,
             document.getElementById('nuggetGraphMetaModelInfo'));
 
         ReactDOM.render(
-           [<AGElementBox id="agElement"
+           [<ReferenceElementBox id="agElement"
                        elementType="node"
-                       agElementId={agTyping[d.id]}
-                       editable={false}
-                       instantiated={instantiated}
+                       elementId ={d.id}
+                       metaType={metaTyping[d.id]}
+                       agElementId={(d.id in agTyping) ? agTyping[d.id][0] : null}
+                       attrs={(d.id in agTyping) ? agTyping[d.id][1] : null}
+                       editable={true}
+                       instantiated={false}
+                       onFetchCandidates={onFetchCandidates}
+                       referenceGenes={referenceGenes[d.id]}
                        />],
             document.getElementById('nuggetGraphIdentificationInfo')
         );

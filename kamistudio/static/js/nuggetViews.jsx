@@ -1,3 +1,8 @@
+/**
+ * Collection of utils for viewing nuggets.
+ */
+
+
 function NuggetListItem(props) {
     var dot, suffix = "";
     if (props.nuggetType == "bnd") {
@@ -23,35 +28,34 @@ function NuggetListItem(props) {
     );
 }
 
-class NuggetList extends React.Component{
+
+function NuggetList(props) {
+
+    var listItems = props.items.map(
+            (item) => <div key={item[0]} id={"nuggetListItem" + item[0]}>
+                            <NuggetListItem
+                                nuggetId={item[0]}
+                                active={item[0] == props.selected ? true: false}
+                                nuggetType={item[1]}
+                                nuggetDesc={item[2]}
+                                onClick={(id, desc, type) => props.onItemClick(id, desc, type)}
+                                instantiated={props.instantiated} />
+                        </div>);
+    return (
+        <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+            {listItems}
+        </ul>
+    )
+}
+
+
+class NuggetListView extends React.Component{
     constructor(props) {
         super(props);
 
-        this.filterList = this.filterList.bind(this);
-
         this.state = {
-            selected: null,
-            initialItems: props.items,
-            items : props.items
+            selected: null
         }
-    }
-
-
-    filterList(event) {
-
-        var state = Object.assign({}, this.state),
-            updatedDict = Object.assign({}, this.state.initialItems);
-
-        var entries = Object.entries(updatedDict).filter(
-                function(item) {
-                    return item.join(", ").toLowerCase().search(
-                        event.target.value.toLowerCase()) !== -1;
-                }
-            );
-        updatedDict = Object.fromEntries(entries);
-
-        state["items"] = updatedDict;
-        this.setState(state);
     }
 
     onClick(id, desc, type) {
@@ -62,29 +66,20 @@ class NuggetList extends React.Component{
     }
 
     render() {
-
-        var content = Object.keys(this.state.items).map(
-            (key) => <div key={key} id={"nuggetListItem" + key}>
-                            <NuggetListItem
-                                nuggetId={key}
-                                active={key == this.state.selected ? true: false}
-                                nuggetType={this.props.items[key][1]}
-                                nuggetDesc={this.props.items[key][0]}
-                                onClick={(id, desc, type) => this.onClick(id, desc, type)}
-                                instantiated={this.props.instantiated} />
-                        </div>);
-
         return ([
-            <div className="row">  
-                <div className="col-md-12">
-                    <input className="form-control search nugget-search" type="text" placeholder="Search" onChange={this.filterList}/>
-                </div>
-            </div>,
-            <div id="nuggetsListView">
-                <ul className="nav nuggets-nav list-group-striped list-unstyled components">
-                    {content}
-                </ul>
-            </div>,
+            <FilteredList 
+                items={this.props.items}
+                onItemClick={this.props.onItemClick}
+                listComponentProps={{
+                    instantiated: this.props.instantiated,
+                    selected: this.state.selected
+                }}
+                filterItems={[]}
+                listComponent={NuggetList}
+                itemFilter={
+                    (item, value) => item.join(", ").toLowerCase().search(
+                            value.toLowerCase()) !== -1
+                }/>,
             <div className="row">
               <div className="col-md-12">
                 <p style={{"margin-top": "10px"}}>Interaction types: <span className="dot dot-bnd"></span> BND <span className="dot dot-mod"></span> MOD</p> 
@@ -112,6 +107,8 @@ class NuggetTable extends React.Component {
         ])
     }
 }
+
+
 
 class NuggetPreview extends React.Component {
 
@@ -189,7 +186,7 @@ class NuggetPreview extends React.Component {
 
             elementInfoBoxes2 = [
                 <div className="col-md-6" id="nuggetGraphIdentificationInfo">
-                    <AGElementBox id="agElement"
+                    <ReferenceElementBox id="agElement"
                                   readonly={this.props.readonly}
                                   items={[]}/>
                 </div>,
@@ -215,6 +212,7 @@ class NuggetPreview extends React.Component {
     }
 }
 
+
 function renderNuggetList(modelId, instantiated, readonly) {
     // fetch nugget list from the server 
     $.ajax({
@@ -222,12 +220,18 @@ function renderNuggetList(modelId, instantiated, readonly) {
         type: 'get',
         dataType: "json",
     }).done(function (data) {
-        var nuggetList = data["nuggets"];
+        var nuggets = data["nuggets"],
+            nuggetList = [];
+
+        for (var k in nuggets) {
+            nuggetList.push([k, nuggets[k][1], nuggets[k][0]]);
+        }
+
         $("#selectNuggetListView").addClass("active");
         $("#selectNuggetTableView").removeClass("active");
 
         ReactDOM.render(
-            <NuggetList 
+            <NuggetListView 
                 items={nuggetList}
                 onItemClick={viewNugget(modelId, instantiated, readonly)}
                 instantiated={instantiated}/>,
@@ -244,6 +248,154 @@ function renderNuggetList(modelId, instantiated, readonly) {
         console.log("Failed to load nuggets");
     });
 }
+
+
+function drawNuggetTable(modelId, geneAdjacency) {
+    var svg = d3.select("#nuggetTable"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    var g = svg.append("g")
+        .attr("class", "everything");
+
+    var zoom = d3.zoom()
+        .translateExtent([[0, 0], [width, height]])
+        .extent([[0, 0], [width, height]])
+        .scaleExtent([1, Infinity])
+        .on("zoom", zoomed);
+
+    svg.call(zoom);
+    var i = 1;
+    var indexedLabels = [];
+    for (var gene in geneAdjacency) {
+        indexedLabels.push([gene, i]);
+        i += 1;
+    }   
+
+    indexedLabels.sort(function(left, right) {
+      return left[0] < right[0] ? -1 : 1;
+    });
+
+    var orders = {};
+    var labelsData = [];
+    for (var i=0; i < indexedLabels.length; i++) {
+        orders[indexedLabels[i][0]] = indexedLabels[i][1];
+        labelsData.push({
+            "label": indexedLabels[i][0],
+            "order": indexedLabels[i][1],
+        })
+    }
+
+    var cellData = [];
+    for (var k in geneAdjacency) {
+        for (var i=0; i < geneAdjacency[k][0].length; i++) {
+            cellData.push({
+                "source": k,
+                "target": geneAdjacency[k][0][i],
+                "nuggets": geneAdjacency[k][1][i],
+                "sourceOrder": orders[k],
+                "targetOrder": orders[geneAdjacency[k][0][i]] 
+            })
+        }
+    }
+
+    var xlabels = g.selectAll(".xlabels")
+                   .data(labelsData)
+                   .enter()
+                   .append("text")
+                   .attr("text-anchor", "start")
+                   .attr("x", function(d) {
+                        return d.order * 20;
+                    })
+                     .attr("y", function(d) {
+                        return -20;
+                    })
+                    .attr("transform", function(d) {
+                        return "rotate(-90," + d.order * 20 + "," + -5 + ")";
+                    })
+                   .text(function(d) { return d.label });
+         
+
+    var ylabels = g.selectAll(".ylabels")
+                   .data(labelsData)
+                   .enter()
+                   .append("text")
+                   .attr("x", function(d) {
+                        return -5;
+                    })
+                     .attr("y", function(d) {
+                        return d.order * 20;
+                    })
+                   .attr("text-anchor", "end")
+                   .text(function(d) { return d.label });
+    var cell = g.selectAll(".cell")
+                 .data(cellData)
+                 .enter()
+                 .append("rect")
+                 .attr("x", function(d) {
+                    return d.sourceOrder * 20;
+                 })
+                 .attr("y", function(d) {
+                    return d.targetOrder * 20;
+                 })
+                 .attr("width", 15)
+                 .attr("height", 15)
+                 .attr('fill', function(d) {
+                    if (d.nuggets.length > 0) {
+                        return "#337ab7";
+                    } else {
+                        return "#FFFFFF";
+                    }
+                 });
+    cell.attr(
+          "transform", function(d) {
+              // zoom to fit the bounding box
+              var boundaries = g.node().getBBox(),
+                  bx = boundaries.x,
+                  by = boundaries.y,
+                  bheight = boundaries.height,
+                  bwidth = boundaries.width;
+              var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+              svg  
+                .attr("viewBox", updatedView)  
+                .attr("preserveAspectRatio", "xMidYMid meet")  
+                .call(zoom);
+                return "translate(" + d.x + "," + d.y + ")"; 
+
+            });
+
+    function zoomed() {
+        var boundaries = g.node().getBBox(),
+                  bx = boundaries.x,
+                  by = boundaries.y,
+                  bheight = boundaries.height,
+                  bwidth = boundaries.width;
+              var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
+              svg  
+                .attr("viewBox", updatedView)  
+                .attr("preserveAspectRatio", "xMidYMid meet")  
+                .call(zoom);
+        // var = d3.event,
+
+        // console.log(d3.event.scale, d3.event.transform);
+        // var e = d3.event,
+        //     tx = Math.min(0, Math.max(e.transform.x, width - width * e.transform.k)),
+        //     ty = Math.min(0, Math.max(e.transform.y, height - height * e.transform.k));
+        //     // then, update the zoom behavior's internal translation, so that
+        //     // it knows how to properly manipulate it on the next movement
+        //     // zoom.translate([tx, ty]);
+        //     // and finally, update the <g> element's transform attribute with the
+        //     // correct translation and scale (in reverse order)
+        //     g.attr("transform", 
+        //            {"x": tx, "y": ty, "k": e.transform.k});
+        //         // [
+        //         //       "translate(" + [tx, ty] + ")",
+        //         //       "scale(" + e.transform.k + ")"
+        //         //         ].join(" "));
+        g.attr("transform", d3.event.transform); // updated for d3 v4
+    }
+}
+
 
 function renderNuggetTable(modelId, adjacency, instantiated, readonly) {
     // TODO: make it fetch nugget table
