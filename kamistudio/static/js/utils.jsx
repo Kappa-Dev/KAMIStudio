@@ -29,6 +29,7 @@ function getSingleValue(data, attr_name) {
 };
 
 function getMultipleValues(data, attr_name) {
+	console.log(data[attr_name]);
 	return attr_name in data ? data[attr_name].data : null;
 };
 

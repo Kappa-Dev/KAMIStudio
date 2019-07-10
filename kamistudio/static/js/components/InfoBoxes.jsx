@@ -53,7 +53,7 @@ class EditableBox extends React.Component {
 		}
 
 		let newState = { ...this.state };
-		newState.updatedData[field] = val;
+		newState.updatedData[field] = val.split(",");
 		this.setState(newState);
 	}
 

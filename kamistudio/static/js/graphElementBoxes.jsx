@@ -107,7 +107,6 @@ class MetaDataBox extends React.Component {
 		if (this.props.elementType === "node") {
 			result = generateNodeMetaDataItems(
 				this.props.elementId, this.props.metaType, this.props.attrs);
-			
 		} else {
 			result = generateEdgeMetaDataItems(
 				this.props.sourceId, this.props.targetId,
@@ -222,7 +221,15 @@ function NuggetSemanticBox(props) {
 
 
 function ReferenceNodeList(props) {
-    var listItems = props.items.map((item) => <li>{item[0], item[1]}</li>);
+    var listItems = props.items.map(
+    	(item) => 
+    		<li class="not-selected">
+    			<a onClick={() => props.onItemClick(item[0])}
+    			   style={{"padding-left": "5pt"}}>
+	  				<div class="node-desc">{item[1]}</div>
+	  				<div class="node-id">ID: {item[0]}</div>
+  				</a>
+    		</li>);
 
     return (
         <ul className="nav nuggets-nav list-group-striped list-unstyled components">
@@ -232,7 +239,7 @@ function ReferenceNodeList(props) {
 }
 
 
-class AGFragmentSelectionDialog extends React.Component {
+class ReferenceSelectionDialog extends React.Component {
 	
 	constructor(props) {
 		super(props);
@@ -240,11 +247,20 @@ class AGFragmentSelectionDialog extends React.Component {
 		this.state = {
 			candidates: null
 		}
+
+		this.onRefereceSelection = this.onRefereceSelection.bind(this);
 	}
 
 	componentWillMount() {
 		if (this.props.onFetchItems) {
 		    this.props.onFetchItems(this);
+		}
+	}
+
+	onRefereceSelection(elementId) {
+		if (this.state.candidates) {
+			this.props.onItemClick(
+				elementId, this.state.candidates[elementId][1]);
 		}
 	}
 
@@ -256,7 +272,7 @@ class AGFragmentSelectionDialog extends React.Component {
 						(key) => [key, this.state.candidates[key][0]]	
 					)}
 					waiting={true}
-					onItemClick={this.props.onItemClick}
+					onItemClick={this.onRefereceSelection}
 					filterItems={this.props.filterItems}
 					listComponent={ReferenceNodeList}
 					itemFilter={
@@ -292,7 +308,9 @@ class ReferenceElementBox extends React.Component {
 		this.onCandidateSelect = this.onCandidateSelect.bind(this);
 
 		this.state = {
-			activeDialog: false
+			activeDialog: false,
+			nonDefaultAGElement: null,
+			nonDefaultAttrs: null
 		}
 	}
 
@@ -308,8 +326,12 @@ class ReferenceElementBox extends React.Component {
 		this.setState(state);
 	}
 
-	onCandidateSelect() {
-
+	onCandidateSelect(elementId, attrs) {
+		var state = Object.assign({}, this.state);
+		state.activeDialog = false;
+		state.nonDefaultAGElement = elementId;
+		state.nonDefaultAttrs = attrs;
+		this.setState(state);
 	}
 
 	render() {
@@ -328,9 +350,19 @@ class ReferenceElementBox extends React.Component {
 
 		if (this.props.elementType) {
 			if (this.props.elementType == "node") {
-				if (this.props.agElementId) {
+				var attrs = null, agElementId = null;
+				if (this.state.nonDefaultAGElement) {
+					attrs = this.state.nonDefaultAttrs;
+					agElementId = this.state.nonDefaultAGElement;
+				} else {
+					if (this.props.agElementId) {
+						attrs = this.props.attrs;
+						agElementId = this.props.agElementId;
+					}
+				}
+				if (attrs) {
 					var result = generateNodeMetaDataItems(
-							this.props.agElementId, this.props.metaType, this.props.attrs),
+							agElementId, this.props.metaType, attrs),
 						message = result[0],
 						items = result[1],
 						data = result[2];
@@ -349,7 +381,7 @@ class ReferenceElementBox extends React.Component {
 		var disable = false;
 
 		if (this.state.activeDialog) {
-			dialog = <AGFragmentSelectionDialog
+			dialog = <ReferenceSelectionDialog
 				id={this.props.id + "SelectionDialog"}
 				title={"Select a reference node"}
 				onRemove={this.onRemoveDialog} 
@@ -382,4 +414,5 @@ class ReferenceElementBox extends React.Component {
 		]);
 	}
 }
+
 

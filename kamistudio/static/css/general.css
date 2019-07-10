@@ -692,3 +692,23 @@ span.glyphicon-question-sign {
 	margin: 5pt;
 	color: #337ab7;
 }
+
+.node-desc {
+	display: inline-block;
+	width: 70%;
+	white-space: nowrap;
+  	overflow: hidden;
+  	text-overflow: ellipsis;
+}
+
+
+.node-id {
+	display: inline-block;
+	color: gray;
+	font-size: 8pt;
+	width: 30%;
+	white-space: nowrap;
+  	overflow: hidden;
+  	text-overflow: ellipsis;
+	float: right;
+}

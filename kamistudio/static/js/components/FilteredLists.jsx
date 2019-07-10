@@ -47,7 +47,7 @@ class FilteredList extends React.Component {
 						<div id="loader"></div>
 					</div>;
 			} else {
-				message = <p>No elements</p>;
+				message = <p style={{"margin-left": "15pt"}}>No elements</p>;
 			}
 	  	} else {
 	  		var props = {};
@@ -56,11 +56,19 @@ class FilteredList extends React.Component {
   					props[k] = this.props.listComponentProps[k]
   				}
   			}
+
   			props.items = (this.state.items === null && this.props.items) ? this.props.items : this.state.items;
 	  		props.onItemClick = this.props.onItemClick;
 
-  			list = React.createElement(
-  				this.props.listComponent, props);
+	  		if (props.items.length == 0 && this.props.items.length !== 0 || this.state.initialItems.length !== 0) {
+	  			message = <p style={
+	  				{"margin-left": "15pt",
+	  				 "height": "350pt"}
+	  			}>No matches</p>;
+	  		} else {
+		  		list = React.createElement(
+	  				this.props.listComponent, props);
+		  	}
   		}
 
 	    return (
@@ -73,6 +81,7 @@ class FilteredList extends React.Component {
 	     	<div className="row">  
 		        <div className="col-md-12">
 		        	{loader}
+			     	{message}
 			     	{list}
 			    </div>
 			</div>

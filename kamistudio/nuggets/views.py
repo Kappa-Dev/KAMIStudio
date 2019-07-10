@@ -68,15 +68,16 @@ def get_nugget(knowledge_obj, nugget_id):
         attrs = attrs_to_json(get_node(knowledge_obj.action_graph, v))
         data["agTyping"][k] = [v, attrs]
     data["semantics"] = {}
-    try:
-        semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
-        for k, v in semantic_nugget_rels.items():
-            data["semantics"][k] = {
-                kk: list(vv)
-                for kk, vv in v.items()
-            }
-    except:
-        pass
+    # try:
+    semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
+    print("\n\n", semantic_nugget_rels)
+    for k, v in semantic_nugget_rels.items():
+        data["semantics"][k] = {
+            kk: list(vv)
+            for kk, vv in v.items()
+        }
+    # except:
+    #     pass
 
     data["templateRelation"] = {}
 
