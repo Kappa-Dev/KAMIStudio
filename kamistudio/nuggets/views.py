@@ -53,7 +53,7 @@ def get_model_nuggets(model_id):
     return jsonify(data), 200
 
 
-def get_nugget(knowledge_obj, nugget_id):
+def get_nugget(knowledge_obj, nugget_id, instantiated=False):
     data = {}
     data["nuggetJson"] = graph_to_d3_json(knowledge_obj.nugget[nugget_id])
     data["nuggetType"] = knowledge_obj.get_nugget_type(nugget_id)
@@ -69,13 +69,14 @@ def get_nugget(knowledge_obj, nugget_id):
         data["agTyping"][k] = [v, attrs]
     data["semantics"] = {}
     # try:
-    semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
-    print("\n\n", semantic_nugget_rels)
-    for k, v in semantic_nugget_rels.items():
-        data["semantics"][k] = {
-            kk: list(vv)
-            for kk, vv in v.items()
-        }
+    if not instantiated:
+        semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
+        print("\n\n", semantic_nugget_rels)
+        for k, v in semantic_nugget_rels.items():
+            data["semantics"][k] = {
+                kk: list(vv)
+                for kk, vv in v.items()
+            }
     # except:
     #     pass
 
@@ -96,7 +97,7 @@ def corpus_nugget_json(corpus_id, nugget_id):
 @nuggets_blueprint.route("/model/<model_id>/raw-nugget/<nugget_id>")
 def model_nugget_json(model_id, nugget_id):
     model = get_model(model_id)
-    return get_nugget(model, nugget_id)
+    return get_nugget(model, nugget_id, instantiated=True)
 
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/raw-nugget/<nugget_id>")

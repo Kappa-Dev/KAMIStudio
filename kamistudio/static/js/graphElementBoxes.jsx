@@ -221,15 +221,20 @@ function NuggetSemanticBox(props) {
 
 
 function ReferenceNodeList(props) {
-    var listItems = props.items.map(
-    	(item) => 
-    		<li class="not-selected">
-    			<a onClick={() => props.onItemClick(item[0])}
-    			   style={{"padding-left": "5pt"}}>
-	  				<div class="node-desc">{item[1]}</div>
-	  				<div class="node-id">ID: {item[0]}</div>
-  				</a>
-    		</li>);
+	var listItems;
+	if (props.items.length !== 0) {
+	    listItems = props.items.map(
+	    	(item) => 
+	    		<li class="not-selected">
+	    			<a onClick={() => props.onItemClick(item[0])}
+	    			   style={{"padding-left": "5pt"}}>
+		  				<div class="node-desc">{item[1]}</div>
+		  				<div class="node-id">ID: {item[0]}</div>
+	  				</a>
+	    		</li>);
+	} else {
+	 	listItems = <p style={{"margin-left": "15px"}}>No reference candidates found</p>;
+	}
 
     return (
         <ul className="nav nuggets-nav list-group-striped list-unstyled components">
@@ -265,9 +270,10 @@ class ReferenceSelectionDialog extends React.Component {
 	}
 
 	render() {
-		var content = null;
+		var content = null, footer = null;
 		if (this.state.candidates !== null) {
-			content = <FilteredList
+			content = [
+				<FilteredList
 					items={Object.keys(this.state.candidates).map(
 						(key) => [key, this.state.candidates[key][0]]	
 					)}
@@ -278,7 +284,17 @@ class ReferenceSelectionDialog extends React.Component {
 					itemFilter={
 						(item, value) => item.join(", ").toLowerCase().search(
 				    			value.toLowerCase()) !== -1
-					}/>;
+					}/>
+			];
+			footer = <a type="button"
+		                   onClick={this.props.onRemoveReference}
+		                   id="selectNotIdentified" className="btn btn-default btn-lg">
+		                    No reference node
+		                    <div class="info-tooltip">
+								<span class="glyphicon glyphicon-question-sign"></span>
+						  		<span class="tooltiptext">This will mark the reference node as 'Not identified' and create a new reference node in the action graph automatically</span>
+							</div>
+		              </a>;
 		} else {
 			content = 
 				<div id="loadingBlock"  className="loading-elements center-block">
@@ -292,7 +308,8 @@ class ReferenceSelectionDialog extends React.Component {
 				id={this.props.id}
 				title={this.props.title}
 				onRemove={this.props.onRemove}
-				content={content}/>
+				content={content}
+				footerContent={footer}/>
 		);
 	}
 }
@@ -309,8 +326,6 @@ class ReferenceElementBox extends React.Component {
 
 		this.state = {
 			activeDialog: false,
-			nonDefaultAGElement: null,
-			nonDefaultAttrs: null
 		}
 	}
 
@@ -326,12 +341,15 @@ class ReferenceElementBox extends React.Component {
 		this.setState(state);
 	}
 
-	onCandidateSelect(elementId, attrs) {
+	onCandidateSelect(agElementId, attrs) {
 		var state = Object.assign({}, this.state);
 		state.activeDialog = false;
-		state.nonDefaultAGElement = elementId;
+		state.nonDefaultAGElement = agElementId;
 		state.nonDefaultAttrs = attrs;
 		this.setState(state);
+		if (this.props.onCandidateSelect) {
+			this.props.onCandidateSelect(this.props.elementId, agElementId);
+		}
 	}
 
 	render() {

@@ -60,11 +60,11 @@ class FilteredList extends React.Component {
   			props.items = (this.state.items === null && this.props.items) ? this.props.items : this.state.items;
 	  		props.onItemClick = this.props.onItemClick;
 
-	  		if (props.items.length == 0 && this.props.items.length !== 0 || this.state.initialItems.length !== 0) {
-	  			message = <p style={
-	  				{"margin-left": "15pt",
-	  				 "height": "350pt"}
-	  			}>No matches</p>;
+	  		if ((props.items.length == 0) && ((this.props.items && this.props.items.length !== 0) || (this.state.initialItems.length !== 0))) {
+		  			message = <p style={
+		  				{"margin-left": "15pt",
+		  				 "height": "350pt"}
+		  			}>No matches</p>;
 	  		} else {
 		  		list = React.createElement(
 	  				this.props.listComponent, props);

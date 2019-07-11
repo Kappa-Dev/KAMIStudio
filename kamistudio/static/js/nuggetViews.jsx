@@ -186,11 +186,12 @@ class NuggetElementInfo extends React.Component {
                 <ReferenceElementBox id="agElement"
                                      readonly={this.props.readonly}
                                      agElementId={this.props.agElementId}
+                                     elementId={this.props.elementId}
                                      elementType="node"
                                      metaType={this.props.metaType}
                                      attrs={this.props.agElementAttrs}
                                      onFetchCandidates={this.props.onFetchCandidates}
-                                     onDataUpdate={this.props.onReferenceUpdate}/>
+                                     onCandidateSelect={this.props.onReferenceUpdate}/>
             </div>,
             semantics
         ];
@@ -282,10 +283,18 @@ class NuggetPreview extends React.Component {
         if (this.state.selectedElement.onMetaDataUpdate) {
             this.state.selectedElement.onMetaDataUpdate(newData, oldData);
         }
+        if (this.props.onMetaDataUpdate) {
+            this.props.onMetaDataUpdate(newData, oldData);
+        }
     }
 
-    onReferenceUpdate(updatedData) {
-       
+    onReferenceUpdate(elementId, agElementId) {
+        var state = Object.assign({}, this.state);
+        state.updatedReferenceElements[elementId] = agElementId;
+        this.setState(state);
+        if (this.props.onReferenceUpdate) {
+            this.props.onReferenceUpdate(elementId, agElementId);
+        }
     }
 
     render() {
@@ -354,27 +363,40 @@ class NuggetPreview extends React.Component {
                         onDataUpdate={this.onDataUpdate} />;
             svgDisplay = "inline-block";
 
-            var upToDateAttrs = this.state.selectedElement.attrs;
-            if (this.state.selectedElement.id in this.state.updatedNuggetMetaData) {
-                for (var k in this.state.updatedNuggetMetaData[this.state.selectedElement.id]) {
-                    if (!(k in upToDateAttrs)) {
-                        upToDateAttrs[k] = {};
-                        upToDateAttrs[k].type = "FiniteSet";
+            var upToDateAttrs;
+            if (!this.props.selectedElement.attrs) {
+                upToDateAttrs = this.state.selectedElement.attrs;
+                if (this.state.selectedElement.id in this.state.updatedNuggetMetaData) {
+                    for (var k in this.state.updatedNuggetMetaData[this.state.selectedElement.id]) {
+                        if (!(k in upToDateAttrs)) {
+                            upToDateAttrs[k] = {};
+                            upToDateAttrs[k].type = "FiniteSet";
+                        }
+                        upToDateAttrs[k].data = this.state.updatedNuggetMetaData[this.state.selectedElement.id][k];
                     }
-                    upToDateAttrs[k].data = this.state.updatedNuggetMetaData[this.state.selectedElement.id][k];
                 }
+            } else {
+                upToDateAttrs = this.props.selectedElement.attrs;
             }
+
+            var elementId = this.props.selectedElement.id ? this.props.selectedElement.id : this.state.selectedElement.id,
+                elementType = this.props.selectedElement.type ? this.props.selectedElement.type : this.state.selectedElement.type,
+                metaType = this.props.selectedElement.metaType ? this.props.selectedElement.metaType : this.state.selectedElement.metaType,
+                agElementId = this.props.selectedElement.agElementId ? this.props.selectedElement.agElementId : this.state.selectedElement.agElementId,
+                agElementAttrs = this.props.selectedElement.agElementAttrs ? this.props.selectedElement.agElementAttrs : this.state.selectedElement.agElementAttrs,
+                semantics = this.props.selectedElement.semantics ? this.props.selectedElement.semantics : this.state.selectedElement.semantics;
 
             nuggetElementInfo =
                 <NuggetElementInfo readonly={this.props.readonly}
                                    instantiated={this.props.instantiated}
-                                   elementId={this.state.selectedElement.id}
+                                   elementId={elementId}
                                    elementAttrs={upToDateAttrs}
-                                   elementType={this.state.selectedElement.type}
-                                   metaType={this.state.selectedElement.metaType}
-                                   agElementId={this.state.selectedElement.agElementId}
-                                   agElementAttrs={this.state.selectedElement.agElementAttrs}
-                                   semantics={this.state.selectedElement.semantics}
+                                   elementType={elementType}
+                                   metaType={metaType}
+                                   agElementId={agElementId}
+                                   agElementAttrs={agElementAttrs}
+                                   semantics={semantics}
+                                   onDataUpdate={this.onDataUpdate}
                                    onMetaDataUpdate={this.onMetaDataUpdate}
                                    onFetchCandidates={this.props.onFetchCandidates}
                                    onReferenceUpdate={this.onReferenceUpdate} />;
@@ -391,6 +413,138 @@ class NuggetPreview extends React.Component {
                 </div>
             </div>
         );
+    }
+}
+
+
+class NuggetEditingBox extends React.Component {
+
+
+    constructor(props) {
+        super(props);
+
+        this.selectElement = this.selectElement.bind(this);
+        this.deselectElement = this.deselectElement.bind(this);
+        this.onDataUpdate = this.onDataUpdate.bind(this);
+        this.onMetaDataUpdate = this.onMetaDataUpdate.bind(this);
+        this.onReferenceUpdate = this.onReferenceUpdate.bind(this);
+        this.onSaveClick = this.onSaveClick.bind(this);
+
+        // var previewElement = ;
+        this.state = {
+            selectedElement: {
+                id: null,
+                attrs: null,
+                type: null,
+                metaType: null,
+                agElementId: null,
+                agElementAttrs: null,
+                semantics: null
+            },
+            updatedNuggetInfo: {},
+            updatedNuggetMetaData: {},
+            updatedReferenceElements: {}
+        }
+    }
+
+    selectElement(elementId, elementAttrs, elementType, metaType,
+                  agTyping, agElementAttrs, semantics,
+                  onMetaDataUpdate) {
+        var state = Object.assign({}, this.state);
+        state.selectedElement = {
+            id: elementId,
+            attrs: elementAttrs,
+            type: elementType,
+            metaType: metaType,
+            agElementId: agTyping,
+            agElementAttrs: agElementAttrs,
+            semantics: semantics,
+            onMetaDataUpdate: onMetaDataUpdate
+        };
+        this.setState(state);
+    }
+
+    deselectElement() {
+        var state = Object.assign({}, this.state);
+        state.selectedElement = null;
+        this.setState(state);
+    }
+
+    onDataUpdate(newData, oldData) {
+        var state = Object.assign({}, this.state);
+        state.updatedNuggetInfo = newData;
+        this.setState(state);
+        if (this.props.onDataUpdate) {
+            this.props.onDataUpdate(newData, oldData);
+        }
+    }
+
+    onMetaDataUpdate(newData, oldData) {
+        var state = Object.assign({}, this.state);
+        state.updatedNuggetMetaData[
+            this.state.selectedElement.id] = newData;
+        this.setState(state);
+        if (this.state.selectedElement.onMetaDataUpdate) {
+            this.state.selectedElement.onMetaDataUpdate(newData, oldData);
+        }
+    }
+
+    onReferenceUpdate(elementId, agElementId) {
+        var state = Object.assign({}, this.state);
+        state.updatedReferenceElements[elementId] = agElementId;
+        this.setState(state);
+    }
+
+    onSaveClick() {
+        $('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px;');
+    }
+
+    render() {
+
+        var element = Object.assign({}, this.state.selectedElement),
+            upToDateAttrs = this.state.selectedElement.attrs;
+        element.attrs = upToDateAttrs;
+        if (this.state.selectedElement.id in this.state.updatedNuggetMetaData) {
+            for (var k in this.state.updatedNuggetMetaData[this.state.selectedElement.id]) {
+                if (!(k in upToDateAttrs)) {
+                    upToDateAttrs[k] = {};
+                    upToDateAttrs[k].type = "FiniteSet";
+                }
+                upToDateAttrs[k].data = this.state.updatedNuggetMetaData[this.state.selectedElement.id][k];
+            }
+        }
+
+        return ([
+            <div id="nuggetViewWidget">
+                <NuggetPreview
+                    selectedElement={element}
+                    nuggetId={this.props.nuggetId}
+                    nuggetDesc={this.props.nuggetDesc}
+                    nuggetType={this.props.nuggetType}
+                    editable={true}
+                    instantiated={this.props.instantiated}
+                    readonly={this.props.readonly}
+                    onDataUpdate={this.onDataUpdate}
+                    onMetaDataUpdate={this.onMetaDataUpdate}
+                    onFetchCandidates={this.props.onFetchCandidates}
+                    onReferenceUpdate={this.onReferenceUpdate}/>
+            </div>,
+            <div className="row">
+                <a type="button" style={{"margin-top": "20pt"}}
+                   onClick={this.onSaveClick}
+                   id="addNuggetToTheModel" className="btn btn-primary btn-lg">
+                    <span className="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus
+                </a>
+            </div>,  
+            <div className="row">
+                <div id="progressBlock" style={{"padding-top": "10px", "display": "none"}}>
+                  <div id="progressMessage">Adding nugget to the corpus...</div>
+                  <div id="loadingBlock" class="loading-elements center-block">
+                    <div id="loader"></div>
+                  </div>
+                </div>
+            </div>
+        ]);
     }
 }
 
@@ -579,6 +733,7 @@ function viewNugget(model_id, instantiated=false, readonly=false) {
 
         var nuggetPreview = ReactDOM.render(
             <NuggetPreview
+                selectedElement={{}}
                 nuggetId={nugget_id}
                 nuggetDesc={nugget_desc}
                 nuggetType={nugget_type}
@@ -655,11 +810,11 @@ function previewNugget(modelId, desc, type,
             //     }
             // }
 
-            nuggetPreview.selectElement(
+            nuggetForm.selectElement(
                 d.id, d.attrs, "node",
                 metaTyping[d.id],
-                 d.id in agTyping ? agTyping[d.id][0] : null,
-                 d.id in agTyping ? agTyping[d.id][1] : null);
+                d.id in agTyping ? agTyping[d.id][0] : null,
+                d.id in agTyping ? agTyping[d.id][1] : null);
 
             var svg = d3.select("#nuggetSvg");
 
@@ -680,8 +835,8 @@ function previewNugget(modelId, desc, type,
     function handleEdgeClick(nuggetGraph, metaTyping) {
     }
 
-    var nuggetPreview = ReactDOM.render(
-        <NuggetPreview
+    var nuggetForm = ReactDOM.render(
+        <NuggetEditingBox
                 nuggetId={"NA"}
                 nuggetDesc={desc}
                 nuggetType={type}
@@ -689,7 +844,7 @@ function previewNugget(modelId, desc, type,
                 onFetchCandidates={onFetchCandidates}
                 instantiated={false}
                 readonly={false}/>,
-        document.getElementById('nuggetViewWidget')
+        document.getElementById('nuggetEditingBox')
     );
 
     drawNugget(

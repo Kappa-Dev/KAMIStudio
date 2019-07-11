@@ -3,14 +3,31 @@
  */
 
 function Dialog(props) {
+
+	var modalFooter = null;
+	if (props.footerContent) {
+		modalFooter = <div className="modal-footer" >{props.footerContent}</div>;
+	}
+
 	return (
-		<div className="selection-dialog dialog" id={props.id}>
-			<h2 style={{"display": "inline-block"}} className="selection-dialog-title">{props.title}</h2>
-			<a className="cancel-link"
-				onClick={props.onRemove}>
-				<span className="glyphicon glyphicon-remove"></span>
-			</a>
-			{props.content}
+		<div className="modal" id="exampleModalCenter" tabindex="-1" role="dialog" 
+			 aria-labelledby="exampleModalCenterTitle"
+			 aria-hidden="true"
+			 style={{"display": "block"}}>
+		  <div className="modal-dialog modal-dialog-centered" role="document">
+		    <div className="modal-content">
+		      <div className="modal-header">
+		        <h3 className="modal-title" id="exampleModalLongTitle">{props.title}</h3>
+		        <button type="button" className="close" onClick={props.onRemove} aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div className="modal-body">
+		        {props.content}
+		      </div>
+		      {modalFooter}
+		    </div>
+		  </div>
 		</div>
 	)
 }
