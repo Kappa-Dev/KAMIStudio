@@ -10,7 +10,11 @@ from flask import (render_template, Blueprint, request, session, redirect,
 from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
-from regraph.primitives import attrs_to_json, get_node, get_edge
+from regraph.primitives import (attrs_to_json,
+                                get_node,
+                                get_edge,
+                                attrs_from_json,
+                                set_node_attrs)
 from regraph.neo4j import Neo4jHierarchy
 
 from werkzeug.utils import secure_filename
@@ -61,10 +65,7 @@ def _generate_unique_variant_name(record, name):
 
 def get_corpus(corpus_id):
     """Retreive corpus from the db."""
-    # try:
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    # except:
-        # corpus_json = None
     if corpus_json and app.neo4j_driver:
         return KamiCorpus(
             corpus_id,
@@ -76,7 +77,8 @@ def get_corpus(corpus_id):
         )
 
 
-def updateLastModified(corpus_id):
+def update_last_modified(corpus_id):
+    """Update the last modified field."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     corpus_json["last_modified"] = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
@@ -172,6 +174,7 @@ def add_interaction(corpus_id, add_agents=True,
             corpus = get_corpus(corpus_id)
             interaction = parse_interaction(request.form)
             corpus.add_interaction(interaction)
+            update_last_modified(corpus_id)
             return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
@@ -183,10 +186,11 @@ def preview_nugget(corpus_id):
     interaction = parse_interaction(request.form)
     corpus = get_corpus(corpus_id)
     try:
-        (nugget, nugget_type, template_rels, des) = generate_nugget(
+        (nugget, nugget_type, template_rels, desc) = generate_nugget(
             corpus, interaction, app.config["READ_ONLY"])
 
         session["nugget"] = nugget
+        session["nugget_desc"] = desc
         session["nugget_type"] = nugget_type
         session["template_rels"] = template_rels
         session.modified = True
@@ -241,6 +245,8 @@ def preview_nugget(corpus_id):
         for k, v in nugget.reference_typing.items():
             attrs = attrs_to_json(get_node(corpus.action_graph, v))
             ag_typing[k] = [v, attrs]
+
+        desc = desc if desc is not None else ""
 
         return render_template(
             "nugget_preview.html",
@@ -344,19 +350,35 @@ def instantiate(corpus_id):
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/add-generated-nugget",
-                        methods=["GET"])
+                        methods=["POST"])
 @check_dbs
 @authenticate
 def add_nugget_from_session(corpus_id, add_agents=True,
                             anatomize=True, apply_semantics=True):
     """Add nugget stored in session to the corpus."""
+    json_data = request.get_json()
+
     corpus = get_corpus(corpus_id)
     if "nugget" not in session:
         return render_template("session_expired.html")
 
+    # Apply the update of description
+    if "nugget_desc" in json_data["updatedNuggetInfo"]:
+        session["nugget_desc"] = json_data["updatedNuggetInfo"]["nugget_desc"][0]
+
+    # Apply the update of meta-data update
+    for k, v in json_data["updatedNuggetMetaData"].items():
+        set_node_attrs(session["nugget"].graph, k, v, update=False)
+
+    # Apply the update of reference nodes
+    for k, v in json_data["updatedReferenceElements"].items():
+        if v is not None:
+            session["nugget"].reference_typing[k] = v
+
     corpus.add_nugget(
         session["nugget"], session["nugget_type"],
         session["template_rels"],
+        desc=session["nugget_desc"],
         add_agents=add_agents,
         anatomize=anatomize,
         apply_semantics=apply_semantics)
@@ -366,7 +388,10 @@ def add_nugget_from_session(corpus_id, add_agents=True,
     if "nugget_type" in session.keys():
         session.pop("nugget_type", None)
 
-    return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
+    data = {
+        "redirect": url_for('corpus.corpus_view', corpus_id=corpus_id)
+    }
+    return jsonify(data), 200
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>/import-json-interactions",
@@ -411,7 +436,7 @@ def imported_interactions(filename, corpus_id):
         #         interactions = [
         #             el for el in json_data
         #         ]
-        updateLastModified(corpus_id)
+        update_last_modified(corpus_id)
         # except:
             # return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
@@ -460,7 +485,7 @@ def update_ag_node_positioning(corpus_id):
         app.mongo.db.kami_corpora.update(
             {'id': corpus_id},
             {'$set': {'node_positioning': position_dict}})
-    updateLastModified(corpus_id)
+    update_last_modified(corpus_id)
     return json.dumps(
         {'success': True}), 200, {'ContentType': 'application/json'}
 
@@ -506,7 +531,7 @@ def update_node_attrs(corpus_id):
                 corpus.action_graph.set_node_attrs_from_json(node_id, node_attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                updateLastModified(corpus_id)
+                update_last_modified(corpus_id)
             except:
                 pass
     return response
@@ -532,7 +557,7 @@ def update_edge_attrs(corpus_id):
                 corpus.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                updateLastModified(corpus_id)
+                update_last_modified(corpus_id)
             except:
                 pass
     return response

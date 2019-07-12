@@ -6,7 +6,7 @@
     <div class="kb-action-buttons">
         <a href="{{ url_for('model.generate_kappa', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-cog"></span> Generate Kappa</a>
         <a href="{{ url_for('model.download_model', model_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export JSON</a>
-        <a {% if not readonly %}href="{{ url_for('model.delete_model', model_id=kb_id) }}"{%endif%} type="button" class="btn btn-primary btn-md panel-button instantiation"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-remove"></span> Delete</a>
+        <a {% if not readonly %}href="{{ url_for('model.delete_model', model_id=kb_id) }}"{%endif%} type="button" class="btn btn-default btn-md panel-button"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-trash"></span> Delete</a>
     </div>
 {% endblock %}
 

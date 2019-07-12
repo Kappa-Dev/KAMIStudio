@@ -1,7 +1,9 @@
 function renderMetaDataBox(modelId, data, oldData) {
-	var name = ("name" in data) ? data["name"] : oldData["name"],
-	 	desc = ("desc" in data) ? data["desc"] : oldData["desc"],
-	 	organism = ("organism" in data) ? data["organism"] : oldData["organism"];
+
+	var name = ("name" in data) ? data["name"][0] : oldData["name"],
+	 	desc = ("desc" in data) ? data["desc"][0] : oldData["desc"],
+	 	organism = ("organism" in data) ? data["organism"][0] : oldData["organism"];
+
     ReactDOM.render(
       <KBMetaDataBox
 			id="modelMetaData"
@@ -20,6 +22,16 @@ function renderMetaDataBox(modelId, data, oldData) {
 };
 
 function sendMetaDataUpdate(modelId, data) {
+	if ("name" in data) {
+		data["name"] = data["name"][0];
+	}
+	if ("desc" in data) {
+		data["desc"] = data["desc"][0];
+	}
+	if ("organism" in data) {
+		data["organism"] = data["organism"][0];
+	}
+
 	$.ajax({
 	    url:  modelId + "/update-meta-data",
 	    type: 'post',
@@ -46,9 +58,9 @@ function handleModelUpdate(modelId) {
 
 
 function renderRateDataBox(modelId, data, oldData, readonly) {
-	var default_bnd_rate = ("default_bnd_rate" in data) ? data["default_bnd_rate"] : oldData["default_bnd_rate"],
-	 	default_brk_rate = ("default_brk_rate" in data) ? data["default_brk_rate"] : oldData["default_brk_rate"],
-	 	default_mod_rate = ("default_mod_rate" in data) ? data["default_mod_rate"] : oldData["default_mod_rate"];
+	var default_bnd_rate = ("default_bnd_rate" in data) ? data["default_bnd_rate"][0] : oldData["default_bnd_rate"],
+	 	default_brk_rate = ("default_brk_rate" in data) ? data["default_brk_rate"][0] : oldData["default_brk_rate"],
+	 	default_mod_rate = ("default_mod_rate" in data) ? data["default_mod_rate"][0] : oldData["default_mod_rate"];
 
 
     ReactDOM.render(
@@ -66,6 +78,16 @@ function renderRateDataBox(modelId, data, oldData, readonly) {
 
 
 function sendRateDataUpdate(modelId, data) {
+	if ("default_bnd_rate" in data) {
+		data["default_bnd_rate"] = data["default_bnd_rate"][0];
+	}
+	if ("default_brk_rate" in data) {
+		data["default_brk_rate"] = data["default_brk_rate"][0];
+	}
+	if ("default_mod_rate" in data) {
+		data["default_mod_rate"] = data["default_mod_rate"][0];
+	}
+
 	$.ajax({
 	    url:  modelId + "/update-rate-data",
 	    type: 'post',

@@ -6,7 +6,7 @@
     <div class="kb-action-buttons">
         <a href="{{ url_for('corpus.instantiate', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-play"></span> Instantiate</a>
         <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
-        <a {% if not readonly %}href="{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}"{% endif %} type="button" class="btn btn-primary btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-remove"></span> Delete</a>
+        <a {% if not readonly %}href="{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}"{% endif %} type="button" class="btn btn-default btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-trash"></span> Delete</a>
     </div>
 {% endblock %}
 
@@ -106,8 +106,8 @@
           modifications='{{ modifications }}'
          />,
          <div id="interactionsButtons">
-           <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
-           <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} class="btn btn-default btn-md panel-button add-interaction-button"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+           <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+           <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} class="btn btn-primary btn-md panel-button add-interaction-button"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
           </div>
         ],
       document.getElementById('corpusData')

@@ -253,7 +253,7 @@ class ReferenceSelectionDialog extends React.Component {
 			candidates: null
 		}
 
-		this.onRefereceSelection = this.onRefereceSelection.bind(this);
+		this.onReferenceSelection = this.onReferenceSelection.bind(this);
 	}
 
 	componentWillMount() {
@@ -262,10 +262,14 @@ class ReferenceSelectionDialog extends React.Component {
 		}
 	}
 
-	onRefereceSelection(elementId) {
-		if (this.state.candidates) {
-			this.props.onItemClick(
-				elementId, this.state.candidates[elementId][1]);
+	onReferenceSelection(elementId) {
+		if (elementId) {
+			if (this.state.candidates) {
+				this.props.onItemClick(
+					elementId, this.state.candidates[elementId][1]);
+			}
+		} else {
+			this.props.onItemClick(null, null);
 		}
 	}
 
@@ -278,7 +282,7 @@ class ReferenceSelectionDialog extends React.Component {
 						(key) => [key, this.state.candidates[key][0]]	
 					)}
 					waiting={true}
-					onItemClick={this.onRefereceSelection}
+					onItemClick={this.onReferenceSelection}
 					filterItems={this.props.filterItems}
 					listComponent={ReferenceNodeList}
 					itemFilter={
@@ -286,15 +290,15 @@ class ReferenceSelectionDialog extends React.Component {
 				    			value.toLowerCase()) !== -1
 					}/>
 			];
-			footer = <a type="button"
-		                   onClick={this.props.onRemoveReference}
-		                   id="selectNotIdentified" className="btn btn-default btn-lg">
+			footer = [<a type="button"
+		                   onClick={() => this.onReferenceSelection(null)}
+		                   id="selectNotIdentified" className="btn btn-default btn-md">
 		                    No reference node
-		                    <div class="info-tooltip">
-								<span class="glyphicon glyphicon-question-sign"></span>
-						  		<span class="tooltiptext">This will mark the reference node as 'Not identified' and create a new reference node in the action graph automatically</span>
-							</div>
-		              </a>;
+		              </a>,
+		              <div class="info-tooltip">
+							<span class="glyphicon glyphicon-question-sign"></span>
+					  		<span class="tooltiptext">This will mark the reference node as 'Not identified' and create a new reference node in the action graph automatically</span>
+					  </div>];
 		} else {
 			content = 
 				<div id="loadingBlock"  className="loading-elements center-block">
@@ -403,6 +407,7 @@ class ReferenceElementBox extends React.Component {
 				id={this.props.id + "SelectionDialog"}
 				title={"Select a reference node"}
 				onRemove={this.onRemoveDialog} 
+				onRemoveReference={this.onRemoveReference}
 				onFetchItems={
 					this.props.onFetchCandidates(
 						this.props.elementId, this.props.metaType)}

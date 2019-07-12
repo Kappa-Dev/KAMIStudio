@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, jsonify, request
 
 from kamistudio.utils import authenticate
-from kamistudio.corpus.views import get_corpus, updateLastModified
+from kamistudio.corpus.views import get_corpus, update_last_modified
 from kamistudio.model.views import get_model
 
 from regraph import graph_to_d3_json, get_node
@@ -225,7 +225,7 @@ def update_node_attrs(corpus_id, nugget_id):
 
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
-                updateLastModified(corpus_id)
+                update_last_modified(corpus_id)
             except:
                 pass
     return response
@@ -257,7 +257,21 @@ def update_edge_attrs(corpus_id, nugget_id):
 
             response = json.dumps(
                 {'success': True}), 200, {'ContentType': 'application/json'}
-                # updateLastModified(corpus_id)
+            update_last_modified(corpus_id)
             # except:
             #     pass
     return response
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/remove-nugget/<nugget_id>")
+@authenticate
+def remove_nugget_from_corpus(corpus_id, nugget_id):
+    corpus = get_corpus(corpus_id)
+    corpus.remove_nugget(nugget_id)
+    return jsonify({"success": True}), 200
+
+
+@nuggets_blueprint.route("/model/<model_id>/remove-nugget/<nugget_id>")
+@authenticate
+def remove_nugget_from_model(model_id, nugget_id):
+    pass

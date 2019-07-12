@@ -58,3 +58,35 @@ function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs)
         // if (failCallback) failCallback();
     });
 }
+
+function postDataWithRedirect(data, url) {
+  $.ajax({
+        url:  url,
+        type: 'post',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: 'application/json',
+  }).done(function (data) {
+        window.location.href = data["redirect"];
+  }).fail(function (xhr, status, error) {
+      console.log("Failed to post data to '" + url + "'");
+      console.log(error);
+      // if (failCallback) failCallback();
+  });
+}
+
+function getData(url, successCallback=null, failCallback=null) {
+  $.ajax({
+      url:  url,
+      type: 'get',
+      dataType: 'json',
+  }).done(function (data) {
+      if (successCallback) {
+        successCallback(data);
+      }
+  }).fail(function (xhr, status, error) {
+      if (failCallback) {
+        failCallback(status, error);
+      }
+  });
+}

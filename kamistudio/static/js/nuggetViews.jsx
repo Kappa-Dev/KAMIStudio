@@ -24,7 +24,10 @@ function NuggetListItem(props) {
         <li className={selected + suffix}>
           <a className={"nugget-selector" + suffix}
              onClick={() => props.onClick(props.nuggetId, props.nuggetDesc, props.nuggetType)}>
-             {dot} {props.nuggetId} <div className="nugget-desc"><p>{props.nuggetDesc}</p></div>
+             {dot} {props.nuggetId} 
+             <div className="nugget-desc">
+                <p>{props.nuggetDesc}</p>
+            </div>
           </a>
         </li>
     );
@@ -57,6 +60,7 @@ class NuggetList extends React.Component {
                                     nuggetType={item[1]}
                                     nuggetDesc={item[2]}
                                     onClick={this.onItemClick}
+                                    onRemove={this.onItemRemove}
                                     instantiated={this.props.instantiated} />
                             </div>);
         return (
@@ -91,7 +95,8 @@ class NuggetListView extends React.Component{
                 onItemClick={this.props.onItemClick}
                 listComponentProps={{
                     instantiated: this.props.instantiated,
-                    selected: this.state.selected
+                    selected: this.state.selected,
+                    onItemRemove: this.props.onItemRemove
                 }}
                 filterItems={[]}
                 listComponent={NuggetList}
@@ -305,7 +310,17 @@ class NuggetPreview extends React.Component {
             data = {},
             nuggetElementInfo = null,
             elementInfoBoxes1 = null,
-            elementInfoBoxes2 = null;
+            elementInfoBoxes2 = null,
+            removeButton = null;
+
+        if (this.props.onRemove) {
+            removeButton = 
+                <button 
+                   type="button" onClick={() => this.props.onRemove(this.props.nuggetId)}
+                   className="btn btn-default btn-sm panel-button editable-box right-button">
+                    <span className="glyphicon glyphicon-trash"></span>
+                </button>;
+        }
 
         if (!this.props.nuggetId) {
             message = "No nugget selected";
@@ -360,7 +375,8 @@ class NuggetPreview extends React.Component {
                         noBorders={true}
                         protected={["nugget_id", "nugget_type"]}
                         readonly={this.props.readonly}
-                        onDataUpdate={this.onDataUpdate} />;
+                        onDataUpdate={this.onDataUpdate}
+                        allTopButtons={removeButton} />;
             svgDisplay = "inline-block";
 
             var upToDateAttrs;
@@ -481,6 +497,7 @@ class NuggetEditingBox extends React.Component {
 
     onMetaDataUpdate(newData, oldData) {
         var state = Object.assign({}, this.state);
+        console.log(newData, oldData);
         state.updatedNuggetMetaData[
             this.state.selectedElement.id] = newData;
         this.setState(state);
@@ -497,6 +514,9 @@ class NuggetEditingBox extends React.Component {
 
     onSaveClick() {
         $('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px;');
+
+        // send ajax request to save the updated data
+        postDataWithRedirect(this.state, this.props.saveUrl);
     }
 
     render() {
@@ -551,6 +571,37 @@ class NuggetEditingBox extends React.Component {
 
 // ----------------- Utils for nugget views -----------------
 
+
+function removeNugget(modelId, nuggetList, instantiated, readonly) {
+    return function(nuggetId) {
+        // send nugget removal request
+        getData(modelId + '/remove-nugget/' + nuggetId);
+
+        // remove nugget from the list
+        for( var i = 0; i < nuggetList.length; i++){ 
+            if (nuggetList[i][0] === nuggetId) {
+                nuggetList.splice(i, 1); 
+            }
+        }
+
+        ReactDOM.render(
+            <NuggetListView 
+                items={nuggetList}
+                onItemClick={viewNugget(modelId, instantiated, readonly)}
+                instantiated={instantiated}/>,
+            document.getElementById('nuggetView')
+        );
+
+        ReactDOM.render(
+            <NuggetPreview
+                instantiated={instantiated}
+                readonly={readonly}/>,
+            document.getElementById('nuggetViewWidget')
+        );
+    };
+}
+
+
 function renderNuggetList(modelId, instantiated, readonly) {
     // fetch nugget list from the server 
     $.ajax({
@@ -571,13 +622,15 @@ function renderNuggetList(modelId, instantiated, readonly) {
         ReactDOM.render(
             <NuggetListView 
                 items={nuggetList}
-                onItemClick={viewNugget(modelId, instantiated, readonly)}
+                onItemClick={viewNugget(
+                    modelId, instantiated, readonly, removeNugget(
+                        modelId, nuggetList, instantiated, readonly))}
                 instantiated={instantiated}/>,
             document.getElementById('nuggetView')
         );
 
         ReactDOM.render(
-            <NuggetPreview 
+            <NuggetPreview
                 instantiated={instantiated}
                 readonly={readonly}/>,
             document.getElementById('nuggetViewWidget')
@@ -588,7 +641,7 @@ function renderNuggetList(modelId, instantiated, readonly) {
 }
 
 
-function viewNugget(model_id, instantiated=false, readonly=false) {
+function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHandler=null) {
 
     return function (nugget_id, nugget_desc, nugget_type) {
 
@@ -740,6 +793,7 @@ function viewNugget(model_id, instantiated=false, readonly=false) {
                 editable={true}
                 instantiated={instantiated}
                 readonly={readonly}
+                onRemove={removeNuggetHandler}
                 onDataUpdate={updateDesc(
                     model_id, nugget_id, instantiated, readonly)}/>,
             document.getElementById('nuggetViewWidget')
@@ -843,6 +897,7 @@ function previewNugget(modelId, desc, type,
                 editable={true}
                 onFetchCandidates={onFetchCandidates}
                 instantiated={false}
+                saveUrl={"add-generated-nugget"}
                 readonly={false}/>,
         document.getElementById('nuggetEditingBox')
     );

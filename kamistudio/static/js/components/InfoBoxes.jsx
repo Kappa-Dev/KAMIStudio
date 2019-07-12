@@ -125,9 +125,11 @@ class EditableBox extends React.Component {
 						<div style={{"float": "right"}}>
 							<button 
 							   type="button" onClick={() => this.props.editAction()}
+							   title={this.props.editText}
 							   className="btn btn-default btn-sm panel-button editable-box right-button">
 							   	<span className="glyphicon glyphicon-pencil"></span> {this.props.editText}
 							</button>
+							{this.props.allTopButtons}
 						</div>
 					</div>;
 			} else {
@@ -142,9 +144,11 @@ class EditableBox extends React.Component {
 								<div style={{"float": "right"}}>
 									<button 
 									   type="button" onClick={this.handleEditClick}
+									   title="Edit"
 									   className="btn btn-default btn-sm panel-button editable-box right-button" disabled={disable}>
-									   	<span className="glyphicon glyphicon-pencil"></span> Edit
+									   	<span className="glyphicon glyphicon-pencil"></span>
 									</button>
+									{this.props.allTopButtons}
 								</div>
 							</div>;
 					}

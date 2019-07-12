@@ -2,6 +2,7 @@
 import datetime
 import json
 import os
+import re
 
 from flask import (render_template, Blueprint, redirect,
                    url_for, request, jsonify, send_file)
@@ -75,6 +76,14 @@ def index():
 
 
 def _generate_unique_corpus_id(name):
+    if len(name) > 0:
+        pattern = re.compile('[\W_]+')
+        name = pattern.sub('', name.title().replace(" ", ""))
+        if (name[0].isdigit()):
+            name = "corpus" + name
+    else:
+        name = "newCorpus"
+
     existing_corpora = [
         el["id"] for el in app.mongo.db.kami_corpora.find(
             {}, {"id": 1, "_id": 0})]
@@ -90,6 +99,13 @@ def _generate_unique_corpus_id(name):
 
 
 def _generate_unique_model_id(name):
+    if len(name) > 0:
+        name = filter(str.isalnum, name.title().replace(" ", ""))
+        if (name[0].isdigit()):
+            name = "model" + name
+    else:
+        name = "newModel"
+
     existing_models = [
         el["id"] for el in app.mongo.db.kami_models.find(
             {}, {"id": 1, "_id": 0})]
@@ -137,7 +153,11 @@ def create_new_corpus():
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
 
-    corpus_id = _generate_unique_corpus_id("corpus")
+    if request.form["name"]:
+        corpus_id = _generate_unique_corpus_id(request.form["name"])
+    else:
+        corpus_id = _generate_unique_corpus_id("corpus")
+
     corpus = KamiCorpus(
         corpus_id,
         annotation,
@@ -166,7 +186,10 @@ def create_new_model():
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
 
-    model_id = _generate_unique_model_id("model")
+    if request.form["name"]:
+        model_id = _generate_unique_model_id(request.form["name"])
+    else:
+        model_id = _generate_unique_model_id("model")
     model = KamiModel(
         model_id,
         annotation,
@@ -249,7 +272,11 @@ def import_model():
 
 def imported_corpus(filename, annotation):
     """Internal handler of already imported model."""
-    corpus_id = _generate_unique_corpus_id("corpus")
+    if annotation["name"]:
+        corpus_id = _generate_unique_corpus_id(annotation["name"])
+    else:
+        corpus_id = _generate_unique_corpus_id("corpus")
+
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -274,6 +301,11 @@ def imported_corpus(filename, annotation):
 
 def imported_model(filename, annotation):
     """Internal handler of already imported model."""
+    if annotation["name"]:
+        model_id = _generate_unique_model_id(annotation["name"])
+    else:
+        model_id = _generate_unique_model_id("model")
+
     model_id = _generate_unique_model_id("model")
     creation_time = last_modified = datetime.datetime.now().strftime(
         "%d-%m-%Y %H:%M:%S")

@@ -29,7 +29,6 @@ function getSingleValue(data, attr_name) {
 };
 
 function getMultipleValues(data, attr_name) {
-	console.log(data[attr_name]);
 	return attr_name in data ? data[attr_name].data : null;
 };
 
@@ -80,25 +79,32 @@ function generateNodeMetaDataItems(elementId, metaType, attrs) {
 			data["synonyms"] = getMultipleValues(attrs, "synonyms");
 
 		} else if ((metaType === "region") || (metaType === "site")) {
-			var name = singleValueToString(attrs, "name"),
-				interproValue = singleValueToString(attrs, "interproid");
+			var name = multipleValuesToString(attrs, "name");
 
-			var interpro;
-			if (interproValue[0] != "I") {
-				interpro = interproValue;
-			} else {
-				interpro =
-					<a href={"http://www.ebi.ac.uk/interpro/entry/" + interproValue}>
-						{interproValue}
-					</a> 
+			var interpros = [], interproValue;
+			if ("interproid" in attrs) {
+				for (var i = attrs["interproid"].data.length - 1; i >= 0; i--) {
+					interproValue = attrs["interproid"].data[i];
+				 	if (interproValue[0] != "I") {
+						interpros.push(interproValue);
+					} else {
+						interpros.push(
+							<a href={"http://www.ebi.ac.uk/interpro/entry/" + interproValue}>
+								{interproValue}
+							</a>);
+					}
+					if (i != 0) {
+						interpros.push(", ");
+					}
+				 } 
 			}
 
 			items = [
 				["name", "Name", name],
-				["interproid", "InterPro ID", interpro]
+				["interproid", "InterPro ID", interpros]
 			];
-			data["interproid"] = getSingleValue(attrs, "interproid");
-			data["name"] = getSingleValue(attrs, "name");
+			data["interproid"] = getMultipleValues(attrs, "interproid");
+			data["name"] = getMultipleValues(attrs, "name");
 		} else if (metaType === "residue") {
 			var aa = multipleValuesToString(attrs, "aa"),
 				test = multipleValuesToString(attrs, "test");

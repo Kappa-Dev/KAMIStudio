@@ -311,6 +311,10 @@ a.btn.instantiation, button.instantiation {
 	border-color: #8d0e14;
 }
 
+button.btn-default.instantiation {
+	background-color: white;
+}
+
 a.btn.instantiation:focus {
 	background-color: #8d0e14;
 	border-color: #8d0e14;
