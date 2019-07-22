@@ -95,7 +95,7 @@
                   </div>
                   <div class="col-sm-6">
                     <div class="nuggets-view">
-                      <!-- <a type="button"
+                      <a type="button"
                          id="selectNuggetListView"
                          class="btn btn-default btn-md panel-button nugget-list-view active" 
                          onclick="renderNuggetList('{{ kb_id }}', '{{nuggets}}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%})">
@@ -104,16 +104,19 @@
                       <a type="button"
                          id="selectNuggetTableView"
                          class="btn btn-default btn-md panel-button nugget-table-view"
-                         onclick="renderNuggetTable('{{ kb_id }}', '{{ gene_adjacency }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});">
+                         onclick="showNuggetTable('{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});">
                          <span class="glyphicon glyphicon-equalizer"></span> Table view
-                      </a> -->
+                      </a>
                     </div>
                   </div>
                 </div>
                 <div id="nuggetView">
-                    <div id="loadingBlock" class="loading-elements center-block">
-                        <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>
-                    </div>             
+                  <div id="progressBlock">
+                    <div id="progressMessage">Loading nuggets...</div>
+                      <div id="loadingBlock" class="loading-elements center-block" style="margin-top: 20pt;">
+                          <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>
+                      </div> 
+                  </div>
                 </div>
             </div>
             <!-- End of nugget list column -->
@@ -144,6 +147,8 @@
 {% if not kb.empty() %}
   
 {% block custom_scripts %}
+  <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/kbDataBoxes.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/graphElementBoxes.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>

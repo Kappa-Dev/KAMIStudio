@@ -146,57 +146,15 @@ def update_corpus_nugget(corpus_id, nugget_id):
 #     return response
 
 
-@nuggets_blueprint.route("/corpus/<corpus_id>/nugget-table")
-def nugget_table(corpus_id):
+@nuggets_blueprint.route("/corpus/<corpus_id>/get-gene-adjacency",
+                         methods=["GET"])
+def get_gene_adjacency(corpus_id):
     """Generate a nugget table."""
-    data = {}
-    data["meta_data"] = dict()
-    data["pairs"] = []
-
     corpus = get_corpus(corpus_id)
-
-    # retreive all the genes from the action graph
-    for g in corpus.genes():
-        uniprotid = None
-        hgnc_symbol = None
-        node = corpus.get_ag_node(g)
-        if "uniprotid" in node:
-            uniprotid = list(node["uniprotid"])[0]
-        if "hgnc_symbol" in node:
-            hgnc_symbol = list(node["hgnc_symbol"])[0]
-        data["meta_data"][g] = (uniprotid, hgnc_symbol)
-
-    table = dict()
-    for g1 in data["meta_data"].keys():
-        for g2 in data["meta_data"].keys():
-            table[(g1, g2)] = []
-            table[(g2, g1)] = []
-            # if g1 not in data["table"].keys():
-            #     data["table"][g1] = dict()
-            # data["table"][g1][g2] = []
-            # if g2 not in data["table"].keys():
-            #     data["table"][g2] = dict()
-            # data["table"][g2][g1] = []
-
-    for nugget_id in corpus.nuggets():
-        nugget = corpus.nugget[nugget_id]
-        nugget_typing = corpus.get_nugget_typing(nugget_id)
-        mentioned_genes = list()
-        for n in nugget.nodes():
-            if nugget_typing[n] in data["meta_data"].keys():
-                mentioned_genes.append(nugget_typing[n])
-        for i, g1 in enumerate(mentioned_genes):
-            for j in range(i + 1, len(mentioned_genes)):
-                g2 = mentioned_genes[j]
-                table[(g1, g2)].append(nugget_id)
-                table[(g2, g1)].append(nugget_id)
-
-    for s, t in table.keys():
-        data["pairs"].append({
-            "source": s,
-            "target": t,
-            "nuggets": table[(s, t)]
-        })
+    data = corpus.get_gene_pairwise_interactions()
+    for k in data.keys():
+        for kk, vv in data[k].items():
+            data[k][kk] = list(vv)
     return jsonify(data), 200
 
 
@@ -205,7 +163,6 @@ def nugget_table(corpus_id):
 @authenticate
 def update_node_attrs(corpus_id, nugget_id):
     """Handle update of node attrs."""
-
     json_data = request.get_json()
     node_id = json_data["id"]
     node_attrs = json_data["attrs"]

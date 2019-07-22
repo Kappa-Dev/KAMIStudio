@@ -118,7 +118,6 @@ def corpus_view(corpus_id):
             "neo4j_connection_failure.html",
             uri=app.config["NEO4J_URI"],
             user=app.config["NEO4J_USER"])
-    # gene_adjacency = corpus.get_gene_pairwise_interactions()
 
     if corpus is not None:
 

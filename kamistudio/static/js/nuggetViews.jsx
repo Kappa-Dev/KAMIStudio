@@ -2,7 +2,6 @@
  * Collection of utils for viewing nuggets.
  */
 
-
 // ---------------- Nugget view components ---------------------
 
 function NuggetListItem(props) {
@@ -125,7 +124,10 @@ class NuggetTable extends React.Component {
 
         return ([
             <div id="tableSvg">
-                <svg id="nuggetTable" width={size} height={size}></svg>
+{/*                <svg id="nuggetTable" 
+                     preserveAspectRatio="xMinYMin meet"
+                     viewBox="0 0 500 500"
+                     style={{"width": "100%", "height": "100%"}}></svg>*/}
             </div>,
             <div id="tableNuggetList"></div>
         ])
@@ -231,6 +233,8 @@ class NuggetPreview extends React.Component {
         this.onDataUpdate = this.onDataUpdate.bind(this);
         this.onMetaDataUpdate = this.onMetaDataUpdate.bind(this);
         this.onReferenceUpdate = this.onReferenceUpdate.bind(this);
+        this.setLoadedGraph = this.setLoadedGraph.bind(this);
+        this.resetLoadedGraph = this.resetLoadedGraph.bind(this);
 
         this.state = {
             selectedElement: {
@@ -244,8 +248,21 @@ class NuggetPreview extends React.Component {
             },
             updatedNuggetInfo: {},
             updatedNuggetMetaData: {},
-            updatedReferenceElements: {}
+            updatedReferenceElements: {},
+            loadedGraph: false
         }
+    }
+
+    setLoadedGraph() {
+        var state = Object.assign({}, this.state);
+        state.loadedGraph = true;
+        this.setState(state);
+    }
+
+    resetLoadedGraph() {
+        var state = Object.assign({}, this.state);
+        state.loadedGraph = false;
+        this.setState(state);
     }
 
     selectElement(elementId, elementAttrs, elementType, metaType,
@@ -417,16 +434,39 @@ class NuggetPreview extends React.Component {
                                    onFetchCandidates={this.props.onFetchCandidates}
                                    onReferenceUpdate={this.onReferenceUpdate} />;
         }
+
+        var loader = null,
+            svg = null;
+
+        if (this.state.loadedGraph) {
+            svg = <svg id="nuggetSvg"
+                       style={{"display": "inline-block"}} 
+                       preserveAspectRatio="xMinYMin meet"
+                       viewBox="0 0 500 200" >
+                  </svg>;
+        } else if (this.props.nuggetId) {
+            loader = 
+                <div id="progressBlock"
+                     style={{"padding-top": "0pt", "margin-top": "20pt"}}>
+                    <div id="progressMessage">Loading the nugget graph...</div>
+                    <div id="loadingBlock" class="loading-elements center-block"
+                          style={{"margin-bottom": "20pt"}}>
+                        <div id={this.props.instantiated ? "loaderModel" : "loader"}></div>
+                    </div>
+                </div>;
+        }
+
         return(
             <div id="nuggetPreview">
                 {fields}
-                <svg id="nuggetSvg"
-                     style={{display: svgDisplay}} 
-                     preserveAspectRatio="xMinYMin meet"
-                     viewBox="0 0 500 200" ></svg>
+                <div id="nuggetSvgBlock">
+                    {loader}
+                    {svg}
+                </div>
                 <div id="nuggetElementInfo">
                     {nuggetElementInfo}
                 </div>
+                <div id="deleteConfirmationDialog"></div>
             </div>
         );
     }
@@ -569,7 +609,46 @@ class NuggetEditingBox extends React.Component {
 }
 
 
+
 // ----------------- Utils for nugget views -----------------
+
+function hideDeleteConfirmationDialog() {
+    ReactDOM.render(
+        null,
+        document.getElementById("deleteConfirmationDialog")
+    );
+}
+
+
+function showDeleteConfirmationDialog(modelId, nuggetList, instantiated, readonly) {
+    return function(nuggetId) {
+        var content = <div style={{"text-align": "center"}}>
+                        <h5>
+                            {"Are you sure you want to remove the nugget '" + nuggetId + "'?"}
+                        </h5>
+
+                        <div style={{"margin-top": "15pt"}}>
+                            <button 
+                               type="button" onClick={hideDeleteConfirmationDialog}
+                               className="btn btn-primary btn-sm panel-button editable-box right-button">
+                                Cancel
+                            </button>
+                            <button 
+                               type="button" onClick={() => removeNugget(modelId, nuggetList, instantiated, readonly)(nuggetId)}
+                               className="btn btn-default btn-sm panel-button editable-box right-button">
+                                Delete
+                            </button>
+                        </div>
+                      </div>;
+        ReactDOM.render(
+            <Dialog content={content} 
+                    title="Delete a nugget"
+                    customStyle={{"margin": "150pt auto"}}
+                    onRemove={hideDeleteConfirmationDialog}/>,
+            document.getElementById("deleteConfirmationDialog")
+        );
+    };
+}
 
 
 function removeNugget(modelId, nuggetList, instantiated, readonly) {
@@ -584,6 +663,8 @@ function removeNugget(modelId, nuggetList, instantiated, readonly) {
             }
         }
 
+        hideDeleteConfirmationDialog()
+
         ReactDOM.render(
             <NuggetListView 
                 items={nuggetList}
@@ -592,12 +673,13 @@ function removeNugget(modelId, nuggetList, instantiated, readonly) {
             document.getElementById('nuggetView')
         );
 
-        ReactDOM.render(
+        var preview = ReactDOM.render(
             <NuggetPreview
                 instantiated={instantiated}
                 readonly={readonly}/>,
             document.getElementById('nuggetViewWidget')
         );
+        preview.resetLoadedGraph();
     };
 }
 
@@ -623,7 +705,7 @@ function renderNuggetList(modelId, instantiated, readonly) {
             <NuggetListView 
                 items={nuggetList}
                 onItemClick={viewNugget(
-                    modelId, instantiated, readonly, removeNugget(
+                    modelId, instantiated, readonly, showDeleteConfirmationDialog(
                         modelId, nuggetList, instantiated, readonly))}
                 instantiated={instantiated}/>,
             document.getElementById('nuggetView')
@@ -782,7 +864,7 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
             };
         }
 
-        d3.select("#nuggetSvg").selectAll("*").remove();
+        d3.select("nuggetSvg").selectAll("*").remove();
 
         var nuggetPreview = ReactDOM.render(
             <NuggetPreview
@@ -799,6 +881,8 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
             document.getElementById('nuggetViewWidget')
         );
 
+        nuggetPreview.resetLoadedGraph();
+
         // use AJAX to send request for retrieving the nugget data
         $.get(model_id + "/raw-nugget/" + nugget_id,
               function(data, status) {
@@ -813,6 +897,8 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
                   "nodeClick": handleNodeClick(nuggetGraph, metaTyping, agTyping, semantics, instantiated),
                   "edgeClick": handleEdgeClick(nuggetGraph, metaTyping, agTyping, semantics, instantiated),
                 }
+
+                nuggetPreview.setLoadedGraph();
 
                 drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelation, 
                            clickHandlers, instantiated);
@@ -913,10 +999,110 @@ function previewNugget(modelId, desc, type,
 }
 
 
+function newDrawNuggetTable(modelId, geneAdjacency) {
+
+    var genes = [];
+
+    for (var k in geneAdjacency) {
+        if (!genes.includes(k)) {
+            genes.push(k);
+        } 
+        for (var kk in geneAdjacency[k]) {
+            if (!genes.includes(kk)) {
+                genes.push(kk);
+            }
+        }
+    }
+
+    genes.sort();
+
+    var nuggetCounts = [];
+    for (var i = 0; i < genes.length; i++) {
+        nuggetCounts.push(new Array(genes.length).fill(0));
+    };
+
+    var gene1, gene2;
+    for (var i = 0; i < genes.length; i++) {
+        gene1 = genes[i];
+        for (var j = i; j < genes.length; j++) {
+            gene2 = genes[j];
+            if (gene1 in geneAdjacency) {
+                if (gene2 in geneAdjacency[gene1]) {
+                    nuggetCounts[i][j] = geneAdjacency[gene1][gene2].length;
+                    nuggetCounts[j][i] = geneAdjacency[gene1][gene2].length;
+                }
+            } else if (gene2 in geneAdjacency) {
+                if (gene1 in geneAdjacency[gene2]) {
+                    nuggetCounts[i][j] = geneAdjacency[gene2][gene1].length;
+                    nuggetCounts[j][i] = geneAdjacency[gene2][gene1].length;
+                }
+            }
+        }
+    }
+
+    var maxNuggets = Math.max(...nuggetCounts.map((el) => Math.max(...el))),
+        data = [
+        {
+            z: nuggetCounts,
+            x: genes.map((g) => "gene " + g),
+            y: genes.map((g) => "gene " + g),
+            hovertemplate: '<i>Protoform X:</i> %{x}<br>'+
+                        '<i>Protoform Y:</i> %{y}<br>' +
+                        '<i>Nuggets found:</i> %{z}',
+            type: 'heatmap',
+            xgap : 3,
+            ygap : 3,
+            colorscale: [
+                [0, 'rgb(218, 227, 236)'],
+                [1.0 / maxNuggets, 'rgb(51, 122, 183)'],
+                [1, 'rgb(51, 122, 183)']
+            ],
+            showscale: false
+        }
+    ];
+    var layout = {
+          autosize: false,
+          width: 500,
+          height: 470,
+          margin: {
+            l: 100,
+            r: 50,
+            b: 85,
+            t: 30,
+            pad: 4
+          },
+          plot_bgcolor: "#fff",
+          xaxis: {
+            showspikes: true,
+            // spikecolor: '#337ab7',
+            spikesides: false,
+            spikethickness: 2,
+            // spikedash: "solid",
+            spikemode: "across",
+            // linecolor: "#fff",
+          },
+          yaxis: {
+            showspikes: true,
+            // spikecolor: '#337ab7',
+            // spikesides: false,
+            spikethickness: 2,
+            // spikedash: "solid"
+            // showcrossline: true
+            spikemode: "across",
+            // linecolor: "#fff",
+          },
+          dragmode: 'pan'
+        };
+
+    Plotly.newPlot('tableSvg', data, layout, {scrollZoom: true});
+}
+
+
 function drawNuggetTable(modelId, geneAdjacency) {
     var svg = d3.select("#nuggetTable"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+        viewBox = svg.attr("viewBox").split(" "),
+        width = +viewBox[2],
+        height = +viewBox[3];
 
     var g = svg.append("g")
         .attr("class", "everything");
@@ -928,6 +1114,7 @@ function drawNuggetTable(modelId, geneAdjacency) {
         .on("zoom", zoomed);
 
     svg.call(zoom);
+
     var i = 1;
     var indexedLabels = [];
     for (var gene in geneAdjacency) {
@@ -949,6 +1136,8 @@ function drawNuggetTable(modelId, geneAdjacency) {
         })
     }
 
+    var cellSize = 20,
+        squareSize = 19;
     var cellData = [];
     for (var k in geneAdjacency) {
         for (var i=0; i < geneAdjacency[k][0].length; i++) {
@@ -962,69 +1151,155 @@ function drawNuggetTable(modelId, geneAdjacency) {
         }
     }
 
-    var xlabels = g.selectAll(".xlabels")
+    var ylabels = g.selectAll(".xlabels")
                    .data(labelsData)
                    .enter()
                    .append("text")
                    .attr("text-anchor", "start")
                    .attr("x", function(d) {
-                        return d.order * 20;
+                        return d.order * cellSize;
                     })
                      .attr("y", function(d) {
-                        return -20;
+                        return ;
                     })
                     .attr("transform", function(d) {
-                        return "rotate(-90," + d.order * 20 + "," + -5 + ")";
+                        return "rotate(-90," + 
+                            (d.order * cellSize  + 3 * cellSize / 4.0) +
+                            "," + 0 + ")";
                     })
                    .text(function(d) { return d.label });
-         
 
-    var ylabels = g.selectAll(".ylabels")
+    var xlabels = g.selectAll(".ylabels")
                    .data(labelsData)
                    .enter()
                    .append("text")
                    .attr("x", function(d) {
-                        return -5;
+                        return cellSize - 2;
                     })
                      .attr("y", function(d) {
-                        return d.order * 20;
+                        return d.order * cellSize + 3 * cellSize / 4;
                     })
                    .attr("text-anchor", "end")
                    .text(function(d) { return d.label });
+
     var cell = g.selectAll(".cell")
                  .data(cellData)
                  .enter()
                  .append("rect")
                  .attr("x", function(d) {
-                    return d.sourceOrder * 20;
+                    return d.sourceOrder * cellSize;
                  })
                  .attr("y", function(d) {
-                    return d.targetOrder * 20;
+                    return d.targetOrder * cellSize;
                  })
-                 .attr("width", 15)
-                 .attr("height", 15)
+                 .attr("width", squareSize)
+                 .attr("height", squareSize)
                  .attr('fill', function(d) {
                     if (d.nuggets.length > 0) {
                         return "#337ab7";
                     } else {
                         return "#FFFFFF";
                     }
-                 });
+                 })
+                .on("mouseover", function(d) {
+                    // hgrid.filter((e) => e.order == d.targetOrder)
+                    d3.select("#hgrid" + d.targetOrder)
+                         .style("opacity", 1)
+                         .raise();
+                    // vgrid.filter((e) => e.order == d.sourceOrder)
+                    d3.select("#vgrid" + d.sourceOrder)
+                         .style("opacity", 1)
+                         .raise();
+                    cell.raise();
+                    xlabels.raise();
+                    ylabels.raise();
+                })
+                .on("mouseout", function(d) {
+                    // hgrid.filter((e) => e.order == d.targetOrder)
+                    d3.select("#hgrid" + d.targetOrder)
+                         .style("opacity", 0);
+                    d3.select("#vgrid" + d.sourceOrder)
+                    // vgrid.filter((e) => e.order == d.sourceOrder)
+                         .style("opacity", 0);
+                    cell.raise();
+                });
+
+    var boundaries = g.node().getBBox(),
+        bx = boundaries.x,
+        by = boundaries.y,
+        bheight = boundaries.height,
+        bwidth = boundaries.width;
+
+    var hgrid = g.selectAll(".horizontal-bar")
+                .data(labelsData)
+                .enter()
+                .append("line")
+                .attr("id", function(d) { return "hgrid" + d.order; })
+                .attr("class", ".horizontal-bar")
+                .attr("x1", bx)
+                .attr("y1",  function(d) {
+                    return d.order * cellSize + cellSize / 2 - (cellSize - squareSize) / 2;
+                })        
+                .attr("x2", bx + bwidth)             
+                .attr("y2", function(d) {
+                    return d.order * cellSize + cellSize / 2 - (cellSize - squareSize) / 2;
+                })
+                .attr("stroke-width", squareSize)
+                // .attr("stroke", "#ddd");
+                .attr("stroke", "#dae3ec")
+                .style("opacity", 0);
+
+    var vgrid = g.selectAll(".vertical-bar")
+                .data(labelsData)
+                .enter()
+                .append("line")
+                .attr("id", function(d) { return "vgrid" + d.order; })
+                .attr("class", ".vertical-bar")
+                .attr("x1", function(d) {
+                    return d.order * cellSize + cellSize / 2 - (cellSize - squareSize) / 2;
+                })
+                .attr("y1", by)        
+                .attr("x2", function(d) {
+                    return d.order * cellSize + cellSize / 2 - (cellSize - squareSize) / 2;
+                })             
+                .attr("y2", by + bheight)
+                .attr("stroke-width", squareSize)
+                // .attr("stroke", "#ddd");
+                .attr("stroke", "#dae3ec")
+                .style("opacity", 0);
+
+    xlabels.raise();
+    ylabels.raise();
+    cell.raise();
+
+    xlabels.on("mouseover", function(d) {
+                hgrid.filter((e) => e.order == d.order)
+                     .style("opacity", 1);
+            })
+           .on("mouseout", function(d) {
+                hgrid.filter((e) => e.order == d.order)
+                     .style("opacity", 0);
+            });
+
+    ylabels.on("mouseover", function(d) {
+                vgrid.filter((e) => e.order == d.order)
+                     .style("opacity", 1);
+            })
+           .on("mouseout", function(d) {
+                vgrid.filter((e) => e.order == d.order)
+                     .style("opacity", 0);
+            });
+
+
     cell.attr(
           "transform", function(d) {
               // zoom to fit the bounding box
-              var boundaries = g.node().getBBox(),
-                  bx = boundaries.x,
-                  by = boundaries.y,
-                  bheight = boundaries.height,
-                  bwidth = boundaries.width;
               var updatedView = "" + bx + " " + by + " " + bwidth + " " + bheight;
               svg  
                 .attr("viewBox", updatedView)  
                 .attr("preserveAspectRatio", "xMidYMid meet")  
                 .call(zoom);
                 return "translate(" + d.x + "," + d.y + ")"; 
-
             });
 
     function zoomed() {
@@ -1059,47 +1334,34 @@ function drawNuggetTable(modelId, geneAdjacency) {
     }
 }
 
-
-function renderNuggetTable(modelId, adjacency, instantiated, readonly) {
-    // TODO: make it fetch nugget table
+function showNuggetTable(modelId, instantiated, readonly) {
     $("#selectNuggetTableView").addClass("active");
     $("#selectNuggetListView").removeClass("active");
 
-    var parsedAdjacency = JSON.parse(adjacency);
-    ReactDOM.render(
-        <NuggetTable 
-            geneAdjacency={parsedAdjacency}
-            onItemClick={viewNugget(modelId, instantiated, readonly)}
-            instantiated={instantiated} />,
-        document.getElementById('nuggetView')
-    );
+    // getch gene data
+    getData(
+        modelId + "/get-gene-adjacency",
+        renderNuggetTable(modelId, instantiated, readonly));
+    document.getElementById("selectNuggetTableView").onclick = showNuggetTable;
+}
 
-    ReactDOM.render(
-        <NuggetPreview 
-            instantiated={instantiated}
-            readonly={readonly}/>,
-        document.getElementById('nuggetViewWidget')
-    );
 
-    drawNuggetTable(modelId, parsedAdjacency);
+function renderNuggetTable(modelId, instantiated, readonly) {
+    return function(parsedAdjacency) {
+        ReactDOM.render(
+            <NuggetTable 
+                geneAdjacency={parsedAdjacency}
+                onItemClick={viewNugget(modelId, instantiated, readonly)}
+                instantiated={instantiated} />,
+            document.getElementById('nuggetView')
+        );
 
-	// // fetch nugget table
-	// $.ajax({
-	//     url: modelId + "/nugget-table",
-	//     type: 'get',
-	//     dataType: "json"
-	// }).done(function (data) {
-	//     var metaData = data["meta_data"];
-	//     var pairs = data["pairs"];
-    	
- //    	// add svg element
- //    	var svgElement = htmlToElement('<svg id="nuggetTable" width="500" height="500"></svg>');
- //  		parent.appendChild(svgElement);
-
- //    	drawTable(pairs, metaData);
-
-	// }).fail(function (e) {
-	//     console.log("Failed to load nugget table");
-	// });
-
+        ReactDOM.render(
+            <NuggetPreview 
+                instantiated={instantiated}
+                readonly={readonly}/>,
+            document.getElementById('nuggetViewWidget')
+        );
+        newDrawNuggetTable(modelId, parsedAdjacency);
+    };
 }

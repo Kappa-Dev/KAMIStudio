@@ -728,6 +728,7 @@ span.glyphicon-question-sign {
 }
 
 .modal-dialog {
+	margin: 50pt auto;
 	height: 350pt;
 }
 
