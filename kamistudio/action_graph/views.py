@@ -24,7 +24,6 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
     if (knowledge_obj.action_graph):
         data["actionGraph"] = graph_to_d3_json(
             knowledge_obj.action_graph, attrs)
-        # data["interactionEdges"] = knowledge_obj.interaction_edges()
         try:
             data["connectedComponents"] =\
                 knowledge_obj.action_graph.find_connected_components()

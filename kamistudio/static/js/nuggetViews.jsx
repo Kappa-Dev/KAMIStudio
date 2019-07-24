@@ -51,7 +51,19 @@ class NuggetList extends React.Component {
     }
 
     render() {
-        var listItems = this.props.items.map(
+        // sort items by id
+        function sortById(a, b) {
+            if (a[0] == b[0]) {
+                return 0;
+            } else {
+                return a[0] < b[0] ? -1 : 1;
+            }
+        };
+
+        var itemsToSort = [...this.props.items];
+        itemsToSort.sort(sortById);
+
+        var listItems = itemsToSort.map(
                 (item) => <div key={item[0]} id={"nuggetListItem" + item[0]}>
                                 <NuggetListItem
                                     nuggetId={item[0]}
@@ -62,8 +74,14 @@ class NuggetList extends React.Component {
                                     onRemove={this.onItemRemove}
                                     instantiated={this.props.instantiated} />
                             </div>);
+        var customStyle = null;
+        if (this.props.height) {
+            customStyle = {"height": this.props.height};
+        }
+
         return (
-            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+            <ul className={"nav list-group-striped list-unstyled components nuggets-nav"}
+                style={customStyle}>
                 {listItems}
             </ul>
         );
@@ -95,7 +113,8 @@ class NuggetListView extends React.Component{
                 listComponentProps={{
                     instantiated: this.props.instantiated,
                     selected: this.state.selected,
-                    onItemRemove: this.props.onItemRemove
+                    onItemRemove: this.props.onItemRemove,
+                    height: this.props.height
                 }}
                 filterItems={[]}
                 listComponent={NuggetList}
@@ -129,7 +148,7 @@ class NuggetTable extends React.Component {
                      viewBox="0 0 500 500"
                      style={{"width": "100%", "height": "100%"}}></svg>*/}
             </div>,
-            <div id="tableNuggetList"></div>
+            <div id="tableNuggetList" style={{"width": "100%", "height": "100%"}}></div>
         ])
     }
 }
@@ -438,7 +457,7 @@ class NuggetPreview extends React.Component {
         var loader = null,
             svg = null;
 
-        if (this.state.loadedGraph) {
+        if ((this.state.loadedGraph) || (this.props.loadedGraph)) {
             svg = <svg id="nuggetSvg"
                        style={{"display": "inline-block"}} 
                        preserveAspectRatio="xMinYMin meet"
@@ -537,7 +556,6 @@ class NuggetEditingBox extends React.Component {
 
     onMetaDataUpdate(newData, oldData) {
         var state = Object.assign({}, this.state);
-        console.log(newData, oldData);
         state.updatedNuggetMetaData[
             this.state.selectedElement.id] = newData;
         this.setState(state);
@@ -578,6 +596,7 @@ class NuggetEditingBox extends React.Component {
             <div id="nuggetViewWidget">
                 <NuggetPreview
                     selectedElement={element}
+                    loadedGraph={true}
                     nuggetId={this.props.nuggetId}
                     nuggetDesc={this.props.nuggetDesc}
                     nuggetType={this.props.nuggetType}
@@ -778,7 +797,10 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
                 // deselect all the selected elements
                 var svg = d3.select("#nuggetSvg");
 
-                nuggetPreview.selectElement([d.source.id, d.target.id], "edge");
+                nuggetPreview.selectElement(
+                    [d.source.id, d.target.id],
+                    d.attrs,
+                    "edge");
 
                 var highlight;
                   if (instantiated) {
@@ -864,8 +886,6 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
             };
         }
 
-        d3.select("nuggetSvg").selectAll("*").remove();
-
         var nuggetPreview = ReactDOM.render(
             <NuggetPreview
                 selectedElement={{}}
@@ -894,11 +914,15 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
                     templateRelation = data["templateRelation"];
 
                 var clickHandlers = {
-                  "nodeClick": handleNodeClick(nuggetGraph, metaTyping, agTyping, semantics, instantiated),
-                  "edgeClick": handleEdgeClick(nuggetGraph, metaTyping, agTyping, semantics, instantiated),
+                  "nodeClick": handleNodeClick(
+                    nuggetGraph, metaTyping, agTyping, semantics, instantiated),
+                  "edgeClick": handleEdgeClick(
+                    nuggetGraph, metaTyping, agTyping, semantics, instantiated),
                 }
 
                 nuggetPreview.setLoadedGraph();
+
+                d3.select("nuggetSvg").selectAll("*").remove();
 
                 drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelation, 
                            clickHandlers, instantiated);
@@ -999,22 +1023,71 @@ function previewNugget(modelId, desc, type,
 }
 
 
-function newDrawNuggetTable(modelId, geneAdjacency) {
+function showSelectedNuggetsModal(nuggets, modelId, instantiated, readonly) {
+    function removeNuggetListModal() {
+        ReactDOM.render(
+            null,
+            document.getElementById("tableNuggetList")
+        );
+    };
+
+    var nuggetList = <NuggetListView 
+        items={nuggets}
+        onItemClick={viewNugget(
+                 modelId, instantiated, readonly, showDeleteConfirmationDialog(
+                 modelId, nuggets, instantiated, readonly))}
+        height={"60%"}
+        instantiated={instantiated}/>;
+
+    ReactDOM.render(
+        <InBlockDialog id="selectedNuggets"
+                       title="Selected nuggets"
+                       onRemove={removeNuggetListModal}
+                       content={nuggetList} />,
+        document.getElementById("tableNuggetList")
+    );
+    // ReactDOM.render(
+    //     <NuggetListView 
+    //         items={nuggetList}
+    //         onItemClick={viewNugget(
+    //             modelId, instantiated, readonly, showDeleteConfirmationDialog(
+    //                 modelId, nuggetList, instantiated, readonly))}
+    //         instantiated={instantiated}/>,
+    //     document.getElementById('nuggetView')
+    // );
+
+    // ReactDOM.render(
+    //     <NuggetPreview
+    //         instantiated={instantiated}
+    //         readonly={readonly}/>,
+    //     document.getElementById('nuggetViewWidget')
+    // );
+}
+
+
+function newDrawNuggetTable(modelId, geneAdjacency, geneLabels, instantiated, readonly) {
 
     var genes = [];
-
     for (var k in geneAdjacency) {
         if (!genes.includes(k)) {
-            genes.push(k);
+            genes.push(k.toString());
         } 
         for (var kk in geneAdjacency[k]) {
             if (!genes.includes(kk)) {
-                genes.push(kk);
+                genes.push(kk.toString());
             }
         }
     }
 
-    genes.sort();
+    function sortByGeneLabel(a, b) {
+        if (geneLabels[a] == geneLabels[b]) {
+            return 0;
+        } else {
+            return geneLabels[a] < geneLabels[b] ? -1 : 1;
+        }
+    }
+
+    genes.sort(sortByGeneLabel);
 
     var nuggetCounts = [];
     for (var i = 0; i < genes.length; i++) {
@@ -1044,11 +1117,10 @@ function newDrawNuggetTable(modelId, geneAdjacency) {
         data = [
         {
             z: nuggetCounts,
-            x: genes.map((g) => "gene " + g),
-            y: genes.map((g) => "gene " + g),
-            hovertemplate: '<i>Protoform X:</i> %{x}<br>'+
-                        '<i>Protoform Y:</i> %{y}<br>' +
-                        '<i>Nuggets found:</i> %{z}',
+            x: genes.map((g) => "g" + g),
+            y: genes.map((g) => "g" + g),
+            nuggets: geneAdjacency,
+            hovertemplate: '<i>Nuggets found:</i> %{z}',
             type: 'heatmap',
             xgap : 3,
             ygap : 3,
@@ -1065,14 +1137,16 @@ function newDrawNuggetTable(modelId, geneAdjacency) {
           width: 500,
           height: 470,
           margin: {
-            l: 100,
-            r: 50,
-            b: 85,
-            t: 30,
+            l: 70,
+            r: 30,
+            b: 30,
+            t: 70,
             pad: 4
           },
           plot_bgcolor: "#fff",
           xaxis: {
+            side: "top",
+            // mirror: "allticks",
             showspikes: true,
             // spikecolor: '#337ab7',
             spikesides: false,
@@ -1080,8 +1154,12 @@ function newDrawNuggetTable(modelId, geneAdjacency) {
             // spikedash: "solid",
             spikemode: "across",
             // linecolor: "#fff",
+            tickvals: genes.map((g) => "g" + g),
+            ticktext: genes.map((g) => geneLabels[g])
           },
           yaxis: {
+            // mirror: "allticks",
+            autorange: "reversed",
             showspikes: true,
             // spikecolor: '#337ab7',
             // spikesides: false,
@@ -1090,11 +1168,35 @@ function newDrawNuggetTable(modelId, geneAdjacency) {
             // showcrossline: true
             spikemode: "across",
             // linecolor: "#fff",
+            tickvals: genes.map((g) => "g" + g),
+            ticktext: genes.map((g) => geneLabels[g])
           },
           dragmode: 'pan'
         };
 
     Plotly.newPlot('tableSvg', data, layout, {scrollZoom: true});
+    var table = document.getElementById('tableSvg');
+    table.on('plotly_click', function(data){
+        if (data.points[0].z != 0) {
+            var nuggets = [],
+                gene1 = data.points[0].x.substring(1),
+                gene2 = data.points[0].y.substring(1);
+
+            if (gene1 in data.points[0].data.nuggets) {
+                if (gene2 in data.points[0].data.nuggets[gene1]) {
+                    nuggets = data.points[0].data.nuggets[gene1][gene2];
+                }
+            } 
+
+            if (gene2 in data.points[0].data.nuggets) {
+                if (gene1 in data.points[0].data.nuggets[gene2]) {
+                    nuggets = data.points[0].data.nuggets[gene2][gene1];
+                }
+            }
+
+            showSelectedNuggetsModal(nuggets, modelId, instantiated, readonly);
+        }
+    });
 }
 
 
@@ -1347,10 +1449,12 @@ function showNuggetTable(modelId, instantiated, readonly) {
 
 
 function renderNuggetTable(modelId, instantiated, readonly) {
-    return function(parsedAdjacency) {
+    return function(data) {
+        var interactions = data["interactions"],
+            geneLabels = data["geneLabels"];
         ReactDOM.render(
             <NuggetTable 
-                geneAdjacency={parsedAdjacency}
+                geneAdjacency={interactions}
                 onItemClick={viewNugget(modelId, instantiated, readonly)}
                 instantiated={instantiated} />,
             document.getElementById('nuggetView')
@@ -1362,6 +1466,6 @@ function renderNuggetTable(modelId, instantiated, readonly) {
                 readonly={readonly}/>,
             document.getElementById('nuggetViewWidget')
         );
-        newDrawNuggetTable(modelId, parsedAdjacency);
+        newDrawNuggetTable(modelId, interactions, geneLabels, instantiated, readonly);
     };
 }

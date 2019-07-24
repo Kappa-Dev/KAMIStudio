@@ -32,3 +32,54 @@ function Dialog(props) {
 	)
 }
 
+
+class InBlockDialog extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		this.state = {};
+	}
+
+	componentDidMount() {
+		console.log(this);
+		console.log(this.props);
+		$(document).ready(
+			function() {
+			    $("#myModal").modal("show");
+
+			    //appending modal background inside the blue div
+			    $('.modal-backdrop').appendTo("#modalBlock");   
+			        //remove the padding right and modal-open class from the body tag which bootstrap adds when a modal is shown
+			        $('body').removeClass("modal-open")
+			        $('body').css("padding-right", "");     
+		  	});
+	}
+
+	render() {
+		var modalFooter = null;
+
+		if (this.props.footerContent) {
+			modalFooter = <div className="modal-footer" >{this.props.footerContent}</div>;
+		}
+
+		return (
+			<div id="modalBlock">
+				<div id="myModal" className="modal fade modal-block" role="dialog">
+			      <div className="modal-dialog">
+			        <div className="modal-content" style={{"margin": "10pt"}}>
+			          <div className="modal-header">
+			            <button type="button" className="close" onClick={this.props.onRemove}>&times;</button>
+			            <h4 className="modal-title">{this.props.title}</h4>
+			          </div>
+			          <div className="modal-body">
+			            {this.props.content}
+			          </div>
+			          {modalFooter}
+			        </div>
+			      </div>
+			    </div>
+			</div>
+		);
+	}
+}

@@ -86,13 +86,13 @@ def prepopulate():
             "--collection", "kami_new_definitions", "--file",
             "examples/kami_definitions.json", "--drop"])
 
-    if app.neo4j_driver is not None:
-        h = Neo4jHierarchy(driver=app.neo4j_driver)
-        h._clear()
+    # if app.neo4j_driver is not None:
+    #     h = Neo4jHierarchy(driver=app.neo4j_driver)
+    #     h._clear()
 
-        Neo4jHierarchy.load(
-            os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
-            driver=app.neo4j_driver)
+    #     Neo4jHierarchy.load(
+    #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
+    #         driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):

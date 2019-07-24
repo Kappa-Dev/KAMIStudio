@@ -151,10 +151,32 @@ def update_corpus_nugget(corpus_id, nugget_id):
 def get_gene_adjacency(corpus_id):
     """Generate a nugget table."""
     corpus = get_corpus(corpus_id)
-    data = corpus.get_gene_pairwise_interactions()
-    for k in data.keys():
-        for kk, vv in data[k].items():
-            data[k][kk] = list(vv)
+    data = {}
+    data["interactions"] = corpus.get_gene_pairwise_interactions()
+    # Precompute labels for a geneset
+    geneset = set()
+    for k, v in data["interactions"].items():
+        geneset.add(k)
+        for kk in v.keys():
+            geneset.add(kk)
+
+    def generate_gene_label(node_id):
+        label = corpus.get_hgnc_symbol(node_id)
+        if label is None:
+            label = corpus.get_uniprot(node_id)
+        return label
+
+    data["geneLabels"] = {
+        g: generate_gene_label(g) for g in geneset
+    }
+
+    # normalize data to be JSON-serializable
+    for k in data["interactions"].keys():
+        for kk, vv in data["interactions"][k].items():
+            new_vv = []
+            for vvv in vv:
+                new_vv.append(list(vvv))
+            data["interactions"][k][kk] = new_vv
     return jsonify(data), 200
 
 
