@@ -109,3 +109,60 @@ function handleRateInfoUpdate(modelId, readonly) {
 		sendRateDataUpdate(modelId, data);
 	}
 }
+
+
+ 
+function showConfirmDeletion(deletionUrl, redirectUrl, instantiated=false) {
+    function onConfirmDelete() {
+    	$("#confirmDeleteButton").attr("disabled", true);
+    	$("#cancelDeleteButton").attr("disabled", true);
+    	
+    	$("#deleteLoadingBlock").css("display", "block");
+
+      	getData(deletionUrl,
+            function() {
+            	window.location.href = redirectUrl;
+            });
+    }
+
+    function onCancelDelete() {
+      ReactDOM.render(
+        null,
+        document.getElementById("deletionConfirmDialog")
+      );
+    }
+
+    var keyword = instantiated ? "model" : "corpus";
+    	content = <div style={{"text-align": "center"}}>
+                    <h5>
+                        {"Are you sure you want to delete this " + keyword + "? This is irreversible, all the data will be lost."}
+                    </h5>
+
+                    <div style={{"margin-top": "15pt"}}>
+                        <button 
+                           type="button" onClick={onCancelDelete}
+                           id="cancelDeleteButton"
+                           className={"btn btn-primary btn-sm panel-button editable-box right-button " + (instantiated ? "instantiation" : "")}>
+                            Cancel
+                        </button>
+                        <button 
+                           type="button" onClick={onConfirmDelete}
+                           id="confirmDeleteButton"
+                           className="btn btn-default btn-sm panel-button editable-box right-button">
+                            Delete
+                        </button>
+                        <div id="deleteLoadingBlock" class="loading-elements center-block"
+				                  style={{"margin-bottom": "20pt", "display": "none"}}>
+				            <p>Cleaning up the database...</p>
+				            <div id={instantiated ? "loaderModel" : "loader"}></div>
+				        </div>
+                    </div>
+                  </div>;
+
+    ReactDOM.render(
+      <Dialog title={"Confirm deletion of the " + keyword}
+              content={content}
+              onRemove={onCancelDelete} />,
+      document.getElementById("deletionConfirmDialog")
+    );
+}

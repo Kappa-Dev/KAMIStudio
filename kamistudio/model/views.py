@@ -4,7 +4,7 @@ import os
 import json
 
 from flask import (render_template, Blueprint, request, redirect,
-                   url_for, send_file)
+                   url_for, send_file, jsonify)
 from flask import current_app as app
 
 from regraph.neo4j import Neo4jHierarchy
@@ -180,7 +180,7 @@ def delete_model(model_id):
         h.remove_graph(model._action_graph_id)
         # drop from mongo db
         app.mongo.db.kami_models.remove({"id": model_id})
-        return redirect(url_for("home.index"))
+        return jsonify({"success": True}), 200
     else:
         return render_template("model_not_found.html", model_id=model_id)
 

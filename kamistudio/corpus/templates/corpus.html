@@ -6,7 +6,8 @@
     <div class="kb-action-buttons">
         <a href="{{ url_for('corpus.instantiate', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-play"></span> Instantiate</a>
         <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
-        <a {% if not readonly %}onClick="confirmCorpusDeletion({{ url_for('corpus.delete_corpus', corpus_id=kb_id) }})" href="{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}"{% endif %} type="button" class="btn btn-default btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-trash"></span> Delete</a>
+        <button {% if not readonly %}onClick="showConfirmDeletion('{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}', '{{ url_for('home.index') }}');"{% endif %} class="btn btn-default btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-trash"></span> Delete</button>
+        <div id="deletionConfirmDialog"></div>
     </div>
 {% endblock %}
 

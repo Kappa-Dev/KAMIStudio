@@ -67,7 +67,7 @@ function postDataWithRedirect(data, url) {
         dataType: 'json',
         contentType: 'application/json',
   }).done(function (data) {
-        window.location.href = data["redirect"];
+      window.location.href = data["redirect"];
   }).fail(function (xhr, status, error) {
       console.log("Failed to post data to '" + url + "'");
       console.log(error);

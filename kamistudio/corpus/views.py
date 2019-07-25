@@ -520,7 +520,7 @@ def delete_corpus(corpus_id):
         h.remove_graph(corpus._action_graph_id)
         # drop from mongo db
         app.mongo.db.kami_corpora.remove({"id": corpus_id})
-        return redirect(url_for("home.index"))
+        return jsonify({"success": True}), 200
     else:
         return render_template("corpus_not_found.html", corpus_id=corpus_id)
 
