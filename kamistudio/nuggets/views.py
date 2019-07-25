@@ -6,7 +6,7 @@ from kamistudio.utils import authenticate
 from kamistudio.corpus.views import get_corpus, update_last_modified
 from kamistudio.model.views import get_model
 
-from regraph import graph_to_d3_json, get_node
+from regraph import graph_to_d3_json, get_node, get_edge
 from regraph.utils import attrs_to_json
 
 
@@ -61,17 +61,29 @@ def get_nugget(knowledge_obj, nugget_id, instantiated=False):
         k: knowledge_obj.get_action_graph_typing()[v]
         for k, v in knowledge_obj.get_nugget_typing(nugget_id).items()
     }
-    data["agTyping"] = {}
-    ag_typing = knowledge_obj.get_nugget_typing(nugget_id)
 
-    for k, v in ag_typing.items():
-        attrs = attrs_to_json(get_node(knowledge_obj.action_graph, v))
-        data["agTyping"][k] = [v, attrs]
+    ag_typing = knowledge_obj.get_nugget_typing(nugget_id)
+    data["agTyping"] = ag_typing
+
+    data["agNodeAttrs"] = {}
+    for v in ag_typing.values():
+        data["agNodeAttrs"][v] = attrs_to_json(get_node(knowledge_obj.action_graph, v))
+
+    data["agEdgeAttrs"] = []
+    for s, t in knowledge_obj.nugget[nugget_id].edges():
+        edge_data = {}
+        edge_data["source"] = ag_typing[s]
+        edge_data["target"] = ag_typing[t]
+        edge_data["attrs"] = attrs_to_json(
+            get_edge(knowledge_obj.action_graph,
+                     ag_typing[s],
+                     ag_typing[t]))
+        data["agEdgeAttrs"].append(edge_data)
+
     data["semantics"] = {}
     # try:
     if not instantiated:
         semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
-        print("\n\n", semantic_nugget_rels)
         for k, v in semantic_nugget_rels.items():
             data["semantics"][k] = {
                 kk: list(vv)

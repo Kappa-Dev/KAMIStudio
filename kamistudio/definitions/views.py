@@ -2,7 +2,7 @@ from flask import current_app as app
 from flask import (Blueprint, jsonify)
 from kami.data_structures.definitions import NewDefinition
 
-from regraph import graph_to_d3_json
+from regraph import graph_to_d3_json, get_node, attrs_to_json
 
 from kamistudio.corpus.views import get_corpus
 
@@ -69,14 +69,20 @@ def fetch_variant_by_uniprot(corpus_id, uniprot_id):
 def get_definitions(corpus_id):
     raw_defs = app.mongo.db.kami_new_definitions.find(
         {"corpus_id": corpus_id})
+    corpus = get_corpus(corpus_id)
 
     definitions = {}
     for d in raw_defs:
-        definitions[d["protoform"]] = [
+        node_attrs = get_node(
+            corpus.action_graph,
+            corpus.get_gene_by_uniprot(d["protoform"]))
+
+        definitions[d["protoform"]] = {}
+        definitions[d["protoform"]]["attrs"] = attrs_to_json(
+            node_attrs)
+        definitions[d["protoform"]]["variants"] = [
             [k, v["desc"], v["wild_type"]]
             for k, v in d["products"].items()
         ]
 
-    data = {}
-    data["definitions"] = definitions
-    return jsonify(data), 200
+    return jsonify(definitions), 200

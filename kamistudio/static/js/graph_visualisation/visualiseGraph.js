@@ -380,6 +380,10 @@ function visualiseGraph(graph, svgId,
       	height = +viewBox[3],
 		active = d3.select(null);
 
+
+    d3.select(svgId).selectAll("*").remove();
+
+
 	// define arrow markers for graph links
 	if (edgeStroke === null) {
 		edgeStroke = '#B8B8B8';

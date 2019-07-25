@@ -394,7 +394,29 @@ class ReferenceElementBox extends React.Component {
 					editable = editableMetaTypes.includes(this.props.metaType);
 				}
 			} else {
-				message = "Not available for this element";
+				var attrs = null, 
+					agSourceId = null,
+					agTargetId = null;
+
+				if (this.props.agSourceId && this.props.agTargetId) {
+					attrs = this.props.attrs;
+					agSourceId = this.props.agSourceId;
+					agTargetId = this.props.agTargetId;
+				}
+				if (attrs) {
+					var result = generateEdgeMetaDataItems(
+							agSourceId, agSourceId,
+							this.props.sourceMetaType,
+							this.props.targetMetaType,
+							attrs),
+						message = result[0],
+						items = result[1],
+						data = result[2];
+						editable = false;
+				} else {
+					message = "Not identified";
+					editable = false;
+				}
 			}
 		} else {
 			message = "Click on an element to select";

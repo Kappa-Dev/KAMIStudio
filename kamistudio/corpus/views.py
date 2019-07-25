@@ -207,7 +207,6 @@ def preview_nugget(corpus_id):
         desc = interaction.desc
         rate = interaction.rate
 
-        ag_typing = {}
         reference_genes = {}
         for n in nugget.graph.nodes():
             if nugget.meta_typing[n] == "mod":
@@ -241,9 +240,23 @@ def preview_nugget(corpus_id):
                 else:
                     reference_genes[n] = []
 
-        for k, v in nugget.reference_typing.items():
+        ag_node_attrs = {}
+        for v in nugget.reference_typing.values():
             attrs = attrs_to_json(get_node(corpus.action_graph, v))
-            ag_typing[k] = [v, attrs]
+            ag_node_attrs[v] = attrs
+
+        ag_edge_attrs = []
+        for s, t in nugget.edges():
+            if s in nugget.reference_typing and\
+               t in nugget.reference_typing:
+                edge_data = {}
+                edge_data["source"] = nugget.reference_typing[s]
+                edge_data["target"] = nugget.reference_typing[t]
+                edge_data["attrs"] = attrs_to_json(
+                    get_edge(corpus.action_graph,
+                             nugget.reference_typing[s],
+                             nugget.reference_typing[t]))
+                ag_edge_attrs.append(edge_data)
 
         desc = desc if desc is not None else ""
 
@@ -256,13 +269,14 @@ def preview_nugget(corpus_id):
             nugget_type=nugget_type,
             nugget_meta_typing=json.dumps(nugget.meta_typing),
             nugget_meta_typing_json=nugget.meta_typing,
-            nugget_ag_typing=json.dumps(ag_typing),
+            nugget_ag_typing=json.dumps(nugget.reference_typing),
+            ag_node_attrs=json.dumps(ag_node_attrs),
+            ag_edge_attrs=json.dumps(ag_edge_attrs),
             nugget_template_rel=json.dumps(template_relation),
             nugget_desc=desc,
             nugget_rate=rate,
             reference_genes=json.dumps(reference_genes),
             nugget_nodes=nugget.graph.nodes(),
-            nugget_ag_typing_dict=nugget.reference_typing,
             readonly=app.config["READ_ONLY"])
     except KamiError:
         return jsonify({}), 200
@@ -761,7 +775,7 @@ def get_reference_candidates(corpus_id, element_type):
 
     for gene in reference_genes:
         if element_type == "mod":
-            candidates = corpus.get_attached_mod(gene, True)
+            candidates = corpus.get_attached_mod(gene, False, True)
             for c in candidates:
                 if c != original_ref_el:
                     enzymes = corpus.get_enzymes_of_mod(c)
@@ -780,7 +794,8 @@ def get_reference_candidates(corpus_id, element_type):
                         attrs_to_json(node_attrs)
                     )
         elif element_type == "bnd":
-            candidates = corpus.get_attached_bnd(gene)
+            candidates = corpus.get_attached_bnd(gene, False)
+            print("----> ", gene, candidates)
             for c in candidates:
                 if c != original_ref_el:
                     node_attrs = get_node(corpus.action_graph, c)
