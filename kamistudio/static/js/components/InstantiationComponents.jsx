@@ -26,21 +26,58 @@ class VariantSelectionItem extends React.Component {
 		super(props);
 
 		this.onSelection = this.onSelection.bind(this);
+		this.isSelected = this.isSelected.bind(this);
+		this.defaultItem = this.defaultItem.bind(this);
+		this.getDefaultItem = this.getDefaultItem.bind(this);
 
 		this.state = {
-			selected: []
+			selected: [],
+			defaultDeselected: false
+		}
+	}
+
+	defaultItem(item) {
+		return this.props.subitems[item][1];
+	}
+
+	getDefaultItem() {
+		for (var item in this.props.subitems) {
+			if (this.defaultItem(item)) {
+				return item;
+			}
+		}
+	}
+
+	isSelected(item) {
+		if (this.defaultItem(item)) {
+			return !this.state.defaultDeselected;
+		} else {
+			return this.state.selected.includes(item);
 		}
 	}
 
 	onSelection(selectionId, item) {
-		var newList = [].concat(this.state.selected);
-		if (this.state.selected.includes(item)) {
-			newList.splice(newList.indexOf(item), 1);
+		var state = Object.assign({}, this.state);
+
+		if (this.defaultItem(item)) {
+			state.defaultDeselected = !state.defaultDeselected;
 		} else {
-			newList.push(item);
+			if (state.selected.includes(item)) {
+				state.selected.splice(state.selected.indexOf(item), 1);
+			} else {
+				state.selected.push(item);
+			}
 		}
-		this.setState({selected: newList});
-		this.props.onSubitemChange(this.props.selectionId, newList);
+
+		this.setState(state);
+
+		var allSelected = [...state.selected];
+		if (!state.defaultDeselected) {
+			allSelected.push(this.getDefaultItem());
+		}
+
+		this.props.onSubitemChange(
+			this.props.selectionId, allSelected);
 	}
 
 	render() {
@@ -52,22 +89,20 @@ class VariantSelectionItem extends React.Component {
 							onChange={() => this.onSelection(this.props.selectionId, item)}
 							name={this.props.selectionId}
 							value={this.props.selectionId + item}
-							checked={(this.state.selected.length == 0 && this.props.subitems[item][1]) || (this.state.selected.includes(item))}/>,
+							checked={this.isSelected(item)}/>,
 					 " " + item + " (" + this.props.subitems[item][0] + ")",
 					 <br/>]
 			);
-			// for (var item in this.props.subitems) {
-			// 	console.log(item, this.props.subitems[item]);
-			// 	console.log(this.state.selected.length);
-			// 	console.log(this.props.subitems[item][1]);
-			// 	console.log(this.state.selected.includes(item));
-			// 	console.log((this.state.selected.length == 0 && this.props.subitems[item][1]) || (this.state.selected.includes(item)));
-			// }
 		} 
 		var message = Object.keys(this.props.subitems).length > 0 ? "" : "No variants specified, Wild Type is selected by default";
 		return (
 			<li>
 				{this.props.selectionId} (Wild type if no variants selected) {message}
+				<button type="button" className="close"
+						onClick={() => this.props.onRemove(this.props.selectionId)}
+						ariaLabel="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
 				<br/>
 				{subitems}
 			</li>
@@ -95,6 +130,7 @@ class InstantiationForm extends React.Component {
 		this.onSubitemChange = this.onSubitemChange.bind(this);
 		this.onSubmit = this.onSubmit.bind(this);
 		this.handleFieldChange = this.handleFieldChange.bind(this);
+		this.onRemoveItem = this.onRemoveItem.bind(this);
 	}
 
 	onButtonClick() {
@@ -171,12 +207,26 @@ class InstantiationForm extends React.Component {
 		this.setState(newState);
 	}
 
+	onRemoveItem(itemId) {
+		var state = {...this.state};
+		var indexToRemove = -1;
+		for (var i = state.choices.length - 1; i >= 0; i--) {
+			if (this.state.choices[i].uniprotid == itemId) {
+				indexToRemove = i;
+				break;
+			}
+		}
+		state.choices.splice(indexToRemove, 1);
+		this.setState(state);
+	}
+
 	render() {
 		var content = this.state.choices.map((item, key) =>
 			<VariantSelectionItem selectionId={item["uniprotid"]}
 						   selectionText={String(item["uniprotid"]) + item["hgnc"]}
 						   subitems={item["variants"]} 
 						   onSubitemChange={this.onSubitemChange}
+						   onRemove={this.onRemoveItem}
 						   noSubitemsMessage={" Wild Type (no variants found, default selection)"}/>),
 			dialog = null;
 
