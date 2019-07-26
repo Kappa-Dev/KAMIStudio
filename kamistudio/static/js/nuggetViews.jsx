@@ -21,7 +21,7 @@ function hideDeleteConfirmationDialog() {
     /* Hide delete nugget confirmation dialog */
     ReactDOM.render(
         null,
-        document.getElementById("deleteConfirmationDialog")
+        document.getElementById("nuggetDeleteConfirmationDialog")
     );
 }
 
@@ -29,7 +29,8 @@ function hideDeleteConfirmationDialog() {
 function showDeleteConfirmationDialog(modelId, nuggetList, instantiated, readonly) {
     /* Show delete nugget confirmation dialog */
     return function(nuggetId) {
-        var content = <div style={{"text-align": "center"}}>
+
+        var content = <div style={{"textAlign": "center"}}>
                         <h5>
                             {"Are you sure you want to remove the nugget '" + nuggetId + "'?"}
                         </h5>
@@ -52,7 +53,7 @@ function showDeleteConfirmationDialog(modelId, nuggetList, instantiated, readonl
                     title="Delete a nugget"
                     customStyle={{"margin": "150pt auto"}}
                     onRemove={hideDeleteConfirmationDialog}/>,
-            document.getElementById("deleteConfirmationDialog")
+            document.getElementById("nuggetDeleteConfirmationDialog")
         );
     };
 }
@@ -703,3 +704,48 @@ function showSelectedNuggetsModal(nuggets, modelId, instantiated, readonly) {
     );
 }
 
+
+function closeSelectedNuggetsDialog(switchEnabled=true) {
+    ReactDOM.render(
+        null,
+        document.getElementById("nuggetDialogView")
+    );
+    if (switchEnabled) {
+        switchToAG($("#switchToAGTab"));
+    }
+}
+
+function viewActionNuggets(modelId, instantiated, readonly) {
+    return function(nuggets) {
+        var nuggetList = [];
+        for (var k in nuggets) {
+            nuggetList.push([k, nuggets[k][1], nuggets[k][0]]);
+        }
+        loadNuggetsTab($("#switchToNuggetsTab"), modelId, instantiated, readonly);
+
+        console.log("instantiated:", instantiated);
+
+        var nuggetListView = <NuggetListView 
+            items={nuggetList}
+            onItemClick={viewNugget(
+                     modelId, instantiated, readonly, showDeleteConfirmationDialog(
+                        modelId, nuggetList, instantiated, readonly))}
+            height={"60%"}
+            instantiated={instantiated}/>;
+
+        var footer = <a type="button"
+                       onClick={() => closeSelectedNuggetsDialog(true)}
+                       id="backToAG" className="btn btn-default btn-md">
+                        Back to the action graph
+                  </a>;
+
+        ReactDOM.render(
+            <InBlockDialog id="selectedNuggets"
+                           title="Selected nuggets"
+                           onRemove={() => closeSelectedNuggetsDialog(false)}
+                           content={nuggetListView}
+                           footerContent={footer}/>,
+            document.getElementById("nuggetDialogView")
+        );
+    };
+}

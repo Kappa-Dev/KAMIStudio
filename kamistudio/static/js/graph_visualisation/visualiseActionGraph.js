@@ -12,6 +12,16 @@ function getLabels(d) {
 
 }
 
+function showActionNuggets(modelId, actionId, instantiated, readonly) {
+	return function() {
+		getData(
+			modelId + "/get-action-nuggets/" + actionId,
+			viewActionNuggets(modelId, instantiated, readonly));
+	};
+}
+
+
+
 function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 									readonly=false) {
   	// use AJAX to send request for retrieving the nugget data
@@ -293,11 +303,13 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    }
 		    if (types.filter(distinct).length == 1) {
 		    	button =
-	    			<button 
-	    				onClick={() => mergeAgNodes(selectedComponents)}
-	    				className="btn btn-default btn-md panel-button add-interaction-button">
-			       			<span class="glyphicon glyphicon-resize-small"></span> Merge nodes
-			       	</button>;
+	    			<div style={{"text-align": "center"}}>
+		    			<button 
+		    				onClick={() => mergeAgNodes(selectedComponents)}
+		    				className="btn btn-default btn-md panel-button add-interaction-button">
+				       			<span class="glyphicon glyphicon-resize-small"></span> Merge nodes
+				       	</button>
+				    </div>;
 		    }
 
 		    var semantics = null;
@@ -380,11 +392,24 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    var button = null;
 		    if (!instantiated && metaTyping[d.id] == "gene") {
 		    	button =
-	    			<a 
-	    				href={model_id + "/add-variant/" + d.id}
-	    				className="btn btn-default btn-md panel-button add-interaction-button">
-			       			<span class="glyphicon glyphicon-plus"></span> Add variant
-			       	</a>;
+	    			<div style={{"text-align": "center"}}>
+	    				<a 
+		    				href={model_id + "/add-variant/" + d.id}
+		    				className="btn btn-default btn-md panel-button add-interaction-button">
+				       			<span class="glyphicon glyphicon-plus"></span> Add variant
+				       	</a>
+				    </div>;
+		    }
+
+		    if (metaTyping[d.id] == "mod" || metaTyping[d.id] == "bnd") {
+		    	button =
+	    			<div style={{"text-align": "center"}}>
+	    				<a 
+		    				onClick={showActionNuggets(model_id, d.id, instantiated, readonly)}
+		    				className="btn btn-default btn-md panel-button add-interaction-button">
+				       			<span class="glyphicon glyphicon-eye-open"></span> Show nuggets
+				       	</a>
+				    </div>;
 		    }
 
 		    var semantics = null;

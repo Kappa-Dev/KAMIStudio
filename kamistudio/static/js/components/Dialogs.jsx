@@ -10,7 +10,7 @@ function Dialog(props) {
 	}
 
 	return (
-		<div className="modal" id="exampleModalCenter" tabindex="-1" role="dialog" 
+		<div className="modal" id="exampleModalCenter" tabIndex="-1" role="dialog" 
 			 aria-labelledby="exampleModalCenterTitle"
 			 aria-hidden="true"
 			 style={{"display": "block"}}>
@@ -42,8 +42,6 @@ class InBlockDialog extends React.Component {
 	}
 
 	componentDidMount() {
-		console.log(this);
-		console.log(this.props);
 		$(document).ready(
 			function() {
 			    $("#myModal").modal("show");

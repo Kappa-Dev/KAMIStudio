@@ -279,3 +279,29 @@ def remove_nugget_from_corpus(corpus_id, nugget_id):
 @authenticate
 def remove_nugget_from_model(model_id, nugget_id):
     pass
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/get-action-nuggets/<action_id>")
+def get_corpus_action_nuggets(corpus_id, action_id):
+    corpus = get_corpus(corpus_id)
+    nuggets = corpus.get_mechanism_nuggets(action_id)
+    data = {}
+    for n in nuggets:
+        data[n] = (
+            corpus.get_nugget_desc(n),
+            corpus.get_nugget_type(n)
+        )
+    return jsonify(data), 200
+
+
+@nuggets_blueprint.route("/model/<model_id>/get-action-nuggets/<action_id>")
+def get_model_action_nuggets(model_id, action_id):
+    model = get_model(model_id)
+    nuggets = model.get_mechanism_nuggets(action_id)
+    data = {}
+    for n in nuggets:
+        data[n] = (
+            model.get_nugget_desc(n),
+            model.get_nugget_type(n)
+        )
+    return jsonify(data), 200

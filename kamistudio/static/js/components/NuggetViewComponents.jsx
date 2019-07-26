@@ -531,7 +531,7 @@ class NuggetPreview extends React.Component {
                 <div id="nuggetElementInfo">
                     {nuggetElementInfo}
                 </div>
-                <div id="deleteConfirmationDialog"></div>
+                <div id="nuggetDeleteConfirmationDialog"></div>
             </div>
         );
     }
