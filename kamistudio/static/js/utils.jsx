@@ -50,7 +50,7 @@ function boolRepresentation(flag) {
 }
 
 
-function generateNodeMetaDataItems(elementId, metaType, attrs) {
+function generateNodeMetaDataItems(elementId, metaType, attrs, instantiated=false) {
 	var message = "",
 		items = [],
 		data = {};
@@ -59,7 +59,6 @@ function generateNodeMetaDataItems(elementId, metaType, attrs) {
 		message = "Click on an element to select";
 	} else {
 		if (metaType === "gene") {
-
 			var uniprot = singleValueToString(attrs, "uniprotid"),
 				hgnc = singleValueToString(attrs, "hgnc_symbol"),
 				synonyms = multipleValuesToString(attrs, "synonyms");
@@ -72,11 +71,24 @@ function generateNodeMetaDataItems(elementId, metaType, attrs) {
 					</a>
 				],
 				["hgnc_symbol", "HGNC Symbol", hgnc],
-				["synonyms", "Synonyms", synonyms]
+				["synonyms", "Synonyms", synonyms],
 			];
 			data["uniprotid"] = getSingleValue(attrs, "uniprotid");
 			data["hgnc_symbol"] = getSingleValue(attrs, "hgnc_symbol");
 			data["synonyms"] = getMultipleValues(attrs, "synonyms");
+
+			if (instantiated) {
+				var variantName = singleValueToString(attrs, "variant_name"),
+					variantDesc = singleValueToString(attrs, "variant_desc")
+
+				items.push([
+					"variane_name", "Variant name", variantName]);
+				items.push([
+					"variane_desc", "Variant description", variantDesc]);
+
+				data["variant_name"] = getSingleValue(attrs, "variant_name");
+				data["variant_desc"] = getSingleValue(attrs, "variant_desc");
+			}
 
 		} else if ((metaType === "region") || (metaType === "site")) {
 			var name = multipleValuesToString(attrs, "name");

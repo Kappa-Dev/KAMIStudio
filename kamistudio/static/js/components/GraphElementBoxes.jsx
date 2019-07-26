@@ -106,7 +106,8 @@ class MetaDataBox extends React.Component {
 		    result = null;
 		if (this.props.elementType === "node") {
 			result = generateNodeMetaDataItems(
-				this.props.elementId, this.props.metaType, this.props.attrs);
+				this.props.elementId, this.props.metaType, this.props.attrs,
+				this.props.instantiated);
 		} else {
 			result = generateEdgeMetaDataItems(
 				this.props.sourceId, this.props.targetId,

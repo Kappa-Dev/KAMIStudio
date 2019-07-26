@@ -219,13 +219,18 @@ function initCCPositions(graph, cc, svgId) {
 
 }
 
-function initNodeLabels(graph, metaTyping) {
+function initNodeLabels(graph, metaTyping, variantName=false) {
 	for (var i = graph.nodes.length - 1; i >= 0; i--) {
 		if (metaTyping[graph.nodes[i].id] == "gene") {
 			if ("hgnc_symbol" in graph.nodes[i].attrs) {
 				graph.nodes[i].label = graph.nodes[i].attrs["hgnc_symbol"].data[0];
 			} else {
 				graph.nodes[i].label = graph.nodes[i].attrs["uniprotid"].data[0];
+			}
+			if (variantName) {
+				if ("variant_name" in graph.nodes[i].attrs) {
+					graph.nodes[i].label += " (" + graph.nodes[i].attrs["variant_name"].data[0] + ")";
+				}
 			}
 		} else if ((metaTyping[graph.nodes[i].id] == "region") ||
 				   (metaTyping[graph.nodes[i].id] == "site")) {

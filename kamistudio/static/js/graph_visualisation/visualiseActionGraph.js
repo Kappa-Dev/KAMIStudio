@@ -77,7 +77,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		}
 		initLinkStrengthDistance(graph, metaTyping);
 		initCircleRadius(graph, metaTyping, AG_META_SIZES);
-		initNodeLabels(graph, metaTyping);
+		initNodeLabels(graph, metaTyping, instantiated);
 
 		var simulationConf = {
 			"charge_strength": -400,
