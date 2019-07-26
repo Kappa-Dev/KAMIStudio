@@ -473,6 +473,16 @@ function drawNuggetTable(modelId, geneAdjacency, geneLabels, instantiated, reado
         }
     }
 
+    var lightColor, darkColor;
+    if (instantiated) {
+        lightColor = 'rgb(245, 229, 230)';
+        darkColor = 'rgb(161, 17, 23)';
+    } else {
+        lightColor = 'rgb(218, 227, 236)';
+        darkColor = 'rgb(51, 122, 183)';
+    }
+
+
     // set up heatmap data and color-scale
     var maxNuggets = Math.max(...nuggetCounts.map((el) => Math.max(...el))),
         data = [
@@ -486,9 +496,9 @@ function drawNuggetTable(modelId, geneAdjacency, geneLabels, instantiated, reado
             xgap : 3,
             ygap : 3,
             colorscale: [
-                [0, 'rgb(218, 227, 236)'],
-                [1.0 / maxNuggets, 'rgb(51, 122, 183)'],
-                [1, 'rgb(51, 122, 183)']
+                [0, lightColor],
+                [1.0 / maxNuggets, darkColor],
+                [1, darkColor]
             ],
             showscale: false,
             // hoverinfo='skip'

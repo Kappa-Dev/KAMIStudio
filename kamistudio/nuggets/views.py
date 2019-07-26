@@ -158,13 +158,9 @@ def update_corpus_nugget(corpus_id, nugget_id):
 #     return response
 
 
-@nuggets_blueprint.route("/corpus/<corpus_id>/get-gene-adjacency",
-                         methods=["GET"])
-def get_gene_adjacency(corpus_id):
-    """Generate a nugget table."""
-    corpus = get_corpus(corpus_id)
+def get_gene_adjacency(kb):
     data = {}
-    data["interactions"] = corpus.get_gene_pairwise_interactions()
+    data["interactions"] = kb.get_gene_pairwise_interactions()
     # Precompute labels for a geneset
     geneset = set()
     for k, v in data["interactions"].items():
@@ -173,9 +169,9 @@ def get_gene_adjacency(corpus_id):
             geneset.add(kk)
 
     def generate_gene_label(node_id):
-        label = corpus.get_hgnc_symbol(node_id)
+        label = kb.get_hgnc_symbol(node_id)
         if label is None:
-            label = corpus.get_uniprot(node_id)
+            label = kb.get_uniprot(node_id)
         return label
 
     data["geneLabels"] = {
@@ -189,6 +185,23 @@ def get_gene_adjacency(corpus_id):
             for vvv in vv:
                 new_vv.append(list(vvv))
             data["interactions"][k][kk] = new_vv
+    return data
+
+
+@nuggets_blueprint.route("/corpus/<corpus_id>/get-gene-adjacency",
+                         methods=["GET"])
+def get_corpus_gene_adjacency(corpus_id):
+    """Generate a nugget table."""
+    corpus = get_corpus(corpus_id)
+    data = get_gene_adjacency(corpus)
+    return jsonify(data), 200
+
+
+@nuggets_blueprint.route("/model/<model_id>/get-gene-adjacency",
+                         methods=["GET"])
+def get_model_gene_adjacency(model_id):
+    model = get_model(model_id)
+    data = get_gene_adjacency(model)
     return jsonify(data), 200
 
 
