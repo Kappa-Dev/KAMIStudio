@@ -29,7 +29,10 @@ function loadNuggetsTab(element, modelId, instantiated=false, readonly=false) {
 
 function loadDefinitionsTab(element, modelId, readonly=false) {
 	switchToDefinitions(element);
-	renderDefinitionList(modelId, readonly);
+
+	getData(
+		modelId + "/definitions", renderDefinitionList(modelId, readonly));
+
 	$("#switchToDefinitionsTab").attr("onClick", "switchToDefinitions(this);");
 }
 

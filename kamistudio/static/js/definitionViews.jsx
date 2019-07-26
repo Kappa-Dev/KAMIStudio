@@ -24,6 +24,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 			graph, metaTyping, META_COLORS),
 		highlight = HIGHLIGHT_COLOR;
 
+
     // initLinkStrengthDistance(graph, metaTyping, 1);
 	initCircleRadius(graph, metaTyping, NUGGET_META_SIZES, 0.5);
 
@@ -111,7 +112,7 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 	                     elementType="node"
 	                     metaType={metaTyping[d.id]}
 	                     attrs={d.attrs}
-	                     editable={true}
+	                     editable={false}
 	                     readonly={readonly}
 	                     onDataUpdate={updateProductNodeAttrs(
 	                        modelId, definitionId, graph, metaTyping, d, i)}/>,
@@ -217,11 +218,89 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 
 
 
-function viewDefinition(modelId, readonly) {
+
+function hideDeleteConfirmationDialog() {
+    /* Hide delete nugget confirmation dialog */
+    ReactDOM.render(
+        null,
+        document.getElementById("variantDeleteConfirmationDialog")
+    );
+}
+
+
+function viewDefinition(modelId, readonly, allDefinitions) {
 	return function(definitionId, protoformGene, products, callback) {
+
+		function showDeleteConfirmationDialog(productName) {
+		    /* Show delete nugget confirmation dialog */
+			var content = <div style={{"textAlign": "center"}}>
+		                    <h5>
+		                        {"Are you sure you want to remove the variant?"}
+		                    </h5>
+
+		                    <div style={{"margin-top": "15pt"}}>
+		                        <button 
+		                           type="button" onClick={hideDeleteConfirmationDialog}
+		                           className="btn btn-primary btn-sm panel-button editable-box right-button">
+		                            Cancel
+		                        </button>
+		                        <button 
+		                           type="button" onClick={() => removeVariant(productName)}
+		                           className="btn btn-default btn-sm panel-button editable-box right-button">
+		                            Delete
+		                        </button>
+		                    </div>
+		                  </div>;
+		    ReactDOM.render(
+		        <Dialog content={content} 
+		                title="Delete a nugget"
+		                customStyle={{"margin": "150pt auto"}}
+		                onRemove={hideDeleteConfirmationDialog}/>,
+		        document.getElementById("variantDeleteConfirmationDialog")
+		    );
+		}
+
+
+		function removeVariant(productName) {
+			hideDeleteConfirmationDialog();
+
+			// send a removal request
+			getData(modelId + "/remove-variant/" + definitionId + "/" + productName);
+
+			// update preview
+			var indexToRemove = products.indexOf(productName);
+			if (indexToRemove !== -1) products.splice(indexToRemove, 1);
+
+			// update definition list
+			var indexToRemove = -1;
+			for (var i = allDefinitions[definitionId].variants.length - 1; i >= 0; i--) {
+				if (allDefinitions[definitionId].variants[i][0] == productName) {
+					indexToRemove = i;
+					break;
+				}
+			}
+			if (indexToRemove !== -1) allDefinitions[definitionId].variants.splice(indexToRemove, 1);
+
+			renderDefinitionList(modelId, readonly)(allDefinitions);
+
+			ReactDOM.render(
+		        <DefinitionPreview
+					readonly={readonly}
+		        	wildType={false}
+		            id={definitionId}
+		            protoformGene={protoformGene}
+		            productNames={products.map((item) => item[0])}
+		            editable={false}
+		            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
+		        document.getElementById('definitionViewWidget')
+		    );
+		}
+
+
 
 		ReactDOM.render(
 			<DefinitionPreview
+				readonly={readonly}
 			 	loading={true}/>,
 			document.getElementById("definitionViewWidget"));
 
@@ -235,9 +314,11 @@ function viewDefinition(modelId, readonly) {
 				function viewProduct(productName) {
 					ReactDOM.render(
 						 <DefinitionPreview
+							readonly={readonly}
 						 	wildType={productName == data["wild_type"]}
 				            id={definitionId}
 				            productId={productName}
+				            onRemove={() => showDeleteConfirmationDialog(productName)}
 				            protoformGene={protoformGene}
 				            productNames={products.map((item) => item[0])}
 				            editable={false}
@@ -256,6 +337,7 @@ function viewDefinition(modelId, readonly) {
 
 				ReactDOM.render(
 			        <DefinitionPreview
+						readonly={readonly}
 			        	wildType={false}
 			            id={definitionId}
 			            protoformGene={protoformGene}
@@ -285,12 +367,7 @@ function viewDefinition(modelId, readonly) {
 
 function renderDefinitionList(modelId, readonly) {
 	// fetch definitions list from the server 
-    $.ajax({
-        url: modelId + "/definitions",
-        type: 'get',
-        dataType: "json",
-    }).done(function (data) {
-        
+   return function (data) {
     	var labels;
     	for (var k in data) {
     		labels = [data[k].attrs["uniprotid"].data[0]];
@@ -304,170 +381,14 @@ function renderDefinitionList(modelId, readonly) {
     	}
 
         ReactDOM.render(
-        <DefinitionList 
-            items={data}
-            onItemClick={viewDefinition(modelId, readonly)}/>,
-        document.getElementById('definitionView')
-	    );
+	        <DefinitionList 
+	            items={data}
+	            onItemClick={viewDefinition(modelId, readonly, data)}/>,
+	        document.getElementById('definitionView'));
 
 	    ReactDOM.render(
 	        <DefinitionPreview editable={false}/>,
 	        document.getElementById('definitionViewWidget')
 	    );
-    }).fail(function (e) {
-        console.log("Failed to load nuggets");
-    });
-}
-
-
-class VariantForm extends React.Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-        	variant_name: null,
-        	desc: null,
-        	removedComponents: [],
-        	selectedAA: [],
-        	wt: false
-        }
-    }
-
-    componentDidMount() {
-    	this.showInteractiveProtoform();
-    }
-
-    showInteractiveProtoform() {
-		var graph = JSON.parse(this.props.graphRepr),
-			metaTyping = JSON.parse(this.props.metaTypingRepr),
-			canonical_sequence = this.props.canonicalSequence;
-
-		for (var i = graph.nodes.length - 1; i >= 0; i--) {
-			if (metaTyping[graph.nodes[i].id] == "residue") {
-				// find edge to the gene with location
-				for (var j = graph.links.length - 1; j >= 0; j--) {
-					if ((graph.links[j].source == graph.nodes[i].id) &&
-						(metaTyping[graph.links[j].target] == "gene")) {
-						if ("loc" in graph.links[j].attrs) {
-							var loc = graph.links[j].attrs["loc"].data[0];
-							if (canonical_sequence) {
-								graph.nodes[i].canonical_aa = canonical_sequence[loc - 1];
-							}
-						}
-					}
-				}
-			}
-		}
-
-		drawDefinitionGraph(
-			this.props.corpusId,
-			null, 
-			"protoform",
-			graph, 
-			metaTyping,
-			this.props.readonly,
-			true,
-			(c, type) => this.onRemoveComponent(c, type),
-			(c, aa) => this.onSetAA(c, aa));
-	}
-
-	onRemoveComponent(component, metaType) {
-		var newState = Object.assign({}, this.state);
-		newState.removedComponents.push([component.id, component.attrs, metaType]);
-		this.setState(newState);
-	}
-
-	onSetAA(component, aa) {
-		var newState = Object.assign({}, this.state);
-		newState.selectedAA.push([component.id, component.attrs, aa]);
-		this.setState(newState);
-	}
-
-	onSubmit(e) {
-		e.preventDefault();
-		if (!this.props.readonly) {
-	        // get our form data out of state
-	        const data = this.state;
-	        const url = "/corpus/" + this.props.corpusId + "/add-variant/" + this.props.geneId;
-	        $.ajax({
-			    url: url,
-			    type: 'post',
-			    dataType: "json",
-			    contentType: 'application/json',
-			    data:  JSON.stringify(data),
-			}).done(function (data) {
-				window.location.href = data["redirect"];
-			}).fail(function (e) {
-			    console.log("Failed to create a variant");
-			});
-		}
-	}
-
-    handleFieldChange = (field) => (event, value, selectedKey) => {
-		var val;
-		if (event) {
-			val = event.target.value;
-		} else {
-			val = value;
-		}
-
-		let newState = { ...this.state };
-		newState[field] = val;
-		this.setState(newState);
-	}
-
-	handleSetWt(e) {
-		var newState = Object.assign({}, this.state);
-		newState.wt = document.getElementById('wtCheckBox').checked;
-		this.setState(newState);
-	}
-
-    render() {
-    	return (
-    		<form id="variantForm">
-				<div className="col-md-8">
-				    <div className="model-input-form-block">
-    					<div className="row form-row">
-						    <label for="default_mod_rate">Variant name</label>
-						    <input type="text" className="form-control" name="variant_name"
-						    	   placeholder=""
-						    	   value={this.state.variant_name}
-						    	   id="variant_name"
-						    	   onChange={this.handleFieldChange("variant_name")}/>
-						</div>
-						<div className="row form-row">
-						    <label for="default_mod_rate">Variant description</label>
-						    <input type="text" className="form-control" name="desc"
-						    	   placeholder=""
-						    	   value={this.state.desc}
-						    	   id="desc"
-						    	   onChange={this.handleFieldChange("desc")}/>
-						</div>
-						<div className="row form-row">
-							<input 
-								onChange={(e) => this.handleSetWt(e)}
-								type="checkbox" name="wt" value="wt" id="wtCheckBox"/> Set as a wild type<br/>
-						</div>
-						<div className="row form-row">
-							<div className="col-md-6" style={{"overflow-x": "scroll"}}>
-						      <svg id="protoformSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"></svg>
-						    </div>
-						    <div className="col-md-6">
-						      <div id="protoformSvgInfoBoxes"></div>
-						    </div>
-						</div>
-						<div className="row form-row" style={{"text-align": "right"}}>
-							<button className="btn btn-primary btn-lg" 
-									name="importForm"
-									disabled={this.props.readonly}
-									onClick={(e) => this.onSubmit(e)}>
-									<span className="glyphicon glyphicon-plus"></span> Add variant
-							</button> 
-						</div>
-					</div>
-				</div>
-			</form>
-    	);
-    }
+    };
 }

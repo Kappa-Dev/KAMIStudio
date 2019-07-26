@@ -678,61 +678,63 @@ def add_variant(corpus_id, gene_node_id):
         if app.config["READ_ONLY"]:
             return render_template("403.html")
         else:
-            json_data = request.get_json()
+            try:
+                json_data = request.get_json()
+                variant_name = json_data["variant_name"]
+                desc = json_data["desc"]
+                wt = json_data["wt"]
+                raw_removed_components = json_data["removedComponents"]
+                raw_selected_aa = json_data["selectedAA"]
 
-            variant_name = json_data["variant_name"]
-            desc = json_data["desc"]
-            wt = json_data["wt"]
-            raw_removed_components = json_data["removedComponents"]
-            raw_selected_aa = json_data["selectedAA"]
+                # Create a variant record
+                corpus = get_corpus(corpus_id)
+                gene_uniprot = corpus.get_uniprot(gene_node_id)
 
-            # Create a variant record
-            corpus = get_corpus(corpus_id)
-            gene_uniprot = corpus.get_uniprot(gene_node_id)
+                components = {
+                    "regions": [],
+                    "sites": [],
+                    "residues": [],
+                    "states": []
+                }
 
-            components = {
-                "regions": [],
-                "sites": [],
-                "residues": [],
-                "states": []
-            }
+                # TODO: think about removal of states
+                for [c_id, c, c_type] in raw_removed_components:
+                    attrs = {k: v["data"] for k, v in c.items()}
+                    if c_type == "region":
+                        components["regions"].append(attrs)
+                    elif c_type == "site":
+                        components["sites"].append(attrs)
+                    elif c_type == "residue":
+                        loc = corpus.get_residue_location(c_id)
+                        if loc is not None:
+                            attrs["loc"] = loc
+                        components["residues"].append(attrs)
 
-            # TODO: think about removal of states
-            for [c_id, c, c_type] in raw_removed_components:
-                attrs = {k: v["data"] for k, v in c.items()}
-                if c_type == "region":
-                    components["regions"].append(attrs)
-                elif c_type == "site":
-                    components["sites"].append(attrs)
-                elif c_type == "residue":
+                residues = []
+                for [c_id, c, aa] in raw_selected_aa:
+                    attrs = {k: v["data"] for k, v in c.items()}
                     loc = corpus.get_residue_location(c_id)
                     if loc is not None:
                         attrs["loc"] = loc
-                    components["residues"].append(attrs)
+                    attrs["aa"] = aa
+                    residues.append(attrs)
 
-            residues = []
-            for [c_id, c, aa] in raw_selected_aa:
-                attrs = {k: v["data"] for k, v in c.items()}
-                loc = corpus.get_residue_location(c_id)
-                if loc is not None:
-                    attrs["loc"] = loc
-                attrs["aa"] = aa
-                residues.append(attrs)
+                product = {
+                    "desc": desc,
+                    "wild_type": wt,
+                    "removed_components": components,
+                    "residues": residues
+                }
 
-            product = {
-                "desc": desc,
-                "wild_type": wt,
-                "removed_components": components,
-                "residues": residues
-            }
+                update_protein_definition(
+                    corpus_id, gene_uniprot, variant_name, product)
 
-            update_protein_definition(
-                corpus_id, gene_uniprot, variant_name, product)
-
-            data = {
-                "redirect": url_for('corpus.corpus_view', corpus_id=corpus_id)
-            }
-            return jsonify(data), 200
+                data = {
+                    "redirect": url_for('corpus.corpus_view', corpus_id=corpus_id)
+                }
+                return jsonify(data), 200
+            except:
+                return jsonify({"success": False}), 200
 
 
 @corpus_blueprint.route("/fetch-reference-candidates/<corpus_id>/<element_type>",

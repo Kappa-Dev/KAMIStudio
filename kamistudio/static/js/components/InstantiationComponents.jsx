@@ -56,6 +56,13 @@ class VariantSelectionItem extends React.Component {
 					 " " + item + " (" + this.props.subitems[item][0] + ")",
 					 <br/>]
 			);
+			// for (var item in this.props.subitems) {
+			// 	console.log(item, this.props.subitems[item]);
+			// 	console.log(this.state.selected.length);
+			// 	console.log(this.props.subitems[item][1]);
+			// 	console.log(this.state.selected.includes(item));
+			// 	console.log((this.state.selected.length == 0 && this.props.subitems[item][1]) || (this.state.selected.includes(item)));
+			// }
 		} 
 		var message = Object.keys(this.props.subitems).length > 0 ? "" : "No variants specified, Wild Type is selected by default";
 		return (
@@ -136,7 +143,6 @@ class InstantiationForm extends React.Component {
 	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
 
 	        const data = this.state;
-	        console.log(data);
 	        const url = "/corpus/" + this.props.modelId + "/instantiate";
 	        $.ajax({
 			    url: url,

@@ -66,19 +66,18 @@ def init_mongo_db():
 
 def prepopulate():
     """Prepopulate mongo DB."""
-    app.mongo.db.kami_new_definitions.remove({})
-    app.mongo.db.kami_corpora.remove({})
-    if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-        subprocess.run([
-            "mongoimport", "--db", "kamistudio",
-            "--collection", "kami_corpora", "--file",
-            "examples/kami_corpora.json", "--drop"])
-    app.mongo.db.kami_models.remove({})
-    if len(list(app.mongo.db.kami_models.find({}))) == 0:
-        subprocess.run([
-            "mongoimport", "--db", "kamistudio",
-            "--collection", "kami_models", "--file",
-            "examples/kami_models.json", "--drop"])
+    # app.mongo.db.kami_corpora.remove({})
+    # if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+    #     subprocess.run([
+    #         "mongoimport", "--db", "kamistudio",
+    #         "--collection", "kami_corpora", "--file",
+    #         "examples/kami_corpora.json", "--drop"])
+    # app.mongo.db.kami_models.remove({})
+    # if len(list(app.mongo.db.kami_models.find({}))) == 0:
+    #     subprocess.run([
+    #         "mongoimport", "--db", "kamistudio",
+    #         "--collection", "kami_models", "--file",
+    #         "examples/kami_models.json", "--drop"])
     app.mongo.db.kami_definitions.remove({})
     if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
         subprocess.run([
