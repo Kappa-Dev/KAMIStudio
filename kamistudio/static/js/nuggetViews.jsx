@@ -8,7 +8,7 @@ function turnOnLoader(instantiated) {
         <div id="progressBlock"
              style={{"padding-top": "0pt", "margin-top": "20pt"}}>
             <div id="progressMessage">Loading...</div>
-            <div id="loadingBlock" class="loading-elements center-block"
+            <div id="loadingBlock" className="loading-elements center-block"
                   style={{"margin-bottom": "20pt"}}>
                 <div id={instantiated ? "loaderModel" : "loader"}></div>
             </div>

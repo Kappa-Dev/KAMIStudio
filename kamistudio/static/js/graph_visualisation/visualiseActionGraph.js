@@ -20,6 +20,34 @@ function showActionNuggets(modelId, actionId, instantiated, readonly) {
 	};
 }
 
+function showGeneVariants(modelId, geneId, uniprotid, instantiated, readonly) {
+
+	return function() {
+
+		function renderSelectedDefinitons(data) {
+			renderDefinitionList(modelId, readonly)(data);
+
+			if (!(uniprotid in data)) {
+				// show a dialog 'no variants found'
+				console.log("Empty", uniprotid);
+			} else {
+				console.log(data);
+				// select variants from the list
+				// Need to call DefinitionList.setSubitemClick
+				viewDefinition(modelId, readonly, data)(uniprotid, uniprotid, data[uniprotid].variants, null);
+			}
+		};
+
+		switchToDefinitions($("#switchToDefinitionsTab"));
+
+		getData(
+			modelId + "/definitions", renderSelectedDefinitons);
+
+		$("#switchToDefinitionsTab").attr("onClick", "switchToDefinitions(this);");
+
+	};
+}
+
 
 
 function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
@@ -391,14 +419,20 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    // If gene node is selected add Create variant button
 		    var button = null;
 		    if (!instantiated && metaTyping[d.id] == "gene") {
-		    	button =
-	    			<div style={{"text-align": "center"}}>
+		    	button = [
+		    		<div style={{"text-align": "center"}}>
+	    				<a 
+		    				onClick={showGeneVariants(model_id, d.id, d.attrs["uniprotid"].data[0], instantiated, readonly)}
+		    				className="btn btn-default btn-md panel-button add-interaction-button">
+				       			<span class="glyphicon glyphicon-eye-open"></span> Show variants
+				       	</a>
 	    				<a 
 		    				href={model_id + "/add-variant/" + d.id}
 		    				className="btn btn-default btn-md panel-button add-interaction-button">
 				       			<span class="glyphicon glyphicon-plus"></span> Add variant
 				       	</a>
-				    </div>;
+				    </div>
+				];
 		    }
 
 		    if (metaTyping[d.id] == "mod" || metaTyping[d.id] == "bnd") {

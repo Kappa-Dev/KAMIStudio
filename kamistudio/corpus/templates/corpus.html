@@ -29,14 +29,14 @@
 
 {% block definitions_tab %}
 	<li class="nav-item">
-	  <a id="switchToDefinitionsTab" class="nav-link" role="tab" onclick="loadDefinitionsTab(this, '{{ kb_id }}', {% if readonly %}true{%else%}false{%endif%});">Protein definitions ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
+	  <a id="switchToDefinitionsTab" class="nav-link" role="tab" onclick="loadDefinitionsTab(this, '{{ kb_id }}', {% if readonly %}true{%else%}false{%endif%});">Protein variants ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
 	</li>
 {% endblock %}
 
 {% block definitions_pane %}
 	<div class="tab-pane" id="definitions" style="display: initial; visibility: hidden;" role="tabpanel">
 	  {% if n_definitons == 0  %}
-	      Corpus does not contain any protein definitions
+	      Corpus does not contain any variant definitions
 	  {% else %}
 	      <!-- Definitions list column -->
 	      <div class="col-sm-6">
