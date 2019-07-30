@@ -25,16 +25,39 @@ function showGeneVariants(modelId, geneId, uniprotid, instantiated, readonly) {
 	return function() {
 
 		function renderSelectedDefinitons(data) {
-			renderDefinitionList(modelId, readonly)(data);
+			var list = renderDefinitionList(modelId, readonly)(data);
 
 			if (!(uniprotid in data)) {
 				// show a dialog 'no variants found'
-				console.log("Empty", uniprotid);
+				function removeNoVariantsModal(switchEnabled=true) {
+			        ReactDOM.render(
+			            null,
+			            document.getElementById("definitionDialog")
+			        );
+			        if (switchEnabled) {
+				        switchToAG($("#switchToAGTab"));
+				    }
+			    };
+
+			    var footer = <a type="button"
+		                       onClick={() => removeNoVariantsModal(true)}
+		                       id="backToAG" className="btn btn-default btn-md">
+		                        Back to the action graph
+		                  	</a>;
+
+				ReactDOM.render(
+			        <InBlockDialog id="selectedDefinition"
+			                       title="No protein variants"
+			                       onRemove={removeNoVariantsModal}
+			                       content={"No protein definitons for the gene '" + uniprotid + "' found"  }
+			                       footerContent={footer}/>,
+			        document.getElementById("definitionDialog")
+			    );
 			} else {
-				console.log(data);
 				// select variants from the list
-				// Need to call DefinitionList.setSubitemClick
-				viewDefinition(modelId, readonly, data)(uniprotid, uniprotid, data[uniprotid].variants, null);
+				list.onItemClick(uniprotid, uniprotid, data[uniprotid].variants, false);
+				viewDefinition(modelId, readonly, data)(
+					uniprotid, uniprotid, data[uniprotid].variants, list.setSubitemClick);
 			}
 		};
 

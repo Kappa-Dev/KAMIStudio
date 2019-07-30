@@ -740,6 +740,9 @@ span.glyphicon-question-sign {
 	text-align: center;
 }
 
+.modal-content {
+	margin: 20pt;
+}
 
 .modal-block {
 	height: 100%;

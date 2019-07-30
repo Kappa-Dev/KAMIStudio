@@ -380,7 +380,7 @@ function renderDefinitionList(modelId, readonly) {
 			data[k].label = labels.join(" / ");
     	}
 
-        ReactDOM.render(
+        var list = ReactDOM.render(
 	        <DefinitionList 
 	            items={data}
 	            onItemClick={viewDefinition(modelId, readonly, data)}/>,
@@ -390,5 +390,6 @@ function renderDefinitionList(modelId, readonly) {
 	        <DefinitionPreview editable={false}/>,
 	        document.getElementById('definitionViewWidget')
 	    );
+	    return list;
     };
 }

@@ -65,7 +65,7 @@ class InBlockDialog extends React.Component {
 			<div id="modalBlock">
 				<div id="myModal" className="modal fade modal-block" role="dialog">
 			      <div className="modal-dialog">
-			        <div className="modal-content" style={{"margin": "10pt"}}>
+			        <div className="modal-content">
 			          <div className="modal-header">
 			            <button type="button" className="close" onClick={this.props.onRemove}>&times;</button>
 			            <h4 className="modal-title">{this.props.title}</h4>

@@ -68,8 +68,8 @@ class DefinitionList extends React.Component {
     	this.setState(state);
     }
 
-    onItemClick(id, protoformGene, products) {
-    	if (id === this.state.selected) {
+    onItemClick(id, protoformGene, products, close=true) {
+    	if ((id === this.state.selected) && close) {
     		this.setState({
 	    		selected: null,
 	    		subitemClick: null
@@ -101,6 +101,7 @@ class DefinitionList extends React.Component {
 	            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
 	                {content}
 	            </ul>
+	            <div id="definitionDialog" style={{"height": "100%", "width": "100%"}}></div>
 	        </div>
 	    ]);
 	}
