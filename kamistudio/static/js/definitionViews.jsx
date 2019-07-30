@@ -346,6 +346,8 @@ function viewDefinition(modelId, readonly, allDefinitions) {
 			            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
 			        document.getElementById('definitionViewWidget')
 			    );
+
+			    // viewProduct(products[0][0]);
 				callback(viewProduct);
 
 				d3.select("#protoformSvg").selectAll("*").remove();

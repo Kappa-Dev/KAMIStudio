@@ -629,6 +629,7 @@ def update_protein_definition(corpus_id, uniprot, name, product):
         "corpus_id": corpus_id,
         "protoform": uniprot
     })
+
     if existing_def:
         new_name = _generate_unique_variant_name(existing_def, name)
         existing_def["products"][new_name] = product
@@ -653,27 +654,30 @@ def update_protein_definition(corpus_id, uniprot, name, product):
 def add_variant(corpus_id, gene_node_id):
     """Handle addition of protein variants."""
     if request.method == "GET":
-        corpus = get_corpus(corpus_id)
-        graph = graph_to_d3_json(
-            corpus.action_graph,
-            nodes=corpus.subcomponent_nodes(gene_node_id))
-        ag_typing = corpus.get_action_graph_typing()
-        meta_typing = {
-            n["id"]: ag_typing[n["id"]] for n in graph["nodes"]
-        }
         try:
-            canonical_sequence = corpus.get_canonical_sequence(
-                gene_node_id)
+            corpus = get_corpus(corpus_id)
+            graph = graph_to_d3_json(
+                corpus.action_graph,
+                nodes=corpus.subcomponent_nodes(gene_node_id))
+            ag_typing = corpus.get_action_graph_typing()
+            meta_typing = {
+                n["id"]: ag_typing[n["id"]] for n in graph["nodes"]
+            }
+            try:
+                canonical_sequence = corpus.get_canonical_sequence(
+                    gene_node_id)
+            except:
+                canonical_sequence = None
+            return render_template(
+                "add_variant.html",
+                corpus=corpus,
+                graph_repr=json.dumps(graph),
+                meta_typing_repr=json.dumps(meta_typing),
+                canonical_sequence=canonical_sequence,
+                gene_id=gene_node_id,
+                readonly=app.config["READ_ONLY"])
         except:
-            canonical_sequence = None
-        return render_template(
-            "add_variant.html",
-            corpus=corpus,
-            graph_repr=json.dumps(graph),
-            meta_typing_repr=json.dumps(meta_typing),
-            canonical_sequence=canonical_sequence,
-            gene_id=gene_node_id,
-            readonly=app.config["READ_ONLY"])
+            return jsonify({"success": False}), 200
     else:
         if app.config["READ_ONLY"]:
             return render_template("403.html")
@@ -701,8 +705,18 @@ def add_variant(corpus_id, gene_node_id):
                 for [c_id, c, c_type] in raw_removed_components:
                     attrs = {k: v["data"] for k, v in c.items()}
                     if c_type == "region":
+                        start, end = corpus.get_fragment_location(c_id)
+                        if start is not None:
+                            attrs["start"] = start
+                        if end is not None:
+                            attrs["end"] = end
                         components["regions"].append(attrs)
                     elif c_type == "site":
+                        start, end = corpus.get_fragment_location(c_id)
+                        if start is not None:
+                            attrs["start"] = start
+                        if end is not None:
+                            attrs["end"] = end
                         components["sites"].append(attrs)
                     elif c_type == "residue":
                         loc = corpus.get_residue_location(c_id)
@@ -797,7 +811,6 @@ def get_reference_candidates(corpus_id, element_type):
                     )
         elif element_type == "bnd":
             candidates = corpus.get_attached_bnd(gene, False)
-            print("----> ", gene, candidates)
             for c in candidates:
                 if c != original_ref_el:
                     node_attrs = get_node(corpus.action_graph, c)

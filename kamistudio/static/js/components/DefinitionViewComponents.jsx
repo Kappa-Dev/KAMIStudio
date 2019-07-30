@@ -24,7 +24,7 @@ class DefinitionListItem extends React.Component {
 
     render() {
 		var items = this.props.products.map((item, key) =>
-				<li className={item[0] === this.state.selected ? "selected" : "not-selected"}>
+				<li className={item[0] === this.state.selected ? "subitem selected-subitem" : "subitem"}>
 					<a onClick={() => this.onItemClick(item[0])} className="inner-selector">
 						Variant {item[0]} {" " + (item[2] ? "(Wild type)" : "")} 
 						<p style={{"display": "inline", "float": "right"}}>{item[1]}</p>
@@ -35,7 +35,7 @@ class DefinitionListItem extends React.Component {
 			display = this.props.active ? {"display": "initial"} : {"display": "none"},
 			spanClass = this.props.active ? "glyphicon glyphicon-menu-down" : "glyphicon glyphicon-menu-right";
 	    return (
-	        <li className="not-selected">
+	        <li className={this.props.active ? "selected" : "not-selected"}>
 	          <a className="nugget-selector" style={{"padding-left": "10pt"}}
 	             onClick={() => this.props.onClick(this.props.id, this.props.protoformGene, this.props.products)}>
 	             <span className={spanClass}></span> Gene {this.props.label}<div className="nugget-desc"></div>
@@ -254,7 +254,8 @@ class VariantForm extends React.Component {
 			canonical_sequence = this.props.canonicalSequence;
 
 		for (var i = graph.nodes.length - 1; i >= 0; i--) {
-			if (metaTyping[graph.nodes[i].id] == "residue") {
+			var metaType = metaTyping[graph.nodes[i].id];
+			if (metaType == "residue") {
 				// find edge to the gene with location
 				for (var j = graph.links.length - 1; j >= 0; j--) {
 					if ((graph.links[j].source == graph.nodes[i].id) &&
@@ -263,6 +264,11 @@ class VariantForm extends React.Component {
 							var loc = graph.links[j].attrs["loc"].data[0];
 							if (canonical_sequence) {
 								graph.nodes[i].canonical_aa = canonical_sequence[loc - 1];
+								var newState = {...this.state};
+								newState.selectedAA.push(
+									[graph.nodes[i].id, graph.nodes[i].attrs, graph.nodes[i].canonical_aa]);
+								this.setState(newState);
+								// this.onSetAA(graph.nodes[i].id, graph.nodes[i].canonical_aa);
 							}
 						}
 					}
@@ -295,7 +301,6 @@ class VariantForm extends React.Component {
 	}
 
 	onSubmit(e) {
-		console.log("On submit activated");
 		e.preventDefault();
 		if (!this.props.readonly) {
 	        // get our form data out of state

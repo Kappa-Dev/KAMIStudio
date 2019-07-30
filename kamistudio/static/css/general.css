@@ -753,3 +753,11 @@ span.glyphicon-question-sign {
 .modal-block, .modal-backdrop {
     position: absolute !important;
 }
+
+
+li.subitem a:hover,
+li.subitem a:active,
+li.subitem a:focus,
+li.subitem.selected-subitem a {
+	background-color: #c5d1dd;
+}
