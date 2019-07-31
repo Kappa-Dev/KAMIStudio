@@ -88,14 +88,18 @@ def update_last_modified(corpus_id):
         upsert=False)
 
 
-def add_new_corpus(corpus_id, creation_time, last_modified, annotation):
+def add_new_corpus(corpus_id, creation_time, last_modified,
+                   annotation, ag_node_positions=None):
     """Add new corpus to the db."""
-    app.mongo.db.kami_corpora.insert_one({
+    d = {
         "id": corpus_id,
         "creation_time": creation_time,
         "last_modified": last_modified,
         "meta_data": annotation
-    })
+    }
+    if ag_node_positions:
+        d["node_positioning"] = ag_node_positions
+    app.mongo.db.kami_corpora.insert_one(d)
 
 
 @corpus_blueprint.route("/corpus/<corpus_id>")
@@ -348,6 +352,8 @@ def instantiate(corpus_id):
                     default_brk_rate=default_brk_rate,
                     default_mod_rate=default_mod_rate
                 )
+                corpus_jsoon = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+
                 add_new_model(model_id, model.creation_time,
                               model.last_modified, annotation,
                               corpus_id=corpus._id,
@@ -355,7 +361,8 @@ def instantiate(corpus_id):
                               seed_genes=[],
                               default_bnd_rate=default_bnd_rate,
                               default_brk_rate=default_brk_rate,
-                              default_mod_rate=default_mod_rate)
+                              default_mod_rate=default_mod_rate,
+                              ag_node_positions=corpus_jsoon["node_positioning"])
                 data = {
                     "redirect": url_for('model.model_view', model_id=model_id)
                 }
@@ -462,8 +469,19 @@ def download_corpus(corpus_id):
     filename = corpus_id.replace(" ", "_") + ".json"
     corpus = get_corpus(corpus_id)
     if corpus:
-        corpus.export_json(
-            os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        # Get action graph layout
+        node_positioning = None
+        json_repr = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+        if "node_positioning" in json_repr.keys():
+            node_positioning = json_repr["node_positioning"]
+
+        corpus_json = corpus.to_json()
+        if node_positioning is not None:
+            corpus_json["node_positioning"] = node_positioning
+
+        with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), 'w') as f:
+            json.dump(corpus_json, f)
+
         return send_file(
             os.path.join(app.config["UPLOAD_FOLDER"], filename),
             as_attachment=True,

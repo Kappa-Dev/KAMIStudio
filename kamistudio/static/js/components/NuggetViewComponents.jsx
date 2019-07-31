@@ -243,6 +243,7 @@ class NuggetElementInfo extends React.Component {
             referenceMetaData = 
                 <div className="col-md-6" id="nuggetGraphIdentificationInfo">
                     <ReferenceElementBox id="agElement"
+                                         instantiated={this.props.instantiated}
                                          readonly={this.props.readonly}
                                          agSourceId={this.props.agElementId[0]}
                                          agTargetId={this.props.agElementId[1]}
@@ -257,6 +258,7 @@ class NuggetElementInfo extends React.Component {
             referenceMetaData = 
                 <div className="col-md-6" id="nuggetGraphIdentificationInfo">
                     <ReferenceElementBox id="agElement"
+                                         instantiated={this.props.instantiated}
                                          readonly={this.props.readonly}
                                          agElementId={this.props.agElementId}
                                          elementId={this.props.elementId}
@@ -618,10 +620,14 @@ class NuggetEditingBox extends React.Component {
     }
 
     onSaveClick() {
-        $('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px;');
+        console.log(this.props.readonly);
 
-        // send ajax request to save the updated data
-        postDataWithRedirect(this.state, this.props.saveUrl);
+        if (!this.props.readonly) {
+            $('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px;');
+
+            // send ajax request to save the updated data
+            postDataWithRedirect(this.state, this.props.saveUrl);
+        }
     }
 
     render() {
@@ -658,7 +664,7 @@ class NuggetEditingBox extends React.Component {
             <div className="row">
                 <a type="button" style={{"margin-top": "20pt"}}
                    onClick={this.onSaveClick}
-                   id="addNuggetToTheModel" className="btn btn-primary btn-lg">
+                   id="addNuggetToTheModel" className="btn btn-primary btn-lg" disable={this.props.readonly}>
                     <span className="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus
                 </a>
             </div>,  

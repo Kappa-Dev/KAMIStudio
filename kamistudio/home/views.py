@@ -100,7 +100,8 @@ def _generate_unique_corpus_id(name):
 
 def _generate_unique_model_id(name):
     if len(name) > 0:
-        name = filter(str.isalnum, name.title().replace(" ", ""))
+        pattern = re.compile('[\W_]+')
+        name = pattern.sub('', name.title().replace(" ", ""))
         if (name[0].isdigit()):
             name = "model" + name
     else:
@@ -285,7 +286,12 @@ def imported_corpus(filename, annotation):
             try:
                 json_data = json.loads(f.read())
                 json_data["corpus_id"] = corpus_id
-                add_new_corpus(corpus_id, creation_time, last_modified, annotation)
+                node_positioning = None
+                if "node_positioning" in json_data:
+                    node_positioning = json_data["node_positioning"]
+                add_new_corpus(
+                    corpus_id, creation_time, last_modified,
+                    annotation, node_positioning)
                 corpus = KamiCorpus.from_json(
                     corpus_id,
                     json_data,
@@ -315,7 +321,11 @@ def imported_model(filename, annotation):
             try:
                 json_data = json.loads(f.read())
                 json_data["model_id"] = model_id
-                add_new_model(model_id, creation_time, last_modified, annotation)
+                node_positioning = None
+                if "node_positioning" in json_data:
+                    node_positioning = json_data["node_positioning"]
+                add_new_model(model_id, creation_time, last_modified,
+                              annotation, ag_node_positions=node_positioning)
                 model = KamiModel.load_json(
                     model_id,
                     os.path.join(app.config['UPLOAD_FOLDER'], filename),

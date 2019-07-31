@@ -493,7 +493,6 @@ def parse_interaction(form):
                 if rate is not None:
                     mod_json["rate"] = rate
 
-                print(mod_json)
                 mod = Modification.from_json(mod_json)
                 return mod
             elif form['modType'] == "AnonymousModification":

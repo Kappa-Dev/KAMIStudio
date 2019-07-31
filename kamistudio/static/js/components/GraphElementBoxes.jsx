@@ -385,7 +385,8 @@ class ReferenceElementBox extends React.Component {
 				}
 				if (attrs) {
 					var result = generateNodeMetaDataItems(
-							agElementId, this.props.metaType, attrs),
+							agElementId, this.props.metaType, attrs,
+							this.props.instantiated),
 						message = result[0],
 						items = result[1],
 						data = result[2];

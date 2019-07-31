@@ -75,7 +75,7 @@ def update_last_modified(model_id):
 def add_new_model(model_id, creation_time, last_modified, annotation,
                   corpus_id=None, seed_genes=None, definitions=None,
                   default_bnd_rate=None, default_brk_rate=None,
-                  default_mod_rate=None):
+                  default_mod_rate=None, ag_node_positions=None):
     """Add new model to the db."""
     json_data = {
         "id": model_id,
@@ -91,6 +91,8 @@ def add_new_model(model_id, creation_time, last_modified, annotation,
     json_data["origin"]["corpus_id"] = corpus_id
     json_data["origin"]["seed_genes"] = seed_genes
     json_data["origin"]["definitions"] = definitions
+    if ag_node_positions is not None:
+        json_data["node_positioning"] = ag_node_positions
     app.mongo.db.kami_models.insert_one(json_data)
 
 
@@ -155,13 +157,30 @@ def download_model(model_id):
     """Handle model download."""
     model = get_model(model_id)
     filename = model_id.replace(" ", "_") + ".json"
-    model.export_json(
-        os.path.join(app.config["UPLOAD_FOLDER"], filename))
-    return send_file(
-        os.path.join(app.config["UPLOAD_FOLDER"], filename),
-        as_attachment=True,
-        mimetype='application/json',
-        attachment_filename=filename)
+
+    if model:
+        # Get action graph layout
+        node_positioning = None
+        json_repr = app.mongo.db.kami_models.find_one({"id": model_id})
+        if "node_positioning" in json_repr.keys():
+            node_positioning = json_repr["node_positioning"]
+
+        model_json = model.to_json()
+        if node_positioning is not None:
+            model_json["node_positioning"] = node_positioning
+
+        with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), 'w') as f:
+            json.dump(model_json, f)
+
+        return send_file(
+            os.path.join(app.config["UPLOAD_FOLDER"], filename),
+            as_attachment=True,
+            mimetype='application/json',
+            attachment_filename=filename)
+    else:
+        return render_template("model_not_found.html",
+                               model_id=model_id)
+
 
 
 @model_blueprint.route("/model/<model_id>/delete")
