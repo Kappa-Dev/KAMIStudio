@@ -305,7 +305,7 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
 
 function previewNugget(modelId, desc, type,
    graph, metaTyping, agTyping, agNodeAttrs, agEdgeAttrs,
-   templateRel, referenceGenes) {
+   templateRel, referenceGenes, readonly) {
 
     /** Nugget preview handler.
      *  
@@ -418,7 +418,7 @@ function previewNugget(modelId, desc, type,
                 onFetchCandidates={onFetchCandidates}
                 instantiated={false}
                 saveUrl={"add-generated-nugget"}
-                readonly={false}/>,
+                readonly={readonly}/>,
         document.getElementById('nuggetEditingBox')
     );
 

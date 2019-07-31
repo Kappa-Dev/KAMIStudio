@@ -620,8 +620,6 @@ class NuggetEditingBox extends React.Component {
     }
 
     onSaveClick() {
-        console.log(this.props.readonly);
-
         if (!this.props.readonly) {
             $('#progressBlock').attr('style', 'display: inline-block; padding-top: 10px;');
 
@@ -655,7 +653,7 @@ class NuggetEditingBox extends React.Component {
                     nuggetType={this.props.nuggetType}
                     editable={true}
                     instantiated={this.props.instantiated}
-                    readonly={this.props.readonly}
+                    readonly={false}
                     onDataUpdate={this.onDataUpdate}
                     onMetaDataUpdate={this.onMetaDataUpdate}
                     onFetchCandidates={this.props.onFetchCandidates}
@@ -664,7 +662,7 @@ class NuggetEditingBox extends React.Component {
             <div className="row">
                 <a type="button" style={{"margin-top": "20pt"}}
                    onClick={this.onSaveClick}
-                   id="addNuggetToTheModel" className="btn btn-primary btn-lg" disable={this.props.readonly}>
+                   id="addNuggetToTheModel" className="btn btn-primary btn-lg" disabled={this.props.readonly}>
                     <span className="glyphicon glyphicon-ok edit-sign"></span> Add to the corpus
                 </a>
             </div>,  

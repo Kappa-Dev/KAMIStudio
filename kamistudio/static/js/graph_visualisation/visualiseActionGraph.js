@@ -356,6 +356,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		    	button =
 	    			<div style={{"text-align": "center"}}>
 		    			<button 
+		    				disabled={readonly}
 		    				onClick={() => mergeAgNodes(selectedComponents)}
 		    				className="btn btn-default btn-md panel-button add-interaction-button">
 				       			<span class="glyphicon glyphicon-resize-small"></span> Merge nodes

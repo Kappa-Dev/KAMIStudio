@@ -115,7 +115,8 @@ function DefinitionGraphView(props) {
         removeButton = 
 	        <div style={{"display": "inline-block", "float": "right"}}>
 		        <button 
-		           type="button" onClick={props.onRemove} disable={props.readonly}
+		           type="button" onClick={props.onRemove}
+		           disabled={props.readonly}
 		           className="btn btn-default btn-sm panel-button editable-box right-button">
 		            <span className="glyphicon glyphicon-trash"></span>
 		        </button>

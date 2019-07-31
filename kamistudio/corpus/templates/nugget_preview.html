@@ -49,6 +49,7 @@
       JSON.parse('{{ ag_node_attrs | safe }}'),
       JSON.parse('{{ ag_edge_attrs | safe }}'),
       JSON.parse('{{ nugget_template_rel | safe }}'),
-      JSON.parse('{{ reference_genes | safe }}'));
+      JSON.parse('{{ reference_genes | safe }}'),
+      {% if readonly %}true{% else %}false{% endif %});
   </script>
 {% endblock %}
