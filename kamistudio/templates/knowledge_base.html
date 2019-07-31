@@ -19,10 +19,10 @@
     <!------------------ Nav tabs --------->
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item active">
-        <a id="switchToAGTab" class="nav-link active {% if instantiated %}instantiation-link {% endif %}"  onClick="switchToAG(this);" role="tab">Action graph ({% if kb.empty() %}empty{% else %}{{ kb.action_graph.nodes()|length }} nodes {% endif %})</a>
+        <a id="switchToAGTab" class="nav-link active {% if instantiated %}instantiation-link {% endif %}"  onclick="switchToAG(this);" role="tab">Action graph ({% if kb.empty() %}empty{% else %}{{ kb.action_graph.nodes()|length }} nodes {% endif %})</a>
       </li>
       <li class="nav-item">
-        <a id="switchToNuggetsTab" class="nav-link {% if instantiated %}instantiation-link {% endif %}" onClick="loadNuggetsTab(this, '{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{% else %}false{% endif %});" role="tab">Nuggets ({% if kb.empty() %}0{% else %}{{ kb.nuggets()|length }}{% endif %} nuggets)</a>
+        <a id="switchToNuggetsTab" class="nav-link {% if instantiated %}instantiation-link {% endif %}" onclick="loadNuggetsTab(this, '{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{% else %}false{% endif %});" role="tab">Nuggets ({% if kb.empty() %}0{% else %}{{ kb.nuggets()|length }}{% endif %} nuggets)</a>
       </li>
       {% block definitions_tab %}{% endblock %}
     </ul>
@@ -171,8 +171,6 @@
       {% if instantiated %}true{% else %}false{% endif %}
       {% if readonly %}, true {% endif %});
 
-    showNuggetList(
-      '{{ kb_id }}', '{{nuggets}}', {% if instantiated %}true{% else %}false{% endif %}, {%    if readonly %}true{%else%}false{%endif%});
   </script>
   {% block info_boxes_rendering %}{% endblock %}
 

@@ -104,6 +104,7 @@ class NuggetListView extends React.Component{
     }
 
     render() {
+
         return ([
             <FilteredList 
                 items={this.props.items}

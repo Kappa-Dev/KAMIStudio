@@ -14,16 +14,18 @@ function switchToAG(element) {
 	$("#definitions").css("visibility", "hidden");
 }
 
-function switchToNuggets(element) {
+function switchToNuggets(element, instantiated) {
 	activateLink(element);
 	$("#nuggets").css("visibility", "initial");
 	$("#action_graph").css("visibility", "hidden");
-	$("#definitions").css("visibility", "hidden");
+	if (!instantiated) {
+		$("#definitions").css("visibility", "hidden");
+	}
 }
 
 function loadNuggetsTab(element, modelId, instantiated=false, readonly=false) {
-	switchToNuggets(element);
-	renderNuggetList(modelId, instantiated, readonly);
+	switchToNuggets(element, instantiated);
+	showNuggetList(modelId, instantiated, readonly);
 	$("#switchToNuggetsTab").attr("onClick", "switchToNuggets(this);");
 }
 

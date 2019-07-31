@@ -139,7 +139,7 @@ def model_view(model_id):
                                kb=model,
                                corpus_id=model._corpus_id,
                                corpus_name=corpus_name,
-                               nuggets=json.dumps(nuggets),
+                               n_nuggets=len(model.nuggets()),
                                proteins=json.dumps(proteins),
                                modifications=json.dumps(modifications),
                                bindings=json.dumps(bindings),

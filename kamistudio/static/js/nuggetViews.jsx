@@ -17,7 +17,7 @@ function turnOnLoader(instantiated) {
     );
 }
 
-function hideDeleteConfirmationDialog() {
+function hideNuggetDeleteConfirmationDialog() {
     /* Hide delete nugget confirmation dialog */
     ReactDOM.render(
         null,
@@ -37,8 +37,8 @@ function showDeleteConfirmationDialog(modelId, nuggetList, instantiated, readonl
 
                         <div style={{"margin-top": "15pt"}}>
                             <button 
-                               type="button" onClick={hideDeleteConfirmationDialog}
-                               className="btn btn-primary btn-sm panel-button editable-box right-button">
+                               type="button" onClick={hideNuggetDeleteConfirmationDialog}
+                               className={"btn btn-primary btn-sm panel-button editable-box right-button " + (instantiated ? "instantiation" : "") }>
                                 Cancel
                             </button>
                             <button 
@@ -52,7 +52,7 @@ function showDeleteConfirmationDialog(modelId, nuggetList, instantiated, readonl
             <Dialog content={content} 
                     title="Delete a nugget"
                     customStyle={{"margin": "150pt auto"}}
-                    onRemove={hideDeleteConfirmationDialog}/>,
+                    onRemove={hideNuggetDeleteConfirmationDialog}/>,
             document.getElementById("nuggetDeleteConfirmationDialog")
         );
     };
@@ -585,7 +585,6 @@ function drawNuggetTable(modelId, geneAdjacency, geneLabels, instantiated, reado
 
 function renderNuggetList(modelId, instantiated, readonly) {
     /* Render nugget list view components */
-
     return function (data) {
         var nuggets = data["nuggets"],
             nuggetList = [];
@@ -601,7 +600,8 @@ function renderNuggetList(modelId, instantiated, readonly) {
                 onItemClick={viewNugget(
                     modelId, instantiated, readonly, showDeleteConfirmationDialog(
                         modelId, nuggetList, instantiated, readonly))}
-                instantiated={instantiated}/>,
+                instantiated={instantiated}
+                readonly={readonly}/>,
             document.getElementById('nuggetView')
         );
 
@@ -722,8 +722,6 @@ function viewActionNuggets(modelId, instantiated, readonly) {
             nuggetList.push([k, nuggets[k][1], nuggets[k][0]]);
         }
         loadNuggetsTab($("#switchToNuggetsTab"), modelId, instantiated, readonly);
-
-        console.log("instantiated:", instantiated);
 
         var nuggetListView = <NuggetListView 
             items={nuggetList}
