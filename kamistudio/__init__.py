@@ -66,18 +66,18 @@ def init_mongo_db():
 
 def prepopulate():
     """Prepopulate mongo DB."""
-    # app.mongo.db.kami_corpora.remove({})
-    # if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
-    #     subprocess.run([
-    #         "mongoimport", "--db", "kamistudio",
-    #         "--collection", "kami_corpora", "--file",
-    #         "examples/kami_corpora.json", "--drop"])
-    # app.mongo.db.kami_models.remove({})
-    # if len(list(app.mongo.db.kami_models.find({}))) == 0:
-    #     subprocess.run([
-    #         "mongoimport", "--db", "kamistudio",
-    #         "--collection", "kami_models", "--file",
-    #         "examples/kami_models.json", "--drop"])
+    app.mongo.db.kami_corpora.remove({})
+    if len(list(app.mongo.db.kami_corpora.find({}))) == 0:
+        subprocess.run([
+            "mongoimport", "--db", "kamistudio",
+            "--collection", "kami_corpora", "--file",
+            "examples/kami_corpora.json", "--drop"])
+    app.mongo.db.kami_models.remove({})
+    if len(list(app.mongo.db.kami_models.find({}))) == 0:
+        subprocess.run([
+            "mongoimport", "--db", "kamistudio",
+            "--collection", "kami_models", "--file",
+            "examples/kami_models.json", "--drop"])
     app.mongo.db.kami_definitions.remove({})
     if len(list(app.mongo.db.kami_definitions.find({}))) == 0:
         subprocess.run([
@@ -85,13 +85,13 @@ def prepopulate():
             "--collection", "kami_new_definitions", "--file",
             "examples/kami_definitions.json", "--drop"])
 
-    # if app.neo4j_driver is not None:
-    #     h = Neo4jHierarchy(driver=app.neo4j_driver)
-    #     h._clear()
+    if app.neo4j_driver is not None:
+        h = Neo4jHierarchy(driver=app.neo4j_driver)
+        h._clear()
 
-    #     Neo4jHierarchy.load(
-    #         os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
-    #         driver=app.neo4j_driver)
+        Neo4jHierarchy.load(
+            os.path.join(os.getcwd(), "examples/demo_hierarchy.json"),
+            driver=app.neo4j_driver)
 
 
 class KAMIStudio(Flask):

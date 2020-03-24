@@ -13,7 +13,7 @@
 
 {% block tabs %}
 
-<form id="corpusImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
+<form id="corpusImportForm" name="corpusImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 			<div class="row form-row">

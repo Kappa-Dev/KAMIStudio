@@ -4,25 +4,20 @@ import json
 import os
 import warnings
 
-from kami.data_structures.corpora import KamiCorpus
+from werkzeug.utils import secure_filename
+
 from flask import (render_template, Blueprint, request, session, redirect,
                    url_for, send_file)
 from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
-from regraph.primitives import (attrs_to_json,
-                                get_node,
-                                get_edge,
-                                attrs_from_json,
-                                set_node_attrs)
-from regraph.neo4j import Neo4jHierarchy
+from regraph.utils import attrs_to_json
+from regraph import Neo4jHierarchy
 
-from werkzeug.utils import secure_filename
-
-import kami.data_structures.entities as entities
+from kami.data_structures.corpora import KamiCorpus
 from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
-from kami.data_structures.definitions import NewDefinition
+from kami.data_structures.definitions import Definition
 from kami.aggregation.generators import generate_nugget
 from kami.aggregation.identifiers import EntityIdentifier
 from kami.exceptions import KamiError
@@ -35,8 +30,10 @@ from kamistudio.model.views import add_new_model
 corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
 
 
-def _generate_unique_model_id(corpus_id):
-    name = corpus_id + "_model"
+def _generate_unique_model_id(corpus_id, model_name):
+    name = corpus_id + "_model_" + model_name
+    name = name.replace(
+        " ", "_").replace(",", "_").replace("/", "_")
     existing_models = [
         el["id"] for el in app.mongo.db.kami_models.find(
             {}, {"id": 1, "_id": 0})]
@@ -128,7 +125,7 @@ def corpus_view(corpus_id):
         n_nuggets = len(corpus.nuggets())
 
         genes = {}
-        for g in corpus.genes():
+        for g in corpus.protoforms():
             genes[g] = []
 
         modifications = {}
@@ -246,7 +243,7 @@ def preview_nugget(corpus_id):
 
         ag_node_attrs = {}
         for v in nugget.reference_typing.values():
-            attrs = attrs_to_json(get_node(corpus.action_graph, v))
+            attrs = attrs_to_json(corpus.action_graph.get_node(v))
             ag_node_attrs[v] = attrs
 
         ag_edge_attrs = []
@@ -257,13 +254,12 @@ def preview_nugget(corpus_id):
                 edge_data["source"] = nugget.reference_typing[s]
                 edge_data["target"] = nugget.reference_typing[t]
                 edge_data["attrs"] = attrs_to_json(
-                    get_edge(corpus.action_graph,
-                             nugget.reference_typing[s],
-                             nugget.reference_typing[t]))
+                    corpus.action_graph.get_edge(
+                        nugget.reference_typing[s],
+                        nugget.reference_typing[t]))
                 ag_edge_attrs.append(edge_data)
 
         desc = desc if desc is not None else ""
-
         return render_template(
             "nugget_preview.html",
             new_nugget=True,
@@ -336,9 +332,9 @@ def instantiate(corpus_id):
                         }
                         for p in selected_products:
                             new_def["products"][p] = definition_json["products"][p]
-                        definitions.append(NewDefinition.from_json(new_def))
+                        definitions.append(Definition.from_json(new_def))
 
-                model_id = _generate_unique_model_id(corpus._id)
+                model_id = _generate_unique_model_id(model_name, corpus._id)
                 annotation = {
                     "name": model_name,
                     "desc": model_desc,
@@ -352,7 +348,8 @@ def instantiate(corpus_id):
                     default_brk_rate=default_brk_rate,
                     default_mod_rate=default_mod_rate
                 )
-                corpus_jsoon = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+                corpus_jsoon = app.mongo.db.kami_corpora.find_one(
+                    {"id": corpus_id})
 
                 add_new_model(model_id, model.creation_time,
                               model.last_modified, annotation,
@@ -388,7 +385,7 @@ def add_nugget_from_session(corpus_id, add_agents=True,
 
     # Apply the update of meta-data update
     for k, v in json_data["updatedNuggetMetaData"].items():
-        set_node_attrs(session["nugget"].graph, k, v, update=False)
+        session["nugget"].graph.set_node_attrs(k, v, update=False)
 
     # Apply the update of reference nodes
     for k, v in json_data["updatedReferenceElements"].items():
@@ -445,20 +442,16 @@ def imported_interactions(filename, corpus_id):
     """Internal handler of already imported interactions."""
     path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.isfile(path_to_file):
-        # try:
-        corpus = get_corpus(corpus_id)
+        try:
+            corpus = get_corpus(corpus_id)
         # corpus.load_interactions_from_json(path_to_file)
-        with open(path_to_file, "r+") as f:
-            json_data = json.loads(f.read())
-            for i, el in enumerate(json_data):
-                corpus.add_interaction(Interaction.from_json(el))
-        #     try:
-        #         interactions = [
-        #             el for el in json_data
-        #         ]
-        update_last_modified(corpus_id)
-        # except:
-            # return render_template("500.html")
+            with open(path_to_file, "r+") as f:
+                json_data = json.loads(f.read())
+                for i, el in enumerate(json_data):
+                    corpus.add_interaction(Interaction.from_json(el))
+            update_last_modified(corpus_id)
+        except:
+            return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
@@ -625,12 +618,12 @@ def get_genes(corpus_id):
     response = json.dumps(
         {'success': False}), 404, {'ContentType': 'application/json'}
     if corpus is not None:
-        gene_nodes = corpus.genes()
+        gene_nodes = corpus.protoforms()
         data = {
             "genes": []
         }
         for g in gene_nodes:
-            uniprotid, hgnc, syn, _ = corpus.get_gene_data(g)
+            uniprotid, hgnc, syn, _ = corpus.get_protoform_data(g)
             data["genes"].append([uniprotid, hgnc, syn])
         response = jsonify(data), 200
     return response
@@ -674,8 +667,7 @@ def add_variant(corpus_id, gene_node_id):
     if request.method == "GET":
         try:
             corpus = get_corpus(corpus_id)
-            graph = graph_to_d3_json(
-                corpus.action_graph,
+            graph = corpus.action_graph.to_d3_json(
                 nodes=corpus.subcomponent_nodes(gene_node_id))
             ag_typing = corpus.get_action_graph_typing()
             meta_typing = {
@@ -814,16 +806,16 @@ def get_reference_candidates(corpus_id, element_type):
                 if c != original_ref_el:
                     enzymes = corpus.get_enzymes_of_mod(c)
                     substrates = corpus.get_substrates_of_mod(c)
-                    node_attrs = get_node(corpus.action_graph, c)
+                    node_attrs = corpus.action_graph.get_node(c)
                     data["candidates"][c] = (
                         "Enzymes: {}, substrates: {}".format(
                             " / ".join(
                                 format_gene_data(
-                                    get_node(corpus.action_graph, p))
+                                    corpus.action_graph.get_node(p))
                                 for p in enzymes),
                             " / ".join(
                                 format_gene_data(
-                                    get_node(corpus.action_graph, p))
+                                    corpus.action_graph.get_node(p))
                                 for p in substrates)),
                         attrs_to_json(node_attrs)
                     )
@@ -831,12 +823,12 @@ def get_reference_candidates(corpus_id, element_type):
             candidates = corpus.get_attached_bnd(gene, False)
             for c in candidates:
                 if c != original_ref_el:
-                    node_attrs = get_node(corpus.action_graph, c)
-                    partners = corpus.get_genes_of_bnd(c)
+                    node_attrs = corpus.action_graph.get_node(c)
+                    partners = corpus.get_protoforms_of_bnd(c)
                     data["candidates"][c] = (
                         "Bindind partners: " + " / ".join(
                             format_gene_data(
-                                get_node(corpus.action_graph, p))
+                                corpus.action_graph.get_node(p))
                             for p in partners),
                         attrs_to_json(node_attrs)
                     )
@@ -845,10 +837,17 @@ def get_reference_candidates(corpus_id, element_type):
                 gene, element_type)
             for c in candidates:
                 if c != original_ref_el:
-                    node_attrs = get_node(corpus.action_graph, c)
-                    edge_attrs = get_edge(corpus.action_graph, c, gene)
+                    node_attrs = corpus.action_graph.get_node(c)
+                    edge_attrs = corpus.action_graph.get_edge(c, gene)
                     data["candidates"][c] = (
                         format_fragment_data(node_attrs, edge_attrs),
                         attrs_to_json(node_attrs))
 
     return jsonify(data), 200
+
+
+@corpus_blueprint.route("/generate-kappa-from-corpus/<corpus_id>",
+                        methods=["GET"])
+def kappa_from_corpus(corpus_id):
+    """Generate Kappa directly from the corpus."""
+    pass

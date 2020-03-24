@@ -39,17 +39,19 @@
   <script src="{{ url_for('static', filename='js/components/FilteredLists.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}" type="text/babel"></script>
   <script type="text/babel">
+    console.log("I call");
     previewNugget(
       '{{corpus_id}}',
       '{{nugget_desc}}',
       '{{nugget_type}}',
-      JSON.parse('{{ nugget_graph | safe }}'),
-      JSON.parse('{{ nugget_meta_typing | safe }}'),
-      JSON.parse('{{ nugget_ag_typing | safe }}'),
-      JSON.parse('{{ ag_node_attrs | safe }}'),
-      JSON.parse('{{ ag_edge_attrs | safe }}'),
-      JSON.parse('{{ nugget_template_rel | safe }}'),
-      JSON.parse('{{ reference_genes | safe }}'),
-      {% if readonly %}true{% else %}false{% endif %});
+       JSON.parse('{{ nugget_graph | safe }}'),
+       JSON.parse('{{ nugget_meta_typing | safe }}'),
+       JSON.parse('{{ nugget_ag_typing | safe }}'),
+       JSON.parse('{{ ag_node_attrs | safe }}'),
+       JSON.parse('{{ ag_edge_attrs | safe }}'),
+       JSON.parse('{{ nugget_template_rel | safe }}'),
+       JSON.parse('{{ reference_genes | safe }}'),
+       {% if readonly %}true{% else %}false{% endif %}
+    );
   </script>
 {% endblock %}

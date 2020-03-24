@@ -47,6 +47,7 @@ def reconnect_mongo_db():
             current_app.mongo.db.create_collection("kami_new_definitions")
         success = True
     except ServerSelectionTimeoutError as e:
+        print(e)
         current_app.mongo.db = None
     return success
 

@@ -312,27 +312,27 @@ def retrieve_actor(form, actor_name, wanted_actors=None, wanted_target=None):
     actor_data = {}
     target_data = {}
 
-    gene_data = {}
+    protoform_data = {}
 
-    gene_data_dict = {
+    protoform_data_dict = {
         "uniprotid": "UniprotAC",
         "hgnc_symbol": "HgncSymbol",
         "synonyms": "Synonyms",
         "location": "Location",
     }
-    for k, v in gene_data_dict.items():
+    for k, v in protoform_data_dict.items():
         if form[actor_name + v] != "":
-            gene_data[k] = form[actor_name + v]
+            protoform_data[k] = form[actor_name + v]
 
-    gene_data["regions"], actors_in_regions, target_in_regions =\
+    protoform_data["regions"], actors_in_regions, target_in_regions =\
         retrieve_regions(
             form, actor_name, wanted_actors, wanted_target)
-    gene_data["sites"], actors_in_sites, target_in_sites =\
+    protoform_data["sites"], actors_in_sites, target_in_sites =\
         retrieve_sites(
             form, actor_name, wanted_actors, wanted_target)
-    gene_data["residues"], target_in_residues = retrieve_residues(
+    protoform_data["residues"], target_in_residues = retrieve_residues(
         form, actor_name, wanted_target)
-    gene_data["states"], target_in_states = retrieve_states(
+    protoform_data["states"], target_in_states = retrieve_states(
         form, actor_name, wanted_target)
 
     if target_in_regions is not None:
@@ -355,16 +355,16 @@ def retrieve_actor(form, actor_name, wanted_actors=None, wanted_target=None):
                     len(actors_in_sites[wanted_actor]) > 0:
                 actor_data[wanted_actor]["in_sites"] =\
                     actors_in_sites[wanted_actor]
-    return gene_data, actor_data, target_data
+    return protoform_data, actor_data, target_data
 
 
-def _process_actor(gene_data, actor_data):
+def _process_actor(protoform_data, actor_data):
     if "in_regions" in actor_data.keys():
         if "site" in actor_data["in_regions"].keys():
             actor = {
                 "type": "SiteActor",
                 "data": {
-                    "gene": gene_data,
+                    "protoform": protoform_data,
                     "region": actor_data["in_regions"]["region"][1],
                     "site": actor_data["in_regions"]["site"][1]
                 }
@@ -373,7 +373,7 @@ def _process_actor(gene_data, actor_data):
             actor = {
                 "type": "RegionActor",
                 "data": {
-                    "gene": gene_data,
+                    "protoform": protoform_data,
                     "region": actor_data["in_regions"]["region"][1]
                 }
             }
@@ -381,12 +381,12 @@ def _process_actor(gene_data, actor_data):
         actor = {
             "type": "SiteActor",
             "data": {
-                "gene": gene_data,
+                "protoform": protoform_data,
                 "site": actor_data["in_sites"][1]
             }
         }
     else:
-        actor = {"type": "Gene", "data": gene_data}
+        actor = {"type": "Protoform", "data": protoform_data}
     return actor
 
 
@@ -452,7 +452,6 @@ def parse_interaction(form):
         if form['modorbnd'] == 'mod':
 
             if form['modType'] == "Modification":
-                print("HEEEE\n\n")
                 mod_json = {}
 
                 wanted_enzyme_subactor = None
@@ -465,20 +464,20 @@ def parse_interaction(form):
                 if "targetSelection" in form.keys():
                     wanted_substrate_target = form["targetSelection"]
 
-                enzyme_gene, subactors, _ = retrieve_actor(
+                enzyme_protoform, subactors, _ = retrieve_actor(
                     form, "enzyme", wanted_enzyme_subactor)
 
                 if "enzymeActorSelection" in subactors.keys():
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, subactors["enzymeActorSelection"])
+                        enzyme_protoform, subactors["enzymeActorSelection"])
                 else:
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, {})
+                        enzyme_protoform, {})
 
-                substrate_gene, _, target_subactor = retrieve_actor(
+                substrate_protoform, _, target_subactor = retrieve_actor(
                     form, "substrate", None, wanted_substrate_target)
                 mod_json["substrate"] = _process_actor(
-                    substrate_gene, target_subactor)
+                    substrate_protoform, target_subactor)
 
                 target, value = _process_implicit_target(target_subactor)
 
@@ -502,10 +501,10 @@ def parse_interaction(form):
                 if "targetSelection" in form.keys():
                     wanted_substrate_target = form["targetSelection"]
 
-                substrate_gene, target_subactor, _ = retrieve_actor(
+                substrate_protoform, target_subactor, _ = retrieve_actor(
                     form, "substrate", None, wanted_substrate_target)
                 mod_json["substrate"] = _process_actor(
-                    substrate_gene, target_subactor)
+                    substrate_protoform, target_subactor)
 
                 target, value = _process_implicit_target(target_subactor)
 
@@ -536,16 +535,16 @@ def parse_interaction(form):
                 if "targetSelection" in form.keys():
                     wanted_substrate_target = form["targetSelection"]
 
-                enzyme_gene, subactors, target_subactor = retrieve_actor(
+                enzyme_protoform, subactors, target_subactor = retrieve_actor(
                     form, "enzymeSub", wanted_enzyme_subactor,
                     wanted_substrate_target)
 
                 if "enzymeSubActorSelection" in subactors.keys():
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, subactors["enzymeSubActorSelection"])
+                        enzyme_protoform, subactors["enzymeSubActorSelection"])
                 else:
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, {})
+                        enzyme_protoform, {})
                 if "target" in target_subactor:
                     target, value = _process_implicit_target(target_subactor["target"])
                 else:
@@ -586,15 +585,15 @@ def parse_interaction(form):
                     wanted_enzyme_subactors = None
 
                 # usual stuff enzyme/substrate actors
-                enzyme_gene, enzyme_subactors, _ = retrieve_actor(
+                enzyme_protoform, enzyme_subactors, _ = retrieve_actor(
                     form, "enzymeLigand", wanted_enzyme_subactors)
 
                 if "enzymeLigandActorSelection" in enzyme_subactors.keys():
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, enzyme_subactors["enzymeLigandActorSelection"])
+                        enzyme_protoform, enzyme_subactors["enzymeLigandActorSelection"])
                 else:
                     mod_json["enzyme"] = _process_actor(
-                        enzyme_gene, {})
+                        enzyme_protoform, {})
 
                 wanted_substrate_subactors = None
                 if "substrateLigandBindingActorSelection" in form.keys():
@@ -606,11 +605,11 @@ def parse_interaction(form):
                 if "targetSelection" in form.keys():
                     wanted_substrate_target = form["targetSelection"]
 
-                substrate_gene, substrate_subactors, target_subactor = retrieve_actor(
+                substrate_protoform, substrate_subactors, target_subactor = retrieve_actor(
                     form, "substrateLigand", wanted_substrate_subactors,
                     wanted_substrate_target)
                 mod_json["substrate"] = _process_actor(
-                    substrate_gene, target_subactor)
+                    substrate_protoform, target_subactor)
 
                 target, value = _process_implicit_target(target_subactor)
 
@@ -746,15 +745,15 @@ def parse_interaction(form):
                     "leftBindingActorSelection": form[
                         "leftBindingActorSelection"]
                 }
-            left_gene, subactors, _ = retrieve_actor(
+            left_protoform, subactors, _ = retrieve_actor(
                 form, "left", wanted_left_subactor)
 
             if "leftBindingActorSelection" in subactors.keys():
                 bnd_json["left"] = _process_actor(
-                    left_gene, subactors["leftBindingActorSelection"])
+                    left_protoform, subactors["leftBindingActorSelection"])
             else:
                 bnd_json["left"] = _process_actor(
-                    left_gene, {})
+                    left_protoform, {})
 
             # process right actor
             wanted_right_subactor = None
@@ -764,15 +763,15 @@ def parse_interaction(form):
                         "rightBindingActorSelection"]
                 }
 
-            right_gene, subactors, _ = retrieve_actor(
+            right_protoform, subactors, _ = retrieve_actor(
                 form, "right", wanted_right_subactor)
 
             if "rightBindingActorSelection" in subactors.keys():
                 bnd_json["right"] = _process_actor(
-                    right_gene, subactors["rightBindingActorSelection"])
+                    right_protoform, subactors["rightBindingActorSelection"])
             else:
                 bnd_json["right"] = _process_actor(
-                    right_gene, {})
+                    right_protoform, {})
 
             if desc is not None:
                 bnd_json["desc"] = desc

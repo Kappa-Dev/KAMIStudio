@@ -1,8 +1,10 @@
 from flask import current_app as app
 from flask import (Blueprint, jsonify)
-from kami.data_structures.definitions import NewDefinition
 
-from regraph import graph_to_d3_json, get_node, attrs_to_json
+from regraph import graph_to_d3_json, get_node
+from regraph.utils import attrs_to_json
+
+from kami.data_structures.definitions import Definition
 
 from kamistudio.corpus.views import get_corpus
 from kamistudio.utils import authenticate, check_dbs
@@ -23,7 +25,7 @@ def fetch_definition(corpus_id, gene_id):
     corpus = get_corpus(corpus_id)
 
     if corpus is not None and definition_json is not None:
-        definition = NewDefinition.from_json(definition_json)
+        definition = Definition.from_json(definition_json)
 
         protoform_graph, gene_node = definition._generate_protoform_graph(
             corpus.action_graph, corpus.get_action_graph_typing())
@@ -79,7 +81,7 @@ def get_definitions(corpus_id):
     for d in raw_defs:
         node_attrs = get_node(
             corpus.action_graph,
-            corpus.get_gene_by_uniprot(d["protoform"]))
+            corpus.get_protoform_by_uniprot(d["protoform"]))
 
         definitions[d["protoform"]] = {}
         definitions[d["protoform"]]["attrs"] = attrs_to_json(
@@ -88,7 +90,6 @@ def get_definitions(corpus_id):
             [k, v["desc"], v["wild_type"]]
             for k, v in d["products"].items()
         ]
-
     return jsonify(definitions), 200
 
 

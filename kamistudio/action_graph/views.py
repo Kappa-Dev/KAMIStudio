@@ -2,8 +2,6 @@
 from flask import Blueprint, jsonify, request
 from flask import current_app as app
 
-from regraph import graph_to_d3_json
-
 from kamistudio.corpus.views import get_corpus
 from kamistudio.model.views import get_model
 from kamistudio.utils import authenticate
@@ -22,8 +20,8 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
     data = {}
 
     if (knowledge_obj.action_graph):
-        data["actionGraph"] = graph_to_d3_json(
-            knowledge_obj.action_graph, attrs)
+        data["actionGraph"] = knowledge_obj.action_graph.to_d3_json(
+            attrs)
         try:
             data["connectedComponents"] =\
                 knowledge_obj.action_graph.find_connected_components()

@@ -220,7 +220,6 @@ def import_corpus():
             annotation["desc"] = request.form["desc"]
         if request.form["organism"]:
             annotation["organism"] = request.form["organism"]
-        # TODO: handle annotation
 
         if 'file' not in request.files:
             raise ValueError('No file part')
@@ -234,6 +233,7 @@ def import_corpus():
         if file:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            print("here handling")
             return imported_corpus(filename, annotation)
 
 
@@ -285,7 +285,6 @@ def imported_corpus(filename, annotation):
         with open(path_to_file, "r+") as f:
             try:
                 json_data = json.loads(f.read())
-                json_data["corpus_id"] = corpus_id
                 node_positioning = None
                 if "node_positioning" in json_data:
                     node_positioning = json_data["node_positioning"]

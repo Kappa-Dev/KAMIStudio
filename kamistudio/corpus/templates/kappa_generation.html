@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block title %}Instantiate{% endblock %}
+
+{% block panel_buttons %}
+  <div class="row">
+    <div class="col-md-12">
+    <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: instantiate a KAMI-model</h2>
+    </div>
+  </div>
+{% endblock %}
+
+{% block tabs %}
+
+<div id="instantiationForm">
+  <div class="col-md-6">
+    <div id="loadingBlock" class="loading-elements center-block">
+      <div id="loader"></div>
+    </div>
+  </div> 
+</div>
+
+{% endblock %}
+
+{% block custom_scripts %}
+  <script type="text/babel" src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}"></script>
+  <script type="text/babel" src="{{ url_for('static', filename='js/components/FilteredLists.jsx') }}"></script>
+  <script type="text/babel" src="{{ url_for('static', filename='js/components/InstantiationComponents.jsx') }}"></script>
+  <script type="text/babel" src="{{ url_for('static', filename='js/instantiationUtils.jsx') }}"></script>
+  <script type="text/babel">
+    ReactDOM.render(
+        <InstantiationForm id="variants"
+                         buttonLabel="Specify variant"
+                         selectionDialogTitle="Select a gene"
+                         onFetchSubitems={getVariants('{{ corpus._id }}')}
+                         onFetchItems={getGenes('{{ corpus._id }}')}
+                         modelId='{{ corpus._id }}'
+                         readonly={% if readonly %}{true}{%else%}{false}{%endif%}/>,
+        document.getElementById("instantiationForm")
+    );
+  </script>
+
+{% endblock %}

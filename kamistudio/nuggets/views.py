@@ -6,7 +6,6 @@ from kamistudio.utils import authenticate
 from kamistudio.corpus.views import get_corpus, update_last_modified
 from kamistudio.model.views import get_model
 
-from regraph import graph_to_d3_json, get_node, get_edge
 from regraph.utils import attrs_to_json
 
 
@@ -55,7 +54,8 @@ def get_model_nuggets(model_id):
 
 def get_nugget(knowledge_obj, nugget_id, instantiated=False):
     data = {}
-    data["nuggetJson"] = graph_to_d3_json(knowledge_obj.nugget[nugget_id])
+    data["nuggetJson"] = knowledge_obj.get_nugget(nugget_id).to_d3_json()
+
     data["nuggetType"] = knowledge_obj.get_nugget_type(nugget_id)
     data["metaTyping"] = {
         k: knowledge_obj.get_action_graph_typing()[v]
@@ -67,23 +67,25 @@ def get_nugget(knowledge_obj, nugget_id, instantiated=False):
 
     data["agNodeAttrs"] = {}
     for v in ag_typing.values():
-        data["agNodeAttrs"][v] = attrs_to_json(get_node(knowledge_obj.action_graph, v))
+        data["agNodeAttrs"][v] = attrs_to_json(
+            knowledge_obj.action_graph.get_node(v))
 
     data["agEdgeAttrs"] = []
-    for s, t in knowledge_obj.nugget[nugget_id].edges():
+    for s, t in knowledge_obj.get_nugget(nugget_id).edges():
         edge_data = {}
         edge_data["source"] = ag_typing[s]
         edge_data["target"] = ag_typing[t]
         edge_data["attrs"] = attrs_to_json(
-            get_edge(knowledge_obj.action_graph,
-                     ag_typing[s],
-                     ag_typing[t]))
+            knowledge_obj.action_graph.get_edge(
+                ag_typing[s],
+                ag_typing[t]))
         data["agEdgeAttrs"].append(edge_data)
 
     data["semantics"] = {}
     # try:
     if not instantiated:
-        semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(nugget_id)
+        semantic_nugget_rels = knowledge_obj.get_nugget_semantic_rels(
+            nugget_id)
         for k, v in semantic_nugget_rels.items():
             data["semantics"][k] = {
                 kk: list(vv)
@@ -117,7 +119,7 @@ def raw_nugget_json(corpus_id, nugget_id):
     corpus = get_corpus(corpus_id)
 
     data = {}
-    data["nuggetJson"] = graph_to_d3_json(corpus.nugget[nugget_id])
+    data["nuggetJson"] = corpus.get_nugget(nugget_id).to_d3_json()
     data["nuggetType"] = corpus.get_nugget_type(nugget_id)
     data["metaTyping"] = {
         k: corpus.get_action_graph_typing()[v]
@@ -160,7 +162,7 @@ def update_corpus_nugget(corpus_id, nugget_id):
 
 def get_gene_adjacency(kb):
     data = {}
-    data["interactions"] = kb.get_gene_pairwise_interactions()
+    data["interactions"] = kb.get_protoform_pairwise_interactions()
     # Precompute labels for a geneset
     geneset = set()
     for k, v in data["interactions"].items():
@@ -194,6 +196,7 @@ def get_corpus_gene_adjacency(corpus_id):
     """Generate a nugget table."""
     corpus = get_corpus(corpus_id)
     data = get_gene_adjacency(corpus)
+    print(data)
     return jsonify(data), 200
 
 
@@ -221,7 +224,7 @@ def update_node_attrs(corpus_id, nugget_id):
     if corpus is not None:
 
         if nugget_id in corpus.nuggets() and\
-           node_id in corpus.nugget[nugget_id].nodes():
+           node_id in corpus.get_nugget(nugget_id).nodes():
             try:
                 # Here I actually need to generate rewriting rule
                 corpus.update_nugget_node_attr_from_json(

@@ -9,7 +9,7 @@ from flask import current_app as app
 
 from regraph.neo4j import Neo4jHierarchy
 
-from kami.exporters import kappa_exporters
+from kami.exporters.kappa import ModelKappaGenerator
 
 from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.models import KamiModel
@@ -344,7 +344,8 @@ def generate_kappa(model_id):
         path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         print(path)
         if not os.path.isfile(path) or not app.config["READ_ONLY"]:
-            kappa_str = kappa_exporters.generate_kappa(model)
+            generator = ModelKappaGenerator(model)
+            kappa_str = generator.generate()
             with open(path, "w+") as f:
                 f.write(kappa_str)
         return send_file(
