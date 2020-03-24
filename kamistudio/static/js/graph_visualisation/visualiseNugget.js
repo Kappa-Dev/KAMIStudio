@@ -182,6 +182,9 @@ function computeFixedPositions(width, height, graph, nuggetType, templateRelatio
 
 function drawNugget(nuggetGraph, nuggetType, metaTyping, agTyping, templateRelation,
                     clickHandlers, instantiated) {
+
+      console.log("Drawing nugget: ");
+      console.log("Nugget graph: ", nuggetGraph);
       var svgId = "nuggetSvg",
           width = 500,
           height = 200,

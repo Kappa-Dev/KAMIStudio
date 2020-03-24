@@ -367,7 +367,7 @@ class VariantForm extends React.Component {
 								type="checkbox" name="wt" value="wt" id="wtCheckBox"/> Set as a wild type<br/>
 						</div>
 						<div className="row form-row">
-							<div className="col-md-6" style={{"overflow-x": "scroll"}}>
+							<div className="col-md-6" style={{"overflow-x": "hidden"}}>
 						      <svg id="protoformSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"></svg>
 						    </div>
 						    <div className="col-md-6">

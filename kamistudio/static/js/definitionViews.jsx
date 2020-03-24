@@ -377,9 +377,9 @@ function renderDefinitionList(modelId, readonly) {
 				labels.push(data[k].attrs["hgnc_symbol"].data[0]);
 			} 
 			if ("synonyms" in data[k].attrs) {
-				labels += (data[k].attrs["synonyms"].data);
+				labels = labels.concat(data[k].attrs["synonyms"].data);
 			}
-			data[k].label = labels.join(" / ");
+			data[k].label = labels.join(", ");
     	}
 
         var list = ReactDOM.render(

@@ -584,8 +584,6 @@ function checkAndSubmitForNuggetGeneration(x, previewUrl) {
 
     	var parent = form.elements[i].parentElement;
 
-    	console.log(form.elements[i].id);
-
     	if (form.elements[i].value === '') {
 		    
 		    for (var j = 0; j < parent.childNodes.length; j++) {
@@ -607,7 +605,7 @@ function checkAndSubmitForNuggetGeneration(x, previewUrl) {
 	}
   }
   if (success == true) {
-  	console.log("Here");
+  	console.log("Validated---> going to preview");
   	$('#interactionForm').attr('action', previewUrl);
   	$('#interactionForm').submit();
   } else {

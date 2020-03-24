@@ -87,7 +87,7 @@ class InteractionsDataBox extends React.Component {
     		<div className="table-responsive">
       			<table className="table info">
        				<tbody>
-       					<DropDownRow name="Genes" items={geneItems}/>
+       					<DropDownRow name="Protoforms" items={geneItems}/>
        					<DropDownRow name="Proteins" items={proteinItems}/>
 			          	<DropDownRow name="Modification mechanisms" items={modItems}/>
 			          	<DropDownRow name="Bindings mechanisms" items={bndItems}/>

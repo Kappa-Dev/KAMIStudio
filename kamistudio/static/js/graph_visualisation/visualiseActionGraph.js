@@ -442,7 +442,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 
 		    // If gene node is selected add Create variant button
 		    var button = null;
-		    if (!instantiated && metaTyping[d.id] == "gene") {
+		    if (!instantiated && metaTyping[d.id] == "protoform") {
 		    	button = [
 		    		<div style={{"text-align": "center"}}>
 	    				<a 

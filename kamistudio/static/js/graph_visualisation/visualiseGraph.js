@@ -1,6 +1,6 @@
 // global vars defining default visualisation configs for different types of nodes
 var NUGGET_META_SIZES = {
-  "gene":35,
+  "protoform":35,
   "region":30,
   "site":15,
   "residue":10,
@@ -10,7 +10,7 @@ var NUGGET_META_SIZES = {
 };
 
 var META_LABEL_DY = {
-  "gene":"-3.5em",
+  "protoform":"-3.5em",
   "region":"-3em",
   "site":"-2em",
   "residue":"-2em",
@@ -20,7 +20,7 @@ var META_LABEL_DY = {
 }
 
 var AG_META_SIZES = {
-  "gene":25,
+  "protoform":25,
   "region":15,
   "site":10,
   "residue":7,
@@ -31,7 +31,7 @@ var AG_META_SIZES = {
 
 var META_COLORS = {
   // "gene":"#FFA19E",
-  "gene":"#8db1d1",
+  "protoform":"#8db1d1",
   // "gene": "#ed757a",
   "region":"#ffb080",
   "site":"#ffd780",
@@ -46,7 +46,7 @@ var META_COLORS = {
 
 var INSTANCE_META_COLORS = {
   // "gene":"#FFA19E",
-  "gene": "#ed757a",
+  "protoform": "#ed757a",
   "region":"#ffb080",
   "site":"#ffd780",
   "residue": "#F68EA0",
@@ -84,7 +84,7 @@ function initLinkStrengthDistance(graph, metaTyping, scale=1) {
 	    var d = graph.links[i], 
 	    	factor = baseStrengthFactor;
 	    d.distance = baseDistance;
-	    if (metaTyping[d.target] == "gene") {
+	    if (metaTyping[d.target] == "protoform") {
 	      if (metaTyping[d.source] == "region") {
 	        factor = baseStrengthFactor * 0.5;
 	        d.distance = baseDistance * 0.4;
@@ -221,7 +221,7 @@ function initCCPositions(graph, cc, svgId) {
 
 function initNodeLabels(graph, metaTyping, variantName=false) {
 	for (var i = graph.nodes.length - 1; i >= 0; i--) {
-		if (metaTyping[graph.nodes[i].id] == "gene") {
+		if (metaTyping[graph.nodes[i].id] == "protoform") {
 			if ("hgnc_symbol" in graph.nodes[i].attrs) {
 				graph.nodes[i].label = graph.nodes[i].attrs["hgnc_symbol"].data[0];
 			} else {

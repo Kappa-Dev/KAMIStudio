@@ -58,7 +58,7 @@ function generateNodeMetaDataItems(elementId, metaType, attrs, instantiated=fals
 	if (!elementId) {
 		message = "Click on an element to select";
 	} else {
-		if (metaType === "gene") {
+		if (metaType === "protoform") {
 			var uniprot = singleValueToString(attrs, "uniprotid"),
 				hgnc = singleValueToString(attrs, "hgnc_symbol"),
 				synonyms = multipleValuesToString(attrs, "synonyms");
@@ -172,8 +172,8 @@ function generateEdgeMetaDataItems(sourceId, targetId,
 		message = "Click on an element to select";
 	} else {
 		//  region/gene, site/gene, site/region
-		if (((sourceMetaType === "region") && (targetMetaType === "gene")) ||
-			((sourceMetaType === "site") && (targetMetaType === "gene")) ||
+		if (((sourceMetaType === "region") && (targetMetaType === "protoform")) ||
+			((sourceMetaType === "site") && (targetMetaType === "protoform")) ||
 			((sourceMetaType === "site") && (targetMetaType === "region"))) {
 			var start = singleValueToString(attrs, "start"),
 				end = singleValueToString(attrs, "end"),

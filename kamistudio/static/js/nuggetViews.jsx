@@ -306,11 +306,12 @@ function viewNugget(model_id, instantiated=false, readonly=false, removeNuggetHa
 function previewNugget(modelId, desc, type,
    graph, metaTyping, agTyping, agNodeAttrs, agEdgeAttrs,
    templateRel, referenceGenes, readonly) {
-
     /** Nugget preview handler.
      *  
      *  Used when previewing newly created nugget.
      */
+
+    console.log("preview called");
 
     function onFetchCandidates(elementId, metaType) {
         /* Handler of fetching reference candidates */
@@ -421,6 +422,8 @@ function previewNugget(modelId, desc, type,
                 readonly={readonly}/>,
         document.getElementById('nuggetEditingBox')
     );
+
+    // nuggetPreview.setLoadedGraph();
 
     // draw the nugget
     drawNugget(
@@ -714,6 +717,7 @@ function closeSelectedNuggetsDialog(switchEnabled=true) {
         switchToAG($("#switchToAGTab"));
     }
 }
+
 
 function viewActionNuggets(modelId, instantiated, readonly) {
     return function(nuggets) {
