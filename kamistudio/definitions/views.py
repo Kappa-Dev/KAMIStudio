@@ -10,7 +10,10 @@ from kamistudio.corpus.views import get_corpus
 from kamistudio.utils import authenticate, check_dbs
 
 
-definitions_blueprint = Blueprint('definitions', __name__, template_folder='templates')
+definitions_blueprint = Blueprint(
+    'definitions', __name__,
+    template_folder='templates',
+    static_folder='static')
 
 
 @definitions_blueprint.route("/corpus/<corpus_id>/raw-definition/<gene_id>")

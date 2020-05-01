@@ -43,7 +43,8 @@ setup(name='KAMIStudio',
           'flask-pymongo',
           'flex',
           'lxml',
-          'jpype1'
+          'jpype1',
+          'werkzeug==0.16.0'
       ],
       # dependency_links=[
       #     'git+https://github.com/Kappa-Dev/ReGraph@master#egg=regraph-1.0',

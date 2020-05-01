@@ -27,7 +27,10 @@ from kamistudio.corpus.form_parsing import(parse_interaction)
 from kamistudio.model.views import add_new_model
 
 
-corpus_blueprint = Blueprint('corpus', __name__, template_folder='templates')
+corpus_blueprint = Blueprint(
+    'corpus', __name__,
+    template_folder='templates',
+    static_folder='static')
 
 
 def _generate_unique_model_id(corpus_id, model_name):

@@ -1,5 +1,6 @@
 export FLASK_APP=kamistudio
-export FLASK_ENV=development
+# Uncomment if dev
+# export FLASK_ENV=development
 
 mkdir kamistudio/uploads
 

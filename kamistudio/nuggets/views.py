@@ -9,7 +9,9 @@ from kamistudio.model.views import get_model
 from regraph.utils import attrs_to_json
 
 
-nuggets_blueprint = Blueprint('nuggets', __name__, template_folder='templates')
+nuggets_blueprint = Blueprint(
+    'nuggets', __name__, template_folder='templates',
+    static_folder='static')
 
 
 @nuggets_blueprint.route("/corpus/<corpus_id>/nugget/<nugget_id>")

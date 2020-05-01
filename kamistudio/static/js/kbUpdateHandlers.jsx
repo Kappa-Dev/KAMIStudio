@@ -21,33 +21,6 @@ function renderMetaDataBox(modelId, data, oldData) {
     );
 };
 
-function sendMetaDataUpdate(modelId, data) {
-	if ("name" in data) {
-		data["name"] = data["name"][0];
-	}
-	if ("desc" in data) {
-		data["desc"] = data["desc"][0];
-	}
-	if ("organism" in data) {
-		data["organism"] = data["organism"][0];
-	}
-
-	$.ajax({
-	    url:  modelId + "/update-meta-data",
-	    type: 'post',
-	    data: JSON.stringify(data),
-	    dataType: 'json',
-    	contentType: 'application/json',
-	}).done(function () {
-		// if (successCallback) successCallback();
-	}).fail(function (xhr, status, error) {
-		console.log("Failed send the request");
-		console.log(error);
-		// if (failCallback) failCallback();
-	});
-};
-
-
 
 function handleModelUpdate(modelId) {
 	return function(data, oldData) {
@@ -77,39 +50,12 @@ function renderRateDataBox(modelId, data, oldData, readonly) {
 };
 
 
-function sendRateDataUpdate(modelId, data) {
-	if ("default_bnd_rate" in data) {
-		data["default_bnd_rate"] = data["default_bnd_rate"][0];
-	}
-	if ("default_brk_rate" in data) {
-		data["default_brk_rate"] = data["default_brk_rate"][0];
-	}
-	if ("default_mod_rate" in data) {
-		data["default_mod_rate"] = data["default_mod_rate"][0];
-	}
-
-	$.ajax({
-	    url:  modelId + "/update-rate-data",
-	    type: 'post',
-	    data: JSON.stringify(data),
-	    dataType: 'json',
-    	contentType: 'application/json',
-	}).done(function () {
-		// if (successCallback) successCallback();
-	}).fail(function (xhr, status, error) {
-		console.log("Failed send the request");
-		console.log(error);
-		// if (failCallback) failCallback();
-	});
-};
-
 function handleRateInfoUpdate(modelId, readonly) {
 	return function(data, oldData) {
 		renderRateDataBox(modelId, data, oldData, readonly);
 		sendRateDataUpdate(modelId, data);
 	}
 }
-
 
  
 function showConfirmDeletion(deletionUrl, redirectUrl, instantiated=false) {

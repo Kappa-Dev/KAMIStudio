@@ -7,7 +7,9 @@ from kamistudio.model.views import get_model
 from kamistudio.utils import authenticate
 
 action_graph_blueprint = Blueprint(
-    'action_graph', __name__, template_folder='templates')
+    'action_graph', __name__,
+    template_folder='templates',
+    static_folder='static')
 
 
 def get_action_graph(knowledge_obj, json_repr, attrs):

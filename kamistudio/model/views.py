@@ -7,7 +7,7 @@ from flask import (render_template, Blueprint, request, redirect,
                    url_for, send_file, jsonify)
 from flask import current_app as app
 
-from regraph.neo4j import Neo4jHierarchy
+from regraph import Neo4jHierarchy
 
 from kami.exporters.kappa import ModelKappaGenerator
 

@@ -20,9 +20,9 @@ from kamistudio.definitions.views import definitions_blueprint
 from neobolt.exceptions import ServiceUnavailable, AuthError
 from pymongo.errors import ServerSelectionTimeoutError
 
-from neo4j.v1 import GraphDatabase
+from neo4j import GraphDatabase
 
-from regraph.neo4j import Neo4jHierarchy
+from regraph import Neo4jHierarchy
 
 
 def init_neo4j_db():
@@ -35,7 +35,7 @@ def init_neo4j_db():
     except AuthError:
         app.neo4j_driver = None
         app._neo4j_up = True
-    except ServiceUnavailable:
+    except:
         app.neo4j_driver = None
         app._neo4j_up = False
 

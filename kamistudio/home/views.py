@@ -17,7 +17,7 @@ from kamistudio.corpus.views import add_new_corpus
 from kamistudio.model.views import add_new_model
 
 from regraph import graph_to_d3_json
-from regraph.neo4j import Neo4jHierarchy
+from regraph import Neo4jHierarchy
 
 
 home_blueprint = Blueprint('home', __name__, template_folder='templates')

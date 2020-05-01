@@ -1,4 +1,3 @@
-
 function sendUpdateNuggetDesc(modelId, nuggetId, desc) {
     /** Send a request to update nugget description*/
     $.ajax({
@@ -19,6 +18,7 @@ function sendUpdateNuggetDesc(modelId, nuggetId, desc) {
     });
 }
 
+
 function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCallback) {
     /** Send a request to update nugget node attrs*/
     $.ajax({
@@ -37,6 +37,7 @@ function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCall
         console.log(error);
     });
 }
+
 
 function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs) {
     /** Send a request to update nugget edge attrs*/
@@ -59,6 +60,7 @@ function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs)
     });
 }
 
+
 function postDataWithRedirect(data, url) {
   $.ajax({
         url:  url,
@@ -75,6 +77,7 @@ function postDataWithRedirect(data, url) {
   });
 }
 
+
 function getData(url, successCallback=null, failCallback=null) {
   $.ajax({
       url:  url,
@@ -90,3 +93,57 @@ function getData(url, successCallback=null, failCallback=null) {
       }
   });
 }
+
+
+function sendMetaDataUpdate(modelId, data) {
+  if ("name" in data) {
+    data["name"] = data["name"][0];
+  }
+  if ("desc" in data) {
+    data["desc"] = data["desc"][0];
+  }
+  if ("organism" in data) {
+    data["organism"] = data["organism"][0];
+  }
+
+  $.ajax({
+      url:  modelId + "/update-meta-data",
+      type: 'post',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      contentType: 'application/json',
+  }).done(function () {
+    // if (successCallback) successCallback();
+  }).fail(function (xhr, status, error) {
+    console.log("Failed send the request");
+    console.log(error);
+    // if (failCallback) failCallback();
+  });
+};
+
+
+function sendRateDataUpdate(modelId, data) {
+  if ("default_bnd_rate" in data) {
+    data["default_bnd_rate"] = data["default_bnd_rate"][0];
+  }
+  if ("default_brk_rate" in data) {
+    data["default_brk_rate"] = data["default_brk_rate"][0];
+  }
+  if ("default_mod_rate" in data) {
+    data["default_mod_rate"] = data["default_mod_rate"][0];
+  }
+
+  $.ajax({
+      url:  modelId + "/update-rate-data",
+      type: 'post',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      contentType: 'application/json',
+  }).done(function () {
+    // if (successCallback) successCallback();
+  }).fail(function (xhr, status, error) {
+    console.log("Failed send the request");
+    console.log(error);
+    // if (failCallback) failCallback();
+  });
+};

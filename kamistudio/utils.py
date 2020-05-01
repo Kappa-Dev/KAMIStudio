@@ -4,7 +4,7 @@ from flask import current_app, render_template
 from neobolt.exceptions import ServiceUnavailable, AuthError
 from pymongo.errors import ServerSelectionTimeoutError
 
-from neo4j.v1 import GraphDatabase
+from neo4j import GraphDatabase
 
 
 def reconnect_neo4j_db():
