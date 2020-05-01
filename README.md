@@ -60,9 +60,7 @@ Currently, some Python dependencies of KAMIStudio are not in the Python Package 
 3. Install ReGraph:
 
 ```
-git clone https://github.com/Kappa-Dev/ReGraph
-cd ReGraph
-python setup.py install
+pip install regraph
 ```
 
 4. Install KAMI:
