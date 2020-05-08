@@ -31,13 +31,13 @@
   <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
   <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/components/InfoBoxes.jsx') }}" type="text/babel"></script>
-  <script src="{{ url_for('static', filename='js/components/NuggetViewComponents.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/GraphElementBoxes.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseGraph.js') }}" type="text/babel"></script>
-  <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseNugget.js') }}" type="text/babel"></script>
-  <script src="{{ url_for('static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/FilteredLists.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/NuggetViewComponents.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/visualiseNugget.js') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script type="text/babel">
     console.log("I call");
     previewNugget(

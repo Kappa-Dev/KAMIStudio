@@ -153,8 +153,22 @@ td.data {
 }
 
 .model-action-brand, .kb-action-brand {
-	margin-left: 10px;
+	/*margin-left: 10px;*/
 	margin-top: 10px;
+    display: inline;
+}
+
+.kb-description {
+    /*margin-left: 10px;*/
+    margin-top: 10px; 
+    /*display: inline;*/
+    color: grey;
+}
+.kb-species {
+    /*margin-left: 10px;*/
+    margin-top: 10px; 
+    display: inline;
+    color: grey;
 }
 
 table.nugget-info-table > tbody > tr > td {
@@ -336,7 +350,7 @@ button.instantiation:hover, button.instantiated[disabled]:hover  {
 }
 
 .highlighted-item {
-	border-radius: 15px;
+	border-radius: 0px 5px 5px 5px;
 	background: #dae3ec;
 	padding: 20px;
 	margin-bottom: 10px;
@@ -423,10 +437,10 @@ table.no-borders > tbody > tr > td {
 .nuggets-nav li:hover:before,
 .nuggets-nav li.open:hover:before {
     width: 100%;
-    -webkit-transition: width .2s ease-in;
+/*    -webkit-transition: width .2s ease-in;
       -moz-transition:  width .2s ease-in;
        -ms-transition:  width .2s ease-in;
-            transition: width .2s ease-in;
+            transition: width .2s ease-in;*/
 }
 
 .nuggets-nav li a {
@@ -657,10 +671,11 @@ ol.pale {
 }
 
 .info-tooltip {
-  position: relative;
+  position: fixed;
   display: inline-block;
   border-bottom: 1px dotted black;
 }
+
 
 .info-tooltip .tooltiptext {
   visibility: hidden;
@@ -730,6 +745,7 @@ span.glyphicon-question-sign {
 .modal-dialog {
 	margin: 50pt auto;
 	height: 350pt;
+    width: 95%;
 }
 
 .modal-title {
@@ -760,4 +776,235 @@ li.subitem a:active,
 li.subitem a:focus,
 li.subitem.selected-subitem a {
 	background-color: #c5d1dd;
+}
+
+/* NEW STYLESS */
+
+
+.corpus-options {
+    float: right;
+}
+
+
+.dropdown-menu {
+    min-width: 0pt;
+}
+
+.row.panel {
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    margin-left: 5pt;
+    margin-right: 5pt;
+}
+
+.row.panel > .row {
+    margin-left: 0pt;
+    margin-right: 0pt;
+}
+
+.nav {
+    margin-left: 5pt;
+}
+
+.tab-pane {
+    margin-left: 5pt;
+    margin-right: 5pt;
+    width: 98%;
+}
+
+.tab-pane > .row {
+    margin-right: 0pt;
+    margin-left: 0pt;
+}
+
+.nav-pills > li + li {
+    margin-left: 5pt;
+    margin-top: 5pt;
+}
+
+.nav-pills > li:first-of-type {
+    margin-top: 5pt;
+}
+
+.nav-tabs > li:first-of-type {
+    margin-left: 16%;
+}
+
+.nav-pills > li {
+    float:none;
+    display:inline-block;
+    zoom:1;
+}
+
+.nav-pills > li > a {
+    transition: none;
+}
+
+.nav-pills {
+    text-align:center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15pt;
+}
+
+.container-fluid {
+    padding-right: 0pt;
+}
+
+
+/* ACTION GRAPH VIEW */
+/*
+    DEMO STYLE
+*/
+
+
+/*@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";*/
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #fafafa;
+}
+
+p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1em;
+  font-weight: 300;
+  line-height: 1.7em;
+  color: #999;
+}
+
+a,
+a:hover,
+a:focus {
+  color: inherit;
+  text-decoration: none;
+  /*transition: all 0.3s;*/
+}
+
+.navbar {
+  border: none;
+  border-radius: 0;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+#navigation-bar {
+  position: fixed;
+  width: 100%;
+  z-index: 500;
+  background: #fff;
+  padding-bottom: 10px;
+}
+
+#navigation-bar span {
+  position: relative;
+  right: 10px;
+}
+
+.navbar-btn {
+  box-shadow: none;
+  outline: none !important;
+  border: none;
+}
+
+.line {
+  width: 100%;
+  height: 1px;
+  border-bottom: 1px dashed #ddd;
+  margin: 40px 0;
+}
+
+i,
+span {
+  display: inline-block;
+}
+
+
+/* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+
+
+#agView {
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    height: 440pt;
+}
+
+
+#agSidebarWrapper {
+    width: 30%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: 0.5s;
+}
+
+
+#agSidebarWrapper.collapsed {
+   width: 0%;
+}
+
+#agSidebarWrapper.collapsed .info-tooltip {
+    position: relative;
+}
+
+#agContentWrapper {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0%;
+    transition: 0.5s;
+}
+
+
+#agContentWrapper.collapsed {
+    width: 70%;
+    left: 30%;}
+
+#graphInfoBoxes {
+    height: 100%;
+    width: 100%;  
+    z-index: 1;
+    overflow-x: hidden;
+    /*position: fixed;
+    top: 0;
+    left: 0;*/
+}
+
+#agContent {
+    width: 100%;
+   /* position: fixed;
+    top: 0;
+    left: 0;*/
+}
+
+#agSidebar {
+    padding: 10pt;
+    padding-top: 0pt;
+}
+
+#graphInfoBoxes {
+    /*background: #dae3ec;*/
+    margin: 5pt;
+}
+
+#collapseButton {
+    padding-left: 5pt;
+    font-size: 20pt;
+    padding-bottom: 0pt;
+}
+
+#graphInfoBoxes  h4 {
+    color: #337ab7;
+}
+
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
 }

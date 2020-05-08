@@ -430,6 +430,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 				highlight = HIGHLIGHT_COLOR;
 			}
 
+			expandSideBar();
+
 		    svg.selectAll(".arrow")
 		      .style("stroke", d3.rgb("#B8B8B8"))
 		      .attr("marker-end", "url(#actionGraphSvgarrow)");
@@ -515,6 +517,8 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 				highlight = HIGHLIGHT_COLOR;
 			}
 
+			expandSideBar();
+
 		    svg.selectAll("circle")
 		      .attr("stroke-width", 0);
 		    svg.selectAll(".arrow")
@@ -595,3 +599,24 @@ function showAGLabels() {
 	button.onclick = hideAGLabels;
 	displayLabels("actionGraphSvg");
 }
+
+
+function expandSideBar() {
+	var sidebar = $('#agSidebarWrapper');
+
+	if (!sidebar.hasClass('selected')) {
+		sidebar.addClass('selected');
+		sidebar.removeClass('collapsed');
+		$('#agContentWrapper').addClass('collapsed');
+	}
+}
+
+function toggleSideBar() {
+	$('#agSidebarWrapper').toggleClass('collapsed');
+    $('#agContentWrapper').toggleClass('collapsed');
+}
+
+$(document).ready(function() {
+  var button = $('#collapseButton'); 
+  button.on('click', toggleSideBar);
+});

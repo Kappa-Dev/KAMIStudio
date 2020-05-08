@@ -14,12 +14,35 @@
 
 
 {% block sidebar_items %}
-	<h2 class="mb-6 kb-action-brand">Corpus overview</h2>
-	<div class="highlighted-item" id="corpusData">
-    <div id="loadingBlock" class="loading-elements center-block">
-      <div id="loader"></div>
-    </div> 
+<div class="container-fluid tabs">
+	<!-- <h2 class="mb-6 kb-action-brand">Corpus overview</h2> -->
+  <ul class="nav nav-tabs corpus" role="tablist">
+    <li class="nav-item active">
+      <a id="switchToInfo" class="nav-link active" onclick="switchToInfo(this);" role="tab">    
+        <h4>Meta-data</h4>
+      </a>
+    </li>
+    <li class="nav-item corpus">
+      <a id="switchToModels" class="nav-link" onclick="loadModelsTab(this);" role="tab">
+        <h4>Models</h4>
+      </a>
+    </li>
+    <li class="nav-item corpus">
+      <a id="switchToAudit" class="nav-link" onclick="loadHistory(this);" role="tab">
+        <h4>History</h4>
+      </a>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active corpus" id="corpusMetaData" role="tabpanel">
+    	<div id="corpusData">
+        <div id="loadingBlock" class="loading-elements center-block">
+          <div id="loader"></div>
+        </div> 
+      </div>
+    </div>
   </div>
+</div>
 {% endblock %}
 
 
@@ -71,26 +94,6 @@
 
 {% block info_boxes_rendering %}
   <script type="text/babel">
-    if (document.getElementById('graphInfoBoxes')) {
-      ReactDOM.render(
-        [<ElementInfoBox id="graphElement" items={[]}/>,
-         <MetaDataBox 
-          {% if readonly %}
-              editable={false}
-          {% else %}
-              editable={true}
-          {% endif %}
-              id="metaData" items={[]}/>,
-          <SemanticsBox
-          {% if readonly %}
-              editable={false}
-          {% else %}
-              editable={true}
-          {% endif %}
-              id="semantics" items={[]}/>],
-        document.getElementById('graphInfoBoxes')
-      );
-    }
     ReactDOM.render(
       [<CorpusDataBox 
       {% if readonly %}

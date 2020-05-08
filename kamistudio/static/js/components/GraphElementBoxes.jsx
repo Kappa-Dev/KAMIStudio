@@ -170,7 +170,7 @@ function SemanticsBox(props) {
 						"Protein-protein interation semantic role of an element"
 					 }
 					 expandable={true}
-					 expanded={false} />
+					 expanded={true} />
 	);
 }
 

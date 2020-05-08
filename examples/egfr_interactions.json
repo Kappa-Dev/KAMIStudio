@@ -11,7 +11,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "right": {
             "data": {
@@ -23,7 +23,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "desc": "EGF binds EGFR"
     },
@@ -47,12 +47,12 @@
                             "bound_to": [],
                             "unbound_from": []
                         },
-                        "type": "Gene"
+                        "type": "Protoform"
                     }
                 ],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "right": {
             "data": {
@@ -72,12 +72,12 @@
                             "bound_to": [],
                             "unbound_from": []
                         },
-                        "type": "Gene"
+                        "type": "Protoform"
                     }
                 ],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "desc": "EGFR homodimerization"
     },
@@ -85,7 +85,7 @@
         "type": "Binding",
         "left": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "P00533",
                     "regions": [],
                     "sites": [],
@@ -123,7 +123,7 @@
         },
         "right": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "P62993",
                     "regions": [],
                     "sites": [],
@@ -172,7 +172,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "right": {
             "data": {
@@ -184,7 +184,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "desc": "EGFR homodimer"
     },
@@ -192,7 +192,7 @@
         "type": "LigandModification",
         "enzyme": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "P00533",
                     "regions": [],
                     "sites": [],
@@ -229,7 +229,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "Residue",
@@ -245,15 +245,15 @@
             }
         },
         "value": true,
-        "enzyme_bnd_subactor": "gene",
-        "substrate_bnd_subactor": "gene",
+        "enzyme_bnd_subactor": "protoform",
+        "substrate_bnd_subactor": "protoform",
         "desc": "EGFR homodimer phosphorylation"
     },
     {
         "type": "Binding",
         "left": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "P29353",
                     "regions": [],
                     "sites": [],
@@ -291,7 +291,7 @@
         },
         "right": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "P62993",
                     "regions": [],
                     "sites": [],
@@ -325,7 +325,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "substrate": {
             "data": {
@@ -337,7 +337,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "Residue",
@@ -367,7 +367,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "substrate": {
             "data": {
@@ -379,7 +379,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "Residue",
@@ -401,7 +401,7 @@
         "type": "Modification",
         "enzyme": {
             "data": {
-                "gene": {
+                "protoform": {
                     "uniprotid": "O60674",
                     "regions": [],
                     "sites": [],
@@ -433,7 +433,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "Residue",
@@ -463,7 +463,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "substrate": {
             "data": {
@@ -475,7 +475,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "Residue",
@@ -516,7 +516,7 @@
                 "bound_to": [],
                 "unbound_from": []
             },
-            "type": "Gene"
+            "type": "Protoform"
         },
         "target": {
             "type": "State",

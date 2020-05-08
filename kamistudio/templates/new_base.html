@@ -1,0 +1,83 @@
+{% extends "bootstrap/base.html" %}
+
+{% block styles %}
+  {{ super() }}
+    <link href="{{url_for('static', filename='css/navbar.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/panel.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sidebar.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/general.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/forms.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='css/loaders.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static', filename='css/graph_visualisation.css')}}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block title %} KAMIStudio {% if readonly %}(read-only){% endif %} {% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-default navbar-static-top">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-2 navbar-col"></div>
+      <div class="col-sm-8 navbar-col">
+        <a class="navbar-brand" href="/home">
+          <div id="titleP">
+              <img src="{{url_for('static', filename='img/logo1.svg')}}" alt="logo" style="width:40px;height:40px;"> <div style="display: inline;">KAMIStudio</div> 
+          </div>
+        </a>
+
+
+        <ul class="nav navbar-nav navbar-right" style="margin-top: 10px;"> 
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('home.about_page')}}">About the project</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('home.tutorial_page')}}">Tutorial</a>
+          </li>
+        </ul>
+
+      </div>
+      <div class="col-sm-2 navbar-col">
+      </div>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+    <div class="row panel" style="margin-bottom: 0px;">
+      <div class="col-sm-2"></div>
+      <div class="col-sm-8">
+        {% block panel %}{% endblock %}
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+    <div class="row" style="margin: 0pt;">
+      <!-- <div class="col-sm-2"></div> -->
+      <div class="col-sm-12">
+          <div class="row">
+            <div class="col-sm-12">
+              {% block workspace %}{% endblock %}
+            </div>
+          </div>
+      </div>
+      <!-- <div class="col-sm-2"></div> -->
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+  {{ super() }}
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script src="{{ url_for('static', filename='js/loaders.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/kbUpdateHandlers.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/requestUtils.js') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/components/InfoBoxes.jsx') }}" type="text/babel"></script> 
+  <script src="{{ url_for('static', filename='js/utils.jsx') }}" type="text/babel"></script>
+  {% block custom_scripts %}{% endblock %}
+
+{% endblock %}
+

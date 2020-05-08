@@ -124,7 +124,7 @@ class ModelDataBox extends React.Component {
 			<div id="modelMetaData">
 				<KBMetaDataBox
 					id="modelMetaData"
-					name="Meta-data"
+					name={null}
 					editable={true}
 					readonly={this.props.readonly}
 					kbName={this.props.kbName}
@@ -190,7 +190,7 @@ class CorpusDataBox extends React.Component {
 			<div id="modelMetaData">
 				<KBMetaDataBox
 					id="corpusMetaData"
-					name="Meta-data"
+					name={null}
 					editable={true}
 					readonly={this.props.readonly}
 					kbName={this.props.kbName}

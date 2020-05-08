@@ -172,7 +172,7 @@ class EditableBox extends React.Component {
 				</button>;
 		}
 
-		var title;
+		var title = null;
 		if (this.props.expandable) {
 			var suffix = "";
 			if (this.props.instantiated) {
@@ -181,21 +181,23 @@ class EditableBox extends React.Component {
 			if (this.state.expanded) {
 				title = 
 					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h3 className={"editable-box" + suffix}>
+						<h4 className={"editable-box" + suffix}>
 							<span className="glyphicon glyphicon-menu-down"></span> {this.props.name}
-						</h3>
+						</h4>
 					</a>;
 				
 			} else {
 				title =
 					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h3 className={"editable-box" + suffix}>
+						<h4 className={"editable-box" + suffix}>
 							<span className="glyphicon glyphicon-menu-right"></span> {this.props.name}
-						</h3>
+						</h4>
 					</a>;
 			}
 		} else {
-			title = <h3 className="editable-box">{this.props.name}</h3>;
+			if (this.props.name) {
+				title = <h4 className="editable-box">{this.props.name}</h4>;
+			}
 		}
 
 		var infoIcon = null;

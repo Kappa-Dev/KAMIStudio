@@ -10,12 +10,9 @@ from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
 
+from kamistudio.corpus.views import corpus_blueprint
 from kamistudio.home.views import home_blueprint
 from kamistudio.model.views import model_blueprint
-from kamistudio.corpus.views import corpus_blueprint
-from kamistudio.action_graph.views import action_graph_blueprint
-from kamistudio.nuggets.views import nuggets_blueprint
-from kamistudio.definitions.views import definitions_blueprint
 
 from neobolt.exceptions import ServiceUnavailable, AuthError
 from pymongo.errors import ServerSelectionTimeoutError
@@ -127,12 +124,9 @@ app.new_nugget = None
 app.new_nugget_type = None
 
 # register the blueprints
-app.register_blueprint(home_blueprint)
-app.register_blueprint(model_blueprint)
-app.register_blueprint(corpus_blueprint)
-app.register_blueprint(action_graph_blueprint)
-app.register_blueprint(nuggets_blueprint)
-app.register_blueprint(definitions_blueprint)
+app.register_blueprint(home_blueprint, url_prefix="/home")
+app.register_blueprint(model_blueprint, url_prefix="/model")
+app.register_blueprint(corpus_blueprint, url_prefix="/corpus")
 
 
 @app.context_processor

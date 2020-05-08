@@ -1,5 +1,5 @@
 function activateLink(element) {
-	var otherLinks = $(".nav-link"),
+	var otherLinks = $(".nav-link.inner"),
 		currentLink = $(element);
 	otherLinks.removeClass("active");
 	otherLinks.parent().removeClass("active");
@@ -7,8 +7,24 @@ function activateLink(element) {
 	currentLink.parent().addClass("active");
 }
 
+function removeAGTransition() {
+	$("#agSidebarWrapper").addClass('notransition');
+	$("#agContentWrapper").addClass('notransition');
+	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+}
+
+function addAGTransition() {
+	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	$("#agSidebarWrapper").removeClass('notransition'); // Re-enable transitions
+
+	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	$("#agContentWrapper").removeClass('notransition'); // Re-enable transitions
+}
+
 function switchToAG(element) {
 	activateLink(element);
+	addAGTransition()
 	$("#nuggets").css("visibility", "hidden");
 	$("#action_graph").css("visibility", "initial");
 	$("#definitions").css("visibility", "hidden");
@@ -16,6 +32,7 @@ function switchToAG(element) {
 
 function switchToNuggets(element, instantiated) {
 	activateLink(element);
+	removeAGTransition()
 	$("#nuggets").css("visibility", "initial");
 	$("#action_graph").css("visibility", "hidden");
 	if (!instantiated) {
@@ -31,7 +48,6 @@ function loadNuggetsTab(element, modelId, instantiated=false, readonly=false) {
 
 function loadDefinitionsTab(element, modelId, readonly=false) {
 	switchToDefinitions(element);
-
 	getData(
 		modelId + "/definitions", renderDefinitionList(modelId, readonly));
 
@@ -40,6 +56,7 @@ function loadDefinitionsTab(element, modelId, readonly=false) {
 
 
 function switchToDefinitions(element) {
+	removeAGTransition();
 	activateLink(element);
 	$("#definitions").css("visibility", "initial");
 	$("#nuggets").css("visibility", "hidden");

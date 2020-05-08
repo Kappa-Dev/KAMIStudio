@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from kami import KamiCorpus, KamiModel
 
 from kamistudio.utils import authenticate, check_dbs
-from kamistudio.corpus.views import add_new_corpus
+from kamistudio.corpus.utils import add_new_corpus
 from kamistudio.model.views import add_new_model
 
 from regraph import graph_to_d3_json

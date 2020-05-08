@@ -1,21 +1,17 @@
 """Views of corpus blueprint."""
-import datetime
 import json
 import os
-import warnings
 
 from werkzeug.utils import secure_filename
 
-from flask import (render_template, Blueprint, request, session, redirect,
-                   url_for, send_file)
+from flask import (render_template, request, session, redirect,
+                   url_for, send_file, Blueprint)
 from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
 from regraph.utils import attrs_to_json
 from regraph import Neo4jHierarchy
 
-from kami.data_structures.corpora import KamiCorpus
-from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
 from kami.data_structures.definitions import Definition
 from kami.aggregation.generators import generate_nugget
@@ -23,8 +19,15 @@ from kami.aggregation.identifiers import EntityIdentifier
 from kami.exceptions import KamiError
 
 from kamistudio.utils import authenticate, check_dbs
-from kamistudio.corpus.form_parsing import(parse_interaction)
 from kamistudio.model.views import add_new_model
+
+from kamistudio.corpus.form_parsing import parse_interaction
+from kamistudio.corpus.utils import (get_corpus, update_last_modified,
+                                     _generate_unique_model_id,
+                                     imported_interactions,
+                                     update_protein_definition,
+                                     get_action_graph, merge_ag_nodes,
+                                     get_nugget)
 
 
 corpus_blueprint = Blueprint(
@@ -33,76 +36,7 @@ corpus_blueprint = Blueprint(
     static_folder='static')
 
 
-def _generate_unique_model_id(corpus_id, model_name):
-    name = corpus_id + "_model_" + model_name
-    name = name.replace(
-        " ", "_").replace(",", "_").replace("/", "_")
-    existing_models = [
-        el["id"] for el in app.mongo.db.kami_models.find(
-            {}, {"id": 1, "_id": 0})]
-    if name not in existing_models:
-        return name
-    else:
-        i = 1
-        new_name = name + "_{}".format(i)
-        while new_name in existing_models:
-            i += 1
-            new_name = name + "_{}".format(i)
-        return new_name
-
-
-def _generate_unique_variant_name(record, name):
-    if name not in record.keys():
-        return name
-    else:
-        i = 1
-        new_name = name + "_{}".format(i)
-        while new_name in record.keys():
-            i += 1
-            new_name = name + "_{}".format(i)
-        return new_name
-
-
-def get_corpus(corpus_id):
-    """Retreive corpus from the db."""
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    if corpus_json and app.neo4j_driver:
-        return KamiCorpus(
-            corpus_id,
-            annotation=CorpusAnnotation.from_json(corpus_json["meta_data"]),
-            creation_time=corpus_json["creation_time"],
-            last_modified=corpus_json["last_modified"],
-            backend="neo4j",
-            driver=app.neo4j_driver,
-        )
-
-
-def update_last_modified(corpus_id):
-    """Update the last modified field."""
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    corpus_json["last_modified"] = datetime.datetime.now().strftime(
-        "%d-%m-%Y %H:%M:%S")
-    app.mongo.db.kami_corpora.update_one(
-        {"_id": corpus_json["_id"]},
-        {"$set": corpus_json},
-        upsert=False)
-
-
-def add_new_corpus(corpus_id, creation_time, last_modified,
-                   annotation, ag_node_positions=None):
-    """Add new corpus to the db."""
-    d = {
-        "id": corpus_id,
-        "creation_time": creation_time,
-        "last_modified": last_modified,
-        "meta_data": annotation
-    }
-    if ag_node_positions:
-        d["node_positioning"] = ag_node_positions
-    app.mongo.db.kami_corpora.insert_one(d)
-
-
-@corpus_blueprint.route("/corpus/<corpus_id>")
+@corpus_blueprint.route("/<corpus_id>")
 @check_dbs
 def corpus_view(corpus_id):
     """View corpus."""
@@ -144,7 +78,7 @@ def corpus_view(corpus_id):
 
         n_defs = len(list(raw_defs))
 
-        return render_template("corpus.html",
+        return render_template("n_corpus.html",
                                kb_id=corpus_id,
                                kb=corpus,
                                n_nuggets=n_nuggets,
@@ -159,7 +93,7 @@ def corpus_view(corpus_id):
                                corpus_id=corpus_id)
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/add-interaction",
+@corpus_blueprint.route("/<corpus_id>/add-interaction",
                         methods=["GET", "POST"])
 @check_dbs
 def add_interaction(corpus_id, add_agents=True,
@@ -181,7 +115,7 @@ def add_interaction(corpus_id, add_agents=True,
             return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/nugget-preview",
+@corpus_blueprint.route("/<corpus_id>/nugget-preview",
                         methods=["POST"])
 @check_dbs
 def preview_nugget(corpus_id):
@@ -236,7 +170,7 @@ def preview_nugget(corpus_id):
                         nugget.reference_typing[nugget_gene])
             else:
                 identifier = EntityIdentifier(nugget.graph, nugget.meta_typing)
-                nugget_gene = identifier.get_gene_of(n)
+                nugget_gene = identifier.get_protoform_of(n)
                 if nugget_gene and nugget_gene in nugget.reference_typing:
                     reference_genes[n] = [
                         nugget.reference_typing[nugget_gene]
@@ -285,7 +219,7 @@ def preview_nugget(corpus_id):
         return jsonify({}), 200
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/instantiate",
+@corpus_blueprint.route("/<corpus_id>/instantiate",
                         methods=["GET", "POST"])
 @check_dbs
 def instantiate(corpus_id):
@@ -369,7 +303,7 @@ def instantiate(corpus_id):
                 return jsonify(data), 200
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/add-generated-nugget",
+@corpus_blueprint.route("/<corpus_id>/add-generated-nugget",
                         methods=["POST"])
 @check_dbs
 @authenticate
@@ -414,7 +348,7 @@ def add_nugget_from_session(corpus_id, add_agents=True,
     return jsonify(data), 200
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/import-json-interactions",
+@corpus_blueprint.route("/<corpus_id>/import-json-interactions",
                         methods=["GET", "POST"])
 @check_dbs
 @authenticate
@@ -441,24 +375,7 @@ def import_json_interactions(corpus_id):
             return imported_interactions(filename, corpus_id)
 
 
-def imported_interactions(filename, corpus_id):
-    """Internal handler of already imported interactions."""
-    path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if os.path.isfile(path_to_file):
-        try:
-            corpus = get_corpus(corpus_id)
-        # corpus.load_interactions_from_json(path_to_file)
-            with open(path_to_file, "r+") as f:
-                json_data = json.loads(f.read())
-                for i, el in enumerate(json_data):
-                    corpus.add_interaction(Interaction.from_json(el))
-            update_last_modified(corpus_id)
-        except:
-            return render_template("500.html")
-    return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
-
-
-@corpus_blueprint.route("/corpus/<corpus_id>/download", methods=["GET"])
+@corpus_blueprint.route("/<corpus_id>/download", methods=["GET"])
 @check_dbs
 def download_corpus(corpus_id):
     """Handle corpus download."""
@@ -488,7 +405,7 @@ def download_corpus(corpus_id):
                                corpus_id=corpus_id)
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/update-ag-node-positioning",
+@corpus_blueprint.route("/<corpus_id>/update-ag-node-positioning",
                         methods=["POST"])
 @authenticate
 @check_dbs
@@ -517,7 +434,7 @@ def update_ag_node_positioning(corpus_id):
         {'success': True}), 200, {'ContentType': 'application/json'}
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/delete")
+@corpus_blueprint.route("/<corpus_id>/delete")
 @authenticate
 @check_dbs
 def delete_corpus(corpus_id):
@@ -539,11 +456,11 @@ def delete_corpus(corpus_id):
         return render_template("corpus_not_found.html", corpus_id=corpus_id)
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/update-node-attrs",
+@corpus_blueprint.route("/<corpus_id>/update-ag-node-attrs",
                         methods=["POST"])
 @authenticate
 @check_dbs
-def update_node_attrs(corpus_id):
+def update_action_graph_node_attrs(corpus_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
     node_id = json_data["id"]
@@ -564,11 +481,11 @@ def update_node_attrs(corpus_id):
     return response
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/update-edge-attrs",
+@corpus_blueprint.route("/<corpus_id>/update-edge-attrs",
                         methods=["POST"])
 @authenticate
 @check_dbs
-def update_edge_attrs(corpus_id):
+def update_action_graph_edge_attrs(corpus_id):
     """Handle update of node attrs."""
     json_data = request.get_json()
     source = json_data["source"]
@@ -581,7 +498,8 @@ def update_edge_attrs(corpus_id):
     if corpus is not None:
         if (source, target) in corpus.action_graph.edges():
             try:
-                corpus.action_graph.set_edge_attrs_from_json(source, target, edge_attrs)
+                corpus.action_graph.set_edge_attrs_from_json(
+                    source, target, edge_attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
                 update_last_modified(corpus_id)
@@ -590,7 +508,7 @@ def update_edge_attrs(corpus_id):
     return response
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/update-meta-data",
+@corpus_blueprint.route("/<corpus_id>/update-meta-data",
                         methods=["POST"])
 @authenticate
 @check_dbs
@@ -613,7 +531,7 @@ def update_meta_data(corpus_id):
     return response
 
 
-@corpus_blueprint.route("/corpus/<corpus_id>/genes")
+@corpus_blueprint.route("/<corpus_id>/genes")
 def get_genes(corpus_id):
     """Handle get genes request."""
     corpus = get_corpus(corpus_id)
@@ -632,37 +550,7 @@ def get_genes(corpus_id):
     return response
 
 
-def update_protein_definition(corpus_id, uniprot, name, product):
-    """Add new protein def."""
-    if name is None:
-        name = "no_name"
-    if product["desc"] is None:
-        product["desc"] = ""
-
-    existing_def = app.mongo.db.kami_new_definitions.find_one({
-        "corpus_id": corpus_id,
-        "protoform": uniprot
-    })
-
-    if existing_def:
-        new_name = _generate_unique_variant_name(existing_def, name)
-        existing_def["products"][new_name] = product
-        app.mongo.db.kami_new_definitions.update_one(
-            {"_id": existing_def["_id"]},
-            {"$set": existing_def},
-            upsert=False)
-    else:
-        d = {
-            "corpus_id": corpus_id,
-            "protoform": uniprot,
-            "products": {
-                name: product
-            }
-        }
-        app.mongo.db.kami_new_definitions.insert_one(d)
-
-
-@corpus_blueprint.route("/corpus/<corpus_id>/add-variant/<gene_node_id>",
+@corpus_blueprint.route("/<corpus_id>/add-variant/<gene_node_id>",
                         methods=["GET", "POST"])
 @check_dbs
 def add_variant(corpus_id, gene_node_id):
@@ -854,3 +742,408 @@ def get_reference_candidates(corpus_id, element_type):
 def kappa_from_corpus(corpus_id):
     """Generate Kappa directly from the corpus."""
     pass
+
+
+@corpus_blueprint.route("/<corpus_id>/raw-action-graph")
+def get_corpus_action_graph(corpus_id, attrs=True):
+    """Handle the raw json action graph representation."""
+    corpus = get_corpus(corpus_id)
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    return get_action_graph(corpus, corpus_json, attrs)
+
+
+@corpus_blueprint.route(
+    "/<corpus_id>/get-ag-elements-by-type/<element_type>")
+def get_ag_node_by_type(corpus_id, element_type):
+    """Add action graph nodes by type."""
+    data = {"elements": []}
+    corpus = get_corpus(corpus_id)
+    ag_nodes = corpus.nodes_of_type(element_type)
+    for n in ag_nodes:
+        element = {"id": n}
+        element["attrs"] = {
+            k: list(v)
+            for k, v in corpus.get_ag_node_data(n).items()
+        }
+        data["elements"].append(element)
+    return jsonify(data), 200
+
+
+@corpus_blueprint.route(
+    "/<corpus_id>/get-ag-element-by-id/<element_id>")
+def get_ag_node_by_id(corpus_id, element_id):
+    """Get action graph node by id."""
+    corpus = get_corpus(corpus_id)
+    data = {
+        k: list(v)
+        for k, v in corpus.get_ag_node_data(
+            element_id).items()
+    }
+    return jsonify(data), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/merge-action-graph-nodes",
+                        methods=["POST"])
+@authenticate
+def merge_corpus_ag_nodes(corpus_id):
+    merge_ag_nodes(get_corpus(corpus_id), request.get_json())
+    return jsonify({"success": True}), 200
+
+# @corpus_blueprint.route("/model/<model_id>/raw-action-graph")
+# def get_model_action_graph(model_id, attrs=True):
+#     """Handle the raw json action graph representation."""
+#     model = get_model(model_id)
+#     model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+#     return get_action_graph(model, model_json, attrs)
+
+
+# @corpus_blueprint.route("/model/<model_id>/merge-action-graph-nodes",
+#                               methods=["POST"])
+# @authenticate
+# def merge_model_ag_nodes(model_id):
+#     merge_ag_nodes(get_model(model_id), request.get_json())
+#     return jsonify({"success": True}), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/nugget/<nugget_id>")
+def corpus_nugget_view(corpus_id, nugget_id):
+    """Handle nugget view."""
+    return("Lets see the nugget")
+
+
+# @corpus_blueprint.route("/model/<model_id>/nugget/<nugget_id>")
+# def model_nugget_view(corpus_id, nugget_id):
+#     """Handle nugget view."""
+#     return("Lets see the nugget")
+
+
+@corpus_blueprint.route("/<corpus_id>/nuggets")
+def get_corpus_nuggets(corpus_id):
+    corpus = get_corpus(corpus_id)
+    nuggets = {}
+    for nugget in corpus.nuggets():
+            nuggets[nugget] = (
+                corpus.get_nugget_desc(nugget),
+                corpus.get_nugget_type(nugget)
+            )
+    data = {}
+    data["nuggets"] = nuggets
+    return jsonify(data), 200
+
+
+# @corpus_blueprint.route("/model/<model_id>/nuggets")
+# def get_model_nuggets(model_id):
+#     model = get_model(model_id)
+#     nuggets = {}
+#     for nugget in model.nuggets():
+#             nuggets[nugget] = (
+#                 model.get_nugget_desc(nugget),
+#                 model.get_nugget_type(nugget)
+#             )
+#     data = {}
+#     data["nuggets"] = nuggets
+#     return jsonify(data), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/raw-nugget/<nugget_id>")
+def corpus_nugget_json(corpus_id, nugget_id):
+    corpus = get_corpus(corpus_id)
+    return get_nugget(corpus, nugget_id)
+
+
+@corpus_blueprint.route("/model/<model_id>/raw-nugget/<nugget_id>")
+def model_nugget_json(model_id, nugget_id):
+    model = get_model(model_id)
+    return get_nugget(model, nugget_id, instantiated=True)
+
+
+@corpus_blueprint.route("/<corpus_id>/raw-nugget/<nugget_id>")
+def raw_nugget_json(corpus_id, nugget_id):
+    corpus = get_corpus(corpus_id)
+
+    data = {}
+    data["nuggetJson"] = corpus.get_nugget(nugget_id).to_d3_json()
+    data["nuggetType"] = corpus.get_nugget_type(nugget_id)
+    data["metaTyping"] = {
+        k: corpus.get_action_graph_typing()[v]
+        for k, v in corpus.get_nugget_typing(nugget_id).items()
+    }
+    data["agTyping"] = corpus.get_nugget_typing(nugget_id)
+
+    data["templateRelation"] = {}
+    for k, v in corpus.get_nugget_template_rel(nugget_id).items():
+        for vv in v:
+            data["templateRelation"][vv] = k
+    return jsonify(data), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/nugget/<nugget_id>/update-nugget-desc",
+                         methods=["POST"])
+@authenticate
+def update_corpus_nugget(corpus_id, nugget_id):
+    json_data = request.get_json()
+    corpus = get_corpus(corpus_id)
+    corpus.set_nugget_desc(nugget_id, json_data["desc"])
+    response = json.dumps(
+        {'success': True}), 200, {'ContentType': 'application/json'}
+
+    return response
+
+
+# @corpus_blueprint.route("/model/<model_id>/nugget/<nugget_id>/update-nugget-desc",
+#                          methods=["POST"])
+# @authenticate
+# def update_model_nugget(model_id, nugget_id):
+#     json_data = request.get_json()
+#     model = get_model(model_id)
+#     model.set_nugget_desc(nugget_id, json_data["desc"])
+#     response = json.dumps(
+#         {'success': True}), 200, {'ContentType': 'application/json'}
+
+#     return response
+
+
+def get_gene_adjacency(kb):
+    data = {}
+    data["interactions"] = kb.get_protoform_pairwise_interactions()
+    # Precompute labels for a geneset
+    geneset = set()
+    for k, v in data["interactions"].items():
+        geneset.add(k)
+        for kk in v.keys():
+            geneset.add(kk)
+
+    def generate_gene_label(node_id):
+        label = kb.get_hgnc_symbol(node_id)
+        if label is None:
+            label = kb.get_uniprot(node_id)
+        return label
+
+    data["geneLabels"] = {
+        g: generate_gene_label(g) for g in geneset
+    }
+
+    # normalize data to be JSON-serializable
+    for k in data["interactions"].keys():
+        for kk, vv in data["interactions"][k].items():
+            new_vv = []
+            for vvv in vv:
+                new_vv.append(list(vvv))
+            data["interactions"][k][kk] = new_vv
+    return data
+
+
+@corpus_blueprint.route("/<corpus_id>/get-gene-adjacency",
+                         methods=["GET"])
+def get_corpus_gene_adjacency(corpus_id):
+    """Generate a nugget table."""
+    corpus = get_corpus(corpus_id)
+    data = get_gene_adjacency(corpus)
+    print(data)
+    return jsonify(data), 200
+
+
+# @corpus_blueprint.route("/model/<model_id>/get-gene-adjacency",
+#                          methods=["GET"])
+# def get_model_gene_adjacency(model_id):
+#     model = get_model(model_id)
+#     data = get_gene_adjacency(model)
+#     return jsonify(data), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/nugget/<nugget_id>/update-node-attrs",
+                        methods=["POST"])
+@authenticate
+def update_nugget_node_attrs(corpus_id, nugget_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    node_id = json_data["id"]
+    node_attrs = json_data["attrs"]
+
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+
+        if nugget_id in corpus.nuggets() and\
+           node_id in corpus.get_nugget(nugget_id).nodes():
+            try:
+                # Here I actually need to generate rewriting rule
+                corpus.update_nugget_node_attr_from_json(
+                    nugget_id, node_id, node_attrs)
+
+                response = json.dumps(
+                    {'success': True}), 200, {'ContentType': 'application/json'}
+                update_last_modified(corpus_id)
+            except:
+                pass
+    return response
+
+
+@corpus_blueprint.route("/<corpus_id>/nugget/<nugget_id>/update-edge-attrs",
+                        methods=["POST"])
+@authenticate
+def update_nugget_edge_attrs(corpus_id, nugget_id):
+    """Handle update of node attrs."""
+    json_data = request.get_json()
+    source = json_data["source"]
+    target = json_data["target"]
+    node_attrs = json_data["attrs"]
+
+    corpus = get_corpus(corpus_id)
+
+    response = json.dumps(
+        {'success': False}), 404, {'ContentType': 'application/json'}
+    if corpus is not None:
+
+        if (source, target) in corpus.action_graph.edges() and\
+           nugget_id in corpus.nuggets():
+            # try:
+                # Here I actually need to generate rewriting rule
+            corpus.update_nugget_edge_attr_from_json(
+                nugget_id, source, target, node_attrs)
+
+            response = json.dumps(
+                {'success': True}), 200, {'ContentType': 'application/json'}
+            update_last_modified(corpus_id)
+            # except:
+            #     pass
+    return response
+
+
+@corpus_blueprint.route("/<corpus_id>/remove-nugget/<nugget_id>")
+@authenticate
+def remove_nugget_from_corpus(corpus_id, nugget_id):
+    corpus = get_corpus(corpus_id)
+    corpus.remove_nugget(nugget_id)
+    return jsonify({"success": True}), 200
+
+
+# @corpus_blueprint.route("/model/<model_id>/remove-nugget/<nugget_id>")
+# @authenticate
+# def remove_nugget_from_model(model_id, nugget_id):
+#     pass
+
+
+@corpus_blueprint.route("/<corpus_id>/get-action-nuggets/<action_id>")
+def get_corpus_action_nuggets(corpus_id, action_id):
+    corpus = get_corpus(corpus_id)
+    nuggets = corpus.get_mechanism_nuggets(action_id)
+    data = {}
+    for n in nuggets:
+        data[n] = (
+            corpus.get_nugget_desc(n),
+            corpus.get_nugget_type(n)
+        )
+    return jsonify(data), 200
+
+# @corpus_blueprint.route("/model/<model_id>/get-action-nuggets/<action_id>")
+# def get_model_action_nuggets(model_id, action_id):
+#     model = get_model(model_id)
+#     nuggets = model.get_mechanism_nuggets(action_id)
+#     data = {}
+#     for n in nuggets:
+#         data[n] = (
+#             model.get_nugget_desc(n),
+#             model.get_nugget_type(n)
+#         )
+#     return jsonify(data), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/raw-definition/<gene_id>")
+@check_dbs
+def fetch_definition(corpus_id, gene_id):
+    """Retreive raw definition graphs."""
+    definition_json = app.mongo.db.kami_new_definitions.find_one({
+        "corpus_id": corpus_id,
+        "protoform": gene_id
+    })
+
+    corpus = get_corpus(corpus_id)
+
+    if corpus is not None and definition_json is not None:
+        definition = Definition.from_json(definition_json)
+
+        protoform_graph, gene_node = definition._generate_protoform_graph(
+            corpus.action_graph, corpus.get_action_graph_typing())
+        product_graphs = {}
+        for el in definition.products:
+            product_graphs[el.name] = el.generate_graph(
+                protoform_graph, gene_node)
+
+        data = {}
+        wild_type_name = None
+        for k, v in definition_json["products"].items():
+            if v["wild_type"]:
+                wild_type_name = k
+        data["wild_type"] = wild_type_name
+        data["protoform_graph"] = graph_to_d3_json(protoform_graph.graph)
+        data["protoform_graph_meta_typing"] = protoform_graph.meta_typing
+        data["product_graphs"] = {}
+        data["product_graphs_meta_typing"] = {}
+        for k, v in product_graphs.items():
+            data["product_graphs"][k] = graph_to_d3_json(v.graph)
+            data["product_graphs_meta_typing"][k] = v.meta_typing
+
+        return jsonify(data), 200
+    return jsonify({"success": False}), 404
+
+
+@corpus_blueprint.route("/<corpus_id>/variants/uniprot/<uniprot_id>")
+@check_dbs
+def fetch_variant_by_uniprot(corpus_id, uniprot_id):
+    """Retreive raw variants by uniprot id."""
+    definition_json = app.mongo.db.kami_new_definitions.find_one({
+        "corpus_id": corpus_id,
+        "protoform": uniprot_id
+    })
+    if definition_json:
+        data = {}
+        data["products"] = {
+            k: [v["desc"], v["wild_type"]]
+            for k, v in definition_json["products"].items()
+        }
+        return jsonify(data), 200
+    return jsonify({"success": False}), 404
+
+
+@corpus_blueprint.route("/<corpus_id>/definitions")
+@check_dbs
+def get_definitions(corpus_id):
+    raw_defs = app.mongo.db.kami_new_definitions.find(
+        {"corpus_id": corpus_id})
+    corpus = get_corpus(corpus_id)
+
+    definitions = {}
+    for d in raw_defs:
+        node_attrs = corpus.action_graph.get_node(
+            corpus.get_protoform_by_uniprot(d["protoform"]))
+
+        definitions[d["protoform"]] = {}
+        definitions[d["protoform"]]["attrs"] = attrs_to_json(
+            node_attrs)
+        definitions[d["protoform"]]["variants"] = [
+            [k, v["desc"], v["wild_type"]]
+            for k, v in d["products"].items()
+        ]
+    return jsonify(definitions), 200
+
+
+@corpus_blueprint.route("/<corpus_id>/remove-variant/<definition_id>/<variant_id>",
+                        methods=["GET"])
+@authenticate
+@check_dbs
+def remove_variant(corpus_id, definition_id, variant_id):
+    definition_json = app.mongo.db.kami_new_definitions.find_one({
+        "corpus_id": corpus_id,
+        "protoform": definition_id
+    })
+    if variant_id in definition_json["products"]:
+        del definition_json["products"][variant_id]
+        app.mongo.db.kami_new_definitions.update_one(
+            {"_id": definition_json["_id"]},
+            {"$set": definition_json})
+        return jsonify({"success": True}), 200
+    else:
+        return jsonify({"success": False}), 200
