@@ -26,6 +26,7 @@ from kamistudio.corpus.utils import (get_corpus, update_last_modified,
                                      _generate_unique_model_id,
                                      imported_interactions,
                                      update_protein_definition,
+                                     update_revision_history,
                                      get_action_graph, merge_ag_nodes,
                                      get_nugget)
 
@@ -58,6 +59,7 @@ def corpus_view(corpus_id):
             user=app.config["NEO4J_USER"])
 
     if corpus is not None:
+        corpus.print_revision_history()
 
         n_nuggets = len(corpus.nuggets())
 
@@ -99,10 +101,11 @@ def corpus_view(corpus_id):
 def add_interaction(corpus_id, add_agents=True,
                     anatomize=True, apply_semantics=True):
     """Handle interaction addition."""
+    corpus = get_corpus(corpus_id)
     if request.method == 'GET':
         return render_template(
             "add_interaction.html",
-            corpus_id=corpus_id,
+            corpus=corpus,
             readonly=app.config["READ_ONLY"])
     elif request.method == 'POST':
         if app.config["READ_ONLY"]:
@@ -111,8 +114,9 @@ def add_interaction(corpus_id, add_agents=True,
             corpus = get_corpus(corpus_id)
             interaction = parse_interaction(request.form)
             corpus.add_interaction(interaction)
+            update_revision_history(corpus)
             update_last_modified(corpus_id)
-            return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
+            return redirect(url_for('corpus.corpus_view', corpus_id=corpus._id))
 
 
 @corpus_blueprint.route("/<corpus_id>/nugget-preview",
@@ -357,8 +361,7 @@ def import_json_interactions(corpus_id):
     if request.method == "GET":
         corpus = get_corpus(corpus_id)
         return render_template('import_interactions.html',
-                               corpus_id=corpus_id,
-                               corpus_name=corpus.annotation.name)
+                               corpus=corpus)
     else:
         if 'file' not in request.files:
             raise ValueError('No file part')
@@ -508,27 +511,30 @@ def update_action_graph_edge_attrs(corpus_id):
     return response
 
 
-@corpus_blueprint.route("/<corpus_id>/update-meta-data",
-                        methods=["POST"])
-@authenticate
+@corpus_blueprint.route("/<corpus_id>/edit-meta-data",
+                        methods=["GET", "POST"])
 @check_dbs
-def update_meta_data(corpus_id):
-    """Handle update of edge attrs."""
-    json_data = request.get_json()
+def edit_meta_data(corpus_id):
+    if request.method == "GET":
+        corpus = get_corpus(corpus_id)
+        return render_template("edit_meta_data.html", corpus=corpus)
+    else:
+        if app.config["READ_ONLY"]:
+            return render_template("403.html")
+        else:
+            json_data = request.form
+            print(json_data)
 
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    for k in json_data.keys():
-        corpus_json["meta_data"][k] = json_data[k]
+            corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+            for k in json_data.keys():
+                corpus_json["meta_data"][k] = json_data[k]
 
-    app.mongo.db.kami_corpora.update_one(
-        {"_id": corpus_json["_id"]},
-        {"$set": corpus_json},
-        upsert=False)
+            app.mongo.db.kami_corpora.update_one(
+                {"_id": corpus_json["_id"]},
+                {"$set": corpus_json},
+                upsert=False)
 
-    response = json.dumps(
-        {'success': True}), 200, {'ContentType': 'application/json'}
-
-    return response
+            return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
 
 
 @corpus_blueprint.route("/<corpus_id>/genes")
@@ -1147,3 +1153,77 @@ def remove_variant(corpus_id, definition_id, variant_id):
         return jsonify({"success": True}), 200
     else:
         return jsonify({"success": False}), 200
+
+
+@corpus_blueprint.route("/new-model", methods=["GET"])
+@authenticate
+@check_dbs
+def new_model():
+    """New model handler."""
+    return render_template("new_model.html")
+
+
+@corpus_blueprint.route("/new-model", methods=["POST"])
+@authenticate
+@check_dbs
+def create_new_model():
+    """Handler for creation of a new corpus."""
+    annotation = {}
+    if request.form["name"]:
+        annotation["name"] = request.form["name"]
+    if request.form["desc"]:
+        annotation["desc"] = request.form["desc"]
+    if request.form["organism"]:
+        annotation["organism"] = request.form["organism"]
+    # TODO: handle annotation
+
+    # creation_time = last_modified = datetime.datetime.now().strftime(
+    #     "%d-%m-%Y %H:%M:%S")
+
+    # if request.form["name"]:
+    #     model_id = _generate_unique_model_id(request.form["name"])
+    # else:
+    #     model_id = _generate_unique_model_id("model")
+    # model = KamiModel(
+    #     model_id,
+    #     annotation,
+    #     creation_time, last_modified,
+    #     backend="neo4j",
+    #     driver=app.neo4j_driver)
+    # model.create_empty_action_graph()
+    # add_new_model(model_id, creation_time, last_modified, annotation)
+    return redirect(url_for('model.model_view', model_id=model_id))
+
+
+@corpus_blueprint.route("/import-model", methods=['GET', 'POST'])
+@authenticate
+@check_dbs
+def import_model():
+    """Handler of model import."""
+    if request.method == "GET":
+        failed = request.args.get('failed')
+        return render_template('import_model.html', failed=failed)
+    else:
+        # check if the post request has the file part
+        annotation = {}
+        if request.form["name"]:
+            annotation["name"] = request.form["name"]
+        if request.form["desc"]:
+            annotation["desc"] = request.form["desc"]
+        if request.form["organism"]:
+            annotation["organism"] = request.form["organism"]
+        # TODO: handle annotation
+
+        if 'file' not in request.files:
+            raise ValueError('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            raise ValueError('No selected file')
+            return redirect(request.url)
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return imported_model(filename, annotation)

@@ -31,7 +31,8 @@ def index():
     corpora = []
     models = []
     recent = [None, None, None]
-    corpora = list(app.mongo.db.kami_corpora.find({}))
+    corpora = list(app.mongo.db.kami_corpora.find({}).sort(
+        "last_modified", -1))
     models = list(app.mongo.db.kami_models.find({}))
 
     # routine for finding last three models/corpora
@@ -129,14 +130,6 @@ def new_corpus():
     return render_template("new_corpus.html")
 
 
-@home_blueprint.route("/new-model", methods=["GET"])
-@authenticate
-@check_dbs
-def new_model():
-    """New model handler."""
-    return render_template("new_model.html")
-
-
 @home_blueprint.route("/new-corpus", methods=["POST"])
 @authenticate
 @check_dbs
@@ -166,40 +159,10 @@ def create_new_corpus():
         backend="neo4j",
         driver=app.neo4j_driver)
     corpus.create_empty_action_graph()
-    add_new_corpus(corpus_id, creation_time, last_modified, annotation)
+    add_new_corpus(
+        corpus_id, creation_time, last_modified, annotation,
+        corpus._versioning.to_json())
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
-
-
-@home_blueprint.route("/new-model", methods=["POST"])
-@authenticate
-@check_dbs
-def create_new_model():
-    """Handler for creation of a new corpus."""
-    annotation = {}
-    if request.form["name"]:
-        annotation["name"] = request.form["name"]
-    if request.form["desc"]:
-        annotation["desc"] = request.form["desc"]
-    if request.form["organism"]:
-        annotation["organism"] = request.form["organism"]
-    # TODO: handle annotation
-
-    creation_time = last_modified = datetime.datetime.now().strftime(
-        "%d-%m-%Y %H:%M:%S")
-
-    if request.form["name"]:
-        model_id = _generate_unique_model_id(request.form["name"])
-    else:
-        model_id = _generate_unique_model_id("model")
-    model = KamiModel(
-        model_id,
-        annotation,
-        creation_time, last_modified,
-        backend="neo4j",
-        driver=app.neo4j_driver)
-    model.create_empty_action_graph()
-    add_new_model(model_id, creation_time, last_modified, annotation)
-    return redirect(url_for('model.model_view', model_id=model_id))
 
 
 @home_blueprint.route("/import-corpus", methods=['GET', 'POST'])
@@ -237,40 +200,6 @@ def import_corpus():
             return imported_corpus(filename, annotation)
 
 
-@home_blueprint.route("/import-model", methods=['GET', 'POST'])
-@authenticate
-@check_dbs
-def import_model():
-    """Handler of model import."""
-    if request.method == "GET":
-        failed = request.args.get('failed')
-        return render_template('import_model.html', failed=failed)
-    else:
-        # check if the post request has the file part
-        annotation = {}
-        if request.form["name"]:
-            annotation["name"] = request.form["name"]
-        if request.form["desc"]:
-            annotation["desc"] = request.form["desc"]
-        if request.form["organism"]:
-            annotation["organism"] = request.form["organism"]
-        # TODO: handle annotation
-
-        if 'file' not in request.files:
-            raise ValueError('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            raise ValueError('No selected file')
-            return redirect(request.url)
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return imported_model(filename, annotation)
-
-
 def imported_corpus(filename, annotation):
     """Internal handler of already imported model."""
     if annotation["name"]:
@@ -302,40 +231,6 @@ def imported_corpus(filename, annotation):
             except:
                 return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
-
-
-def imported_model(filename, annotation):
-    """Internal handler of already imported model."""
-    if annotation["name"]:
-        model_id = _generate_unique_model_id(annotation["name"])
-    else:
-        model_id = _generate_unique_model_id("model")
-
-    model_id = _generate_unique_model_id("model")
-    creation_time = last_modified = datetime.datetime.now().strftime(
-        "%d-%m-%Y %H:%M:%S")
-    path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if os.path.isfile(path_to_file):
-        with open(path_to_file, "r+") as f:
-            try:
-                json_data = json.loads(f.read())
-                json_data["model_id"] = model_id
-                node_positioning = None
-                if "node_positioning" in json_data:
-                    node_positioning = json_data["node_positioning"]
-                add_new_model(model_id, creation_time, last_modified,
-                              annotation, ag_node_positions=node_positioning)
-                model = KamiModel.load_json(
-                    model_id,
-                    os.path.join(app.config['UPLOAD_FOLDER'], filename),
-                    annotation,
-                    creation_time=creation_time,
-                    last_modified=last_modified,
-                    backend="neo4j",
-                    driver=app.neo4j_driver)
-            except:
-                return render_template("500.html")
-    return redirect(url_for('model.model_view', model_id=model_id))
 
 
 @home_blueprint.route("/about")

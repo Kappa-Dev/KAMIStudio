@@ -176,7 +176,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 
 		function sendUpdateNodeAttrs(nodeId, attrs, successCallback) {
 			$.ajax({
-			    url:  model_id + "/update-node-attrs",
+			    url:  model_id + "/update-ag-node-attrs",
 			    type: 'post',
 			    data: JSON.stringify({
 			    	"id": nodeId,
@@ -195,7 +195,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 
 		function sendUpdateEdgeAttrs(sourceId, targetId, attrs) {
 			$.ajax({
-			    url:  model_id + "/update-edge-attrs",
+			    url:  model_id + "/update-ag-edge-attrs",
 			    type: 'post',
 			    data: JSON.stringify({
 			    	"source": sourceId,

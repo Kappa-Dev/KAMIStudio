@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 {% block title %}New corpus{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
       <h1 class="mb-6 model-action-brand">New corpus</h1>
@@ -11,7 +11,7 @@
 {% endblock %}
 
 
-{% block tabs %}
+{% block inner_workspace %}
 
 <form id="newModelForm" novalidate="{{ url_for('home.new_corpus') }}" method="post">
 	<div class="col-md-6">
@@ -37,7 +37,7 @@
 			<div class="row form-row">
 				<div class="col-md-12">
 					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
-						<p>Loading...</p>
+						<div class="faded">Loading...</div>
 						<div id="loader"></div>
 					</div>
 				</div>

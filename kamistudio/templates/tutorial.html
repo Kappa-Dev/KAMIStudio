@@ -1,81 +1,77 @@
-{% extends 'base.html' %}
+{% extends 'new_base.html' %}
 
 {% block title %}KAMIStudio tutorial{% endblock %}
 
-{% block main_content %}
-<div class="row">
-	<div class="col-md-2">
+{% block panel %}
+<h2 style="margin: 0pt">KAMIStudio tutorial</h2>
+{% endblock %}
+
+{% block inner_workspace %}
+	<div id="about" style="text-align: left;">
+		<h2><a id="Introduction_4"></a>Introduction</h2>
+		<p>KAMIStudio provides a graphical environment for curation of cellular signalling knowledge. It is a web-based application whose server and client can be installed and run locally. The page <a href="http://kamistudio.ens-lyon.fr">http://kamistudio.ens-lyon.fr</a> contains a read-only instance of KAMIStudio where all the functionality related to the data modification is disabled. Instructions for installation of KAMIStudio locally can be found here: <a href="https://github.com/Kappa-Dev/KAMIStudio/blob/master/README.md">https://github.com/Kappa-Dev/KAMIStudio/blob/master/README.md</a>.</p>
+		<p>KAMIStudio’s interface consists of a set of pages served by an instance of the KAMIStudio server. In this tutorial we assume that we work with the server that runs at <code>&lt;kamistudio_host&gt;</code>. For your local version of KAMIStudio by default it is <code>localhost:5000</code> and for the online demo it is <code>kamistudio.ens-lyon.fr</code>.</p>
+		<p>Before proceeding with this tutorial you can also visit the about page <a href="http://kamistudio.ens-lyon.fr/about">http://kamistudio.ens-lyon.fr/about</a>. The source Markdown text-file of this tutorial can be found <a href="{{url_for('home.serve_tutorial_file', file='Tutorial.md')}}">here</a>.</p>
+
+		<hr>
+
+		<h2><a id="KAMIStudio_home_kamistudio_host_or_kamistudio_hosthome_14"></a>KAMIStudio home (<code>&lt;kamistudio_host&gt;/</code> or <code>&lt;kamistudio_host&gt;/home</code>)</h2>
+		<p>This page displays a list of corpora and models stored at the current instance of KAMIStudio. The top panel provides the entries corresponding to three most recently modified corpora/models.</p>
+		<p>On this page you can also create a new corpus/model and import a corpus/model from a JSON file (see examples <a href="{{url_for('home.serve_tutorial_file', file='egfr_corpus.json')}}"><code>egfr_corpus.json</code></a> and <a href="{{url_for('home.serve_tutorial_file', file='egfr_model.json')}}"><code>egfr_model.json</code></a>).</p>
+
+		<hr>
+
+		<h2><a id="Corpus_and_model_pages_kamistudio_hostcorpuscorpus_id_and_kamistudio_hostmodelmodel_id_22"></a>Corpus and model pages (<code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;</code> and <code>&lt;kamistudio_host&gt;/model/&lt;model_id&gt;</code>)</h2>
+		<p>A corpus/model view page is divided into three main areas: the side-bar on the left, the panel buttons in the top right corner and the main visualization workspace in the middle.</p>
+		<h3><a id="Sidebar_26"></a>Sidebar</h3>
+		<p>The sidebar displays the meta-data attached to the corpus/model. For a corpus this meta-data contains the corpus name, description, reference organism, creation and last modified dates. For a model it also contains a link to the knowledge corpus of origin (if available) and the default interaction rates that are used by the server to generate Kappa rules when rates are not specified. With the ‘Edit’ buttons on the sidebar user can modify corpus/model meta-data.</p>
+		<p>In addition, the sidebar displays the number of genes and interactions present in the corpus/model. For corpora it also contains two buttons ‘Add interaction’ and ‘Import interactions’.</p>
+		<h4><a id="Adding_an_individual_PPI_using_interactive_forms_32"></a>Adding an individual PPI using interactive forms</h4>
+		<p>‘Add interaction’ button links to <code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;/add-interaction</code> page that contains an interactive form that allows the user to add a new PPI to the corpus. The user can switch between the forms for binding and modification interaction types. For modification interactions the user can select among the available modification interaction subtypes:</p>
+		<ol class="pale">
+			<li><i>Default</i>: modification involving an enzyme and a substrate.</li>
+			<li><i>Anonymous</i>: modification involving only a substrate (usually represents an instantaneous modification of a substrate state).</li>
+			<li><i>Self-modification</i>: modification of a substrate state by itself.</li>
+			<li><i>Ligand modification</i>: modification that requires an enzyme to be bound to a substrate.</li>
+		</ol>
+		<p>For every interaction agent (e.g. enzyme/substrate for modifications and left/right partners for binding) and its components the user can add an arbitrary number of subcomponents required for the interaction: regions, sites, residues and states according to the KAMI meta-model.</p>
+		<p>Upon filling the interaction form the user has two choices: go to the nugget preview page or skip the preview step and directly add the interaction to the corpus. The nugget preview page allows the user to see the nugget graph generated by the KAMI generation engine.</p>
+		<h4><a id="Batch_import_of_interactions_from_a_JSONfile_45"></a>Batch import of interactions from a JSON-file</h4>
+		<p>Alternatively, the user can batch import interactions from a JSON-file, an example file can be found here:<br>
+		<a href="{{url_for('home.serve_tutorial_file', file='egfr_interactions.json')}}"><code>egfr_interactions.json</code></a>.</p>
+		<hr>
+		<h3><a id="Visualization_workspace_52"></a>Visualization workspace</h3>
+		<p>The main visualization workspace contains several tabs corresponding to the knowledge components of corpora/models. For corpora it contains three tabs: ‘Action graph’, ‘Nuggets’ and ‘Protein definitions’, while for models only the first two of them. Switching between tabs can be done by simply clicking on their names.</p>
+		<h4><a id="Action_graph_visualization_56"></a>Action graph visualization</h4>
+		<p>This tab contains the svg-canvas visualizing the action graph. Having mouse over the visualization area the user can zoom in/out by scrolling, pan the canvas by clicking and moving the mouse and zoom-in a particular area by double-clicking. The graph nodes can be dragged and the current graph layout can be saved at any time by clicking on the ‘Save current layout’ button. The buttons ‘Show/Hide labels’ adds/removes a label for every node of the action graph.</p>
+		<p>The user can click on a node/edge and see the information attached to it displayed on the right from the canvas (including its meta-type and meta-data). The meta-data can be also modified at any time.</p>
+		<p>The user can also drag multiple nodes at the same time by selecting a set of nodes (with CTRL + click). Moreover, the user can select multiple nodes of the same type attached to the same agent and merge them. For example, when we select two binding actions of the same protoform (that are not known to represent the same interaction mechanism) we see a button ‘Merge nodes’ appearing on the right from the canvas. We can now click this button and obtain the updated action graph where these two interaction mechanisms are the same.</p>
+		<h5><a id="Creation_of_a_new_protein_variant_64"></a>Creation of a new protein variant</h5>
+		<p>When clicking on a protoform node the button ‘Add variant’ appears on the right from the canvas. Clicking on this button leads to the page dedicated to the creation of a new protein variant (isoform) from the selected protoform gene.</p>
+		<p>For the creation of a variant KAMIStudio provides an interactive form containing the fields for specifying a variant name, a variant description and a flag which indicates to KAMI if this variant represents the wild type isoform. KAMIStudio also loads a small graph corresponding to all the protoform components available in the action graph. The user can click on any component and choose to remove it, which this represents the fact that this variant is a splice-variant that does not contain this freshly removed component. When clicked on a residue node, the user can also choose which amino acid among all the amino acid keys available in the action graph for this residue will be selected for the new variant.</p>
+		<h4><a id="Nugget_visualization_71"></a>Nugget visualization</h4>
+		<p>The nugget visualization tab displays the list of nuggets available in the corpus/model. Every item of the list is marked with a color-coded type of the interaction (i.e. binding or modification). The nuggets in the list can be filtered interactively by typing in the attached search field.</p>
+		<p>Clicking on a list item displays the nugget graph corresponding to this item. The user can interact with the nugget graph in a way similar to the action graph visualization. Note the following differences:</p>
+		<ol class="pale">
+			<li>The zoom capabilities are disabled for the nugget graph visualization.</li>
+			<li>The information displayed upon clicking on a nugget node contains a dropdown entry ‘Identification’ which provides some information on the action graph node that types the clicked node (including all the available meta-data).</li>
+		</ol>
+		<h4><a id="Protein_definitions_visualization_for_corpora_only_81"></a>Protein definitions visualization (for corpora only)</h4>
+		<p>This tab displays the list of genes that have specified non-default variants. Every item represents a gene and is displayed as a UniProt accession number. Clicking on an item (1) visualizes a small graph with all the components of the corresponding protoform in the action graph and (2) shows the list of available variants. Subsequent clicking on a variant displays a small graph with all the components of the corresponding variant alongside the protoform graph.</p>
+		<h3><a id="Panel_buttons_86"></a>Panel buttons</h3>
+		<p>On the top-right of a corpus page, there are three buttons: ‘Instantiate’, ‘Export’ and ‘Delete’.</p>
+		
+		<ol class="pale">
+			<li>‘Instantiate’ redirects you to the model instantiation page.</li>
+			<li>‘Export’ serves a JSON-file representing the corpus.</li>
+			<li>‘Delete’ deletes the corpus.</li>
+		</ol>
+		
+		<p>A model page, on the other hand, does not contain ‘Instantiate’ button, but ‘Generate Kappa’ that serves a generated Kappa-file to download.</p>
+		<h4><a id="Model_instantiation_kamistudio_hostcorpuscorpus_idinstantiate_97"></a>Model instantiation (<code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;/instantiate</code>)</h4>
+		<p>This page provides a form for instantiation of a model from a corpus. The user can specify a model name, description, default binding, unbinding and modification rates. By default, only the wild-type variants of genes are selected for instantiation. To select a non-wild-type variant the user can click on ‘Specify variant’ button. It opens a dialog for gene selection (showing all the genes available in the corpus and allowing interactive filtering as in the nugget visualization). When a gene is selected all the available variants are displayed. The user can select any number of variants for the instantiation.</p>
+		<hr>
+		<h2><a id="Issues_found_103"></a>Issues found?</h2>
+		<p>KAMIStudio is currently under development; if you find any issues using KAMIStudio, please, report them here: <a href="https://github.com/Kappa-Dev/KAMIStudio/issues">https://github.com/Kappa-Dev/KAMIStudio/issues</a>.</p>
 	</div>
-	<div class="col-md-8">
-		<div id="about" style="text-align: left;">
-			<h1><a id="KAMIStudio_tutorial_0"></a>KAMIStudio tutorial</h1>
-			<hr>
-			<h2><a id="Introduction_4"></a>Introduction</h2>
-			<p>KAMIStudio provides a graphical environment for curation of cellular signalling knowledge. It is a web-based application whose server and client can be installed and run locally. The page <a href="http://kamistudio.ens-lyon.fr">http://kamistudio.ens-lyon.fr</a> contains a read-only instance of KAMIStudio where all the functionality related to the data modification is disabled. Instructions for installation of KAMIStudio locally can be found here: <a href="https://github.com/Kappa-Dev/KAMIStudio/blob/master/README.md">https://github.com/Kappa-Dev/KAMIStudio/blob/master/README.md</a>.</p>
-			<p>KAMIStudio’s interface consists of a set of pages served by an instance of the KAMIStudio server. In this tutorial we assume that we work with the server that runs at <code>&lt;kamistudio_host&gt;</code>. For your local version of KAMIStudio by default it is <code>localhost:5000</code> and for the online demo it is <code>kamistudio.ens-lyon.fr</code>.</p>
-			<p>Before proceeding with this tutorial you can also visit the about page <a href="http://kamistudio.ens-lyon.fr/about">http://kamistudio.ens-lyon.fr/about</a>. The source Markdown text-file of this tutorial can be found <a href="{{url_for('home.serve_tutorial_file', file='Tutorial.md')}}">here</a>.</p>
-
-			<hr>
-
-			<h2><a id="KAMIStudio_home_kamistudio_host_or_kamistudio_hosthome_14"></a>KAMIStudio home (<code>&lt;kamistudio_host&gt;/</code> or <code>&lt;kamistudio_host&gt;/home</code>)</h2>
-			<p>This page displays a list of corpora and models stored at the current instance of KAMIStudio. The top panel provides the entries corresponding to three most recently modified corpora/models.</p>
-			<p>On this page you can also create a new corpus/model and import a corpus/model from a JSON file (see examples <a href="{{url_for('home.serve_tutorial_file', file='egfr_corpus.json')}}"><code>egfr_corpus.json</code></a> and <a href="{{url_for('home.serve_tutorial_file', file='egfr_model.json')}}"><code>egfr_model.json</code></a>).</p>
-
-			<hr>
-
-			<h2><a id="Corpus_and_model_pages_kamistudio_hostcorpuscorpus_id_and_kamistudio_hostmodelmodel_id_22"></a>Corpus and model pages (<code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;</code> and <code>&lt;kamistudio_host&gt;/model/&lt;model_id&gt;</code>)</h2>
-			<p>A corpus/model view page is divided into three main areas: the side-bar on the left, the panel buttons in the top right corner and the main visualization workspace in the middle.</p>
-			<h3><a id="Sidebar_26"></a>Sidebar</h3>
-			<p>The sidebar displays the meta-data attached to the corpus/model. For a corpus this meta-data contains the corpus name, description, reference organism, creation and last modified dates. For a model it also contains a link to the knowledge corpus of origin (if available) and the default interaction rates that are used by the server to generate Kappa rules when rates are not specified. With the ‘Edit’ buttons on the sidebar user can modify corpus/model meta-data.</p>
-			<p>In addition, the sidebar displays the number of genes and interactions present in the corpus/model. For corpora it also contains two buttons ‘Add interaction’ and ‘Import interactions’.</p>
-			<h4><a id="Adding_an_individual_PPI_using_interactive_forms_32"></a>Adding an individual PPI using interactive forms</h4>
-			<p>‘Add interaction’ button links to <code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;/add-interaction</code> page that contains an interactive form that allows the user to add a new PPI to the corpus. The user can switch between the forms for binding and modification interaction types. For modification interactions the user can select among the available modification interaction subtypes:</p>
-			<ol class="pale">
-				<li><i>Default</i>: modification involving an enzyme and a substrate.</li>
-				<li><i>Anonymous</i>: modification involving only a substrate (usually represents an instantaneous modification of a substrate state).</li>
-				<li><i>Self-modification</i>: modification of a substrate state by itself.</li>
-				<li><i>Ligand modification</i>: modification that requires an enzyme to be bound to a substrate.</li>
-			</ol>
-			<p>For every interaction agent (e.g. enzyme/substrate for modifications and left/right partners for binding) and its components the user can add an arbitrary number of subcomponents required for the interaction: regions, sites, residues and states according to the KAMI meta-model.</p>
-			<p>Upon filling the interaction form the user has two choices: go to the nugget preview page or skip the preview step and directly add the interaction to the corpus. The nugget preview page allows the user to see the nugget graph generated by the KAMI generation engine.</p>
-			<h4><a id="Batch_import_of_interactions_from_a_JSONfile_45"></a>Batch import of interactions from a JSON-file</h4>
-			<p>Alternatively, the user can batch import interactions from a JSON-file, an example file can be found here:<br>
-			<a href="{{url_for('home.serve_tutorial_file', file='egfr_interactions.json')}}"><code>egfr_interactions.json</code></a>.</p>
-			<hr>
-			<h3><a id="Visualization_workspace_52"></a>Visualization workspace</h3>
-			<p>The main visualization workspace contains several tabs corresponding to the knowledge components of corpora/models. For corpora it contains three tabs: ‘Action graph’, ‘Nuggets’ and ‘Protein definitions’, while for models only the first two of them. Switching between tabs can be done by simply clicking on their names.</p>
-			<h4><a id="Action_graph_visualization_56"></a>Action graph visualization</h4>
-			<p>This tab contains the svg-canvas visualizing the action graph. Having mouse over the visualization area the user can zoom in/out by scrolling, pan the canvas by clicking and moving the mouse and zoom-in a particular area by double-clicking. The graph nodes can be dragged and the current graph layout can be saved at any time by clicking on the ‘Save current layout’ button. The buttons ‘Show/Hide labels’ adds/removes a label for every node of the action graph.</p>
-			<p>The user can click on a node/edge and see the information attached to it displayed on the right from the canvas (including its meta-type and meta-data). The meta-data can be also modified at any time.</p>
-			<p>The user can also drag multiple nodes at the same time by selecting a set of nodes (with CTRL + click). Moreover, the user can select multiple nodes of the same type attached to the same agent and merge them. For example, when we select two binding actions of the same protoform (that are not known to represent the same interaction mechanism) we see a button ‘Merge nodes’ appearing on the right from the canvas. We can now click this button and obtain the updated action graph where these two interaction mechanisms are the same.</p>
-			<h5><a id="Creation_of_a_new_protein_variant_64"></a>Creation of a new protein variant</h5>
-			<p>When clicking on a protoform node the button ‘Add variant’ appears on the right from the canvas. Clicking on this button leads to the page dedicated to the creation of a new protein variant (isoform) from the selected protoform gene.</p>
-			<p>For the creation of a variant KAMIStudio provides an interactive form containing the fields for specifying a variant name, a variant description and a flag which indicates to KAMI if this variant represents the wild type isoform. KAMIStudio also loads a small graph corresponding to all the protoform components available in the action graph. The user can click on any component and choose to remove it, which this represents the fact that this variant is a splice-variant that does not contain this freshly removed component. When clicked on a residue node, the user can also choose which amino acid among all the amino acid keys available in the action graph for this residue will be selected for the new variant.</p>
-			<h4><a id="Nugget_visualization_71"></a>Nugget visualization</h4>
-			<p>The nugget visualization tab displays the list of nuggets available in the corpus/model. Every item of the list is marked with a color-coded type of the interaction (i.e. binding or modification). The nuggets in the list can be filtered interactively by typing in the attached search field.</p>
-			<p>Clicking on a list item displays the nugget graph corresponding to this item. The user can interact with the nugget graph in a way similar to the action graph visualization. Note the following differences:</p>
-			<ol class="pale">
-				<li>The zoom capabilities are disabled for the nugget graph visualization.</li>
-				<li>The information displayed upon clicking on a nugget node contains a dropdown entry ‘Identification’ which provides some information on the action graph node that types the clicked node (including all the available meta-data).</li>
-			</ol>
-			<h4><a id="Protein_definitions_visualization_for_corpora_only_81"></a>Protein definitions visualization (for corpora only)</h4>
-			<p>This tab displays the list of genes that have specified non-default variants. Every item represents a gene and is displayed as a UniProt accession number. Clicking on an item (1) visualizes a small graph with all the components of the corresponding protoform in the action graph and (2) shows the list of available variants. Subsequent clicking on a variant displays a small graph with all the components of the corresponding variant alongside the protoform graph.</p>
-			<h3><a id="Panel_buttons_86"></a>Panel buttons</h3>
-			<p>On the top-right of a corpus page, there are three buttons: ‘Instantiate’, ‘Export’ and ‘Delete’.</p>
-			
-			<ol class="pale">
-				<li>‘Instantiate’ redirects you to the model instantiation page.</li>
-				<li>‘Export’ serves a JSON-file representing the corpus.</li>
-				<li>‘Delete’ deletes the corpus.</li>
-			</ol>
-			
-			<p>A model page, on the other hand, does not contain ‘Instantiate’ button, but ‘Generate Kappa’ that serves a generated Kappa-file to download.</p>
-			<h4><a id="Model_instantiation_kamistudio_hostcorpuscorpus_idinstantiate_97"></a>Model instantiation (<code>&lt;kamistudio_host&gt;/corpus/&lt;corpus_id&gt;/instantiate</code>)</h4>
-			<p>This page provides a form for instantiation of a model from a corpus. The user can specify a model name, description, default binding, unbinding and modification rates. By default, only the wild-type variants of genes are selected for instantiation. To select a non-wild-type variant the user can click on ‘Specify variant’ button. It opens a dialog for gene selection (showing all the genes available in the corpus and allowing interactive filtering as in the nugget visualization). When a gene is selected all the available variants are displayed. The user can select any number of variants for the instantiation.</p>
-			<hr>
-			<h2><a id="Issues_found_103"></a>Issues found?</h2>
-			<p>KAMIStudio is currently under development; if you find any issues using KAMIStudio, please, report them here: <a href="https://github.com/Kappa-Dev/KAMIStudio/issues">https://github.com/Kappa-Dev/KAMIStudio/issues</a>.</p>
-		</div>
-	</div>
-</div>
 {% endblock %}

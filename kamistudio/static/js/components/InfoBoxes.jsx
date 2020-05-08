@@ -111,9 +111,9 @@ class EditableBox extends React.Component {
 					</div>;
 			} else {
 				content = 
-					<p id={this.props.id + "noSelectedElements"}>
+					<div className="small-faded" id={this.props.id + "noSelectedElements"}>
 						{this.props.message}
-					</p>;
+					</div>;
 			}
 		}
 

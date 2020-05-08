@@ -1,0 +1,53 @@
+{% extends "new_base.html" %}
+
+
+{% block title %}Add variant{% endblock %}
+
+{% block panel %}
+  <div class="row">
+    <div class="col-md-12">
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a> / Edit meta-data</h2>
+    </div>
+  </div>
+{% endblock %}
+
+{% block inner_workspace %}
+<form id="newModelForm" style="margin-top: 10pt;" novalidate="{{ url_for('corpus.edit_meta_data', corpus_id=corpus._id) }}" method="post">
+  <div class="col-md-6">
+      <div class="model-input-form-block">
+      <div class="row form-row">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" name="name" id="name" placeholder="" value="{{ corpus.annotation.name }}">
+      </div>
+
+      <div class="row form-row">
+          <!-- <div class="col-md-6"> -->
+            <label for="desc">Description</label>
+            <input type="text" class="form-control" name="desc" id="desc" placeholder="" value="{{ corpus.annotation.desc }}">
+          <!-- </div> -->
+      </div>
+
+      <div class="row form-row">
+            <label for="desc">Organism</label>
+            <input type="text" class="form-control" name="organism" id="organism" placeholder="" value="{{ corpus.annotation.organism }}">
+      </div>
+
+
+      <div class="row form-row">
+        <div class="col-md-12">
+          <div id="loadingBlock" class="loading-elements center-block" style="display: none;">
+            <div class="faded">Loading...</div>
+            <div id="loader"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row form-row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6" style="text-align: right;">
+          <button type="submit" class="btn btn-primary btn-lg" name="importForm" action="submit" onClick="showLoader(this);">Save</button> 
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

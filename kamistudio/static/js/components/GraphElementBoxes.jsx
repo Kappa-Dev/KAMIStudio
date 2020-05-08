@@ -150,7 +150,7 @@ function SemanticsBox(props) {
 			items = [[
 				"semantics",
 				"Semantics",
-				props.semantics ? props.semantics.join(", ") : <p className="faded">not specified</p>
+				props.semantics ? props.semantics.join(", ") : <div className="small-faded">not specified</div>
 			]];
 		} else {
 			message = "Not available for this element";
@@ -234,7 +234,7 @@ function ReferenceNodeList(props) {
 	  				</a>
 	    		</li>);
 	} else {
-	 	listItems = <p style={{"margin-left": "15px"}}>No reference candidates found</p>;
+	 	listItems = <div className="small-faded" style={{"margin-left": "15px"}}>No reference candidates found</div>;
 	}
 
     return (
@@ -303,7 +303,7 @@ class ReferenceSelectionDialog extends React.Component {
 		} else {
 			content = 
 				<div id="loadingBlock"  className="loading-elements center-block">
-					<p>Loading...</p>
+					<div className="faded">Loading...</div>
 					<div id="loader"></div>
 				</div>;
 		}

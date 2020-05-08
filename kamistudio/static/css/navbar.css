@@ -1,3 +1,30 @@
+.navbar {
+  border: none;
+  border-radius: 0;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+#navigation-bar {
+  position: fixed;
+  width: 100%;
+  z-index: 500;
+  background: #fff;
+  padding-bottom: 10px;
+}
+
+#navigation-bar span {
+  position: relative;
+  right: 10px;
+}
+
+.navbar-btn {
+  box-shadow: none;
+  outline: none !important;
+  border: none;
+}
+
+
 .navbar-brand
 {
     /*position: absolute;
@@ -24,4 +51,26 @@
 
 #titleP {
 	margin: 0 0 0px;
+}
+
+
+ul.navbar-right {
+    display: none;
+}
+
+.top-nav {
+    float: right;
+    margin-top: 13pt;
+    display: inline-block;
+}
+
+@media (min-width: 768px) {
+    .top-nav {
+        display: none;
+    }
+
+    ul.navbar-right {
+        display: inline-block;
+    }
+
 }

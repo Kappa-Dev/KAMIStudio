@@ -1,21 +1,25 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
+
+{% block custom_styles %}
+<link href="{{url_for('static', filename='css/nuggets.css')}}" rel="stylesheet" type="text/css">
+{% endblock %}
 
 {% block title %}Nugget preview{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
-      <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: nugget preview</h2>
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a> / Nugget preview</h2>
     </div>
   </div>
 {% endblock %}
 
 
-{% block tabs %}
+{% block inner_workspace %}
   <div class="row">
     <div class="col-md-7">
       <div id="nuggetEditingBox">
-        <div id="loadingBlock" class="loading-elements center-block">
+        <div id="loadingBlock" style="margin-top: 15pt;" class="loading-elements center-block">
             <div id="progressMessage">Generating a nugget graph, identifying entities...</div>
             <div id="loader"></div>
         </div>

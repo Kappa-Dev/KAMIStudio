@@ -1,35 +1,47 @@
 {% extends "new_base.html" %}
 
+{% block custom_styles %}
+<link href="{{url_for('static', filename='css/action_graph.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/nuggets.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/tabs.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/navbar.css')}}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+
+{% block title %}KAMIStudio: corpus '{{ kb.annotation.name }}'{% endblock %}
+
 
 {% block panel %}
 
 <div class="row">
     <h2 class="mb-6 kb-action-brand">{{ kb.annotation.name }}</h2>
-    <h3 class="mb-6 kb-species">({{ kb.annotation.organism }})</h3>
+    <h3 class="mb-6 kb-species">(species: {% if not kb.annotation.organism %}NA{% else %}{{ kb.annotation.organism }}{% endif %})</h3>
     <div class="dropdown corpus-options">
-
-      <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
       <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
         Options
         <span class="caret"></span>
       </button>
       <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
         <li>
+          <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+        </li>
+        <li>
           <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
         </li>
+        <hr style="margin-top: 0pt; margin-bottom: 0pt;" />
         <li>
           <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
         </li>
         <li>
-          <a href=""><span class="glyphicon glyphicon-pencil"></span> Edit</a>
+          <a {% if not readonly %}href="{{ url_for('corpus.edit_meta_data', corpus_id=kb_id) }}"{%endif%} {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-pencil"></span> Edit</a>
         </li>
         <li>
-          <a {% if readonly %} disabled{% endif %} style="color:#8d0e14"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+          <a {% if readonly %} disabled{% endif %} {% if not readonly %}onClick="showConfirmDeletion('{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}', '{{ url_for('home.index') }}');"{% endif %} style="color:#8d0e14"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         </li>
       </ul>
     </div>
     <div id="deletionConfirmDialog"></div>
-    <h5 class="mb-6 kb-description">{{ kb.annotation.desc }}</h5>
+    <h5 class="mb-6 kb-description">{% if kb.annotation.desc %}{{ kb.annotation.desc }}{% endif %}</h5>
 </div>
 
 {% endblock %}
@@ -38,16 +50,17 @@
   <div class="container-fluid tabs">
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item active">
-        <a id="switchToKnowledgeTab" class="nav-link active"  onclick="switchToKnowledge(this);" role="tab"><h4>Knowledge</h4></a>
+        <a id="switchToKnowledgeTab" class="nav-link global active"  onclick="switchToKnowledge(this);" role="tab"><h4>Knowledge</h4></a>
       </li>
       <li class="nav-item">
-        <a id="switchToModelsTab" class="nav-link" onclick="switchToModels(this, '{{ kb_id }}');" role="tab"><h4>Models</h4></a>
+        <a id="switchToModelsTab" class="nav-link global" 
+           onclick="loadModelsTab(this, '{{ kb_id }}', {% if readonly %}true{% else %}false{% endif %});" role="tab"><h4>Models</h4></a>
       </li>
       <li class="nav-item">
-        <a id="switchToHistory" class="nav-link" onclick="switchToHistory(this, '{{ kb_id }}');" role="tab"><h4>Revision history</h4></a>
+        <a id="switchToHistory" class="nav-link global" onclick="loadHistoryTab(this, '{{ kb_id }}', {% if readonly %}true{% else %}false{% endif %});" role="tab"><h4>Revision history</h4></a>
       </li>
       <li class="nav-item">
-        <a id="switchToMetaData" class="nav-link" onclick="switchToMetaData(this, '{{ kb_id }}');" role="tab"><h4>Meta-data</h4></a>
+        <a id="switchToMetaData" class="nav-link global" onclick="switchToMetaData(this, '{{ kb_id }}');" role="tab"><h4>Meta-data</h4></a>
       </li>
     </ul>
     
@@ -217,7 +230,21 @@
           </div>
 
           <!------------------ MODELS TAB ---------->
-          <div class="tab-pane" id="modelsTab" role="tabpanel">
+          <div class="tab-pane" style="display: initial; visibility: hidden;" id="modelsTab" role="tabpanel">
+            <div class="row">
+              <div class="col-md-4">
+                <h2 class="collection-brand" style="margin-top: 0pt">Models</h2>
+              </div>
+              <div class="col-md-8">
+                <div class="collection-buttons">
+                  {% if not readonly %}
+                    <a href="{{ url_for('corpus.new_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">New model</a>
+                    <a href="{{ url_for('corpus.import_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">Import model</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>   
+
           </div>
 
           <!------------------ HISTORY TAB ---------->
@@ -254,7 +281,7 @@
   <script src="{{ url_for('corpus.static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('corpus.static', filename='js/visualiseNugget.js') }}" type="text/babel"></script>
   <script src="{{ url_for('corpus.static', filename='js/visualiseActionGraph.js') }}" type="text/babel"></script>
-
+  <script src="{{ url_for('corpus.static', filename='js/knowledgeTabSwitching.js') }}" type="text/javascript"></script>
   <script type="text/babel">
     // call react func
     ReactDOM.render(

@@ -1,0 +1,216 @@
+
+td.nugget-desc {
+    color: #777;
+    vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+}
+
+td.nugget-id {
+    vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+    width: 20%;
+}
+
+td.data {
+    border-top: 1px solid #eee;
+}
+
+.nugget-nav-buttons {
+    text-align: right;
+    border-bottom: 1px solid #ddd;
+}
+
+.show-nugget-button {
+    margin: 5px;
+}
+
+#nuggets {
+    margin-top: 20px
+}
+
+.nugget-list-view {
+    margin-left: 0px;
+}
+
+.nugget-record.nugget-id {
+    vertical-align: top;
+}
+
+.nugget-record.nugget-desc {
+    vertical-align: top;
+}
+
+.nugget-record.nugget-nav-buttons {
+    vertical-align: top;
+}
+
+#addNuggetToTheModel {
+    float: right;
+}
+
+table.nugget-info-table > tbody > tr > td {
+    border-top: 0px;
+}
+
+.nugget-info-table {
+    table-layout: fixed;
+}
+
+.nugget-info-table-header {
+    float: right;
+    border-right: 1px solid #ddd;
+}
+
+.nugget-info-table-header.no-border {
+    border-right: 0px;
+}
+
+.nugget-info-table-huge-cell {
+    border-left: 1px solid #ddd;
+}
+
+.entity-identification-table {
+    margin-left: 0px;
+    table-layout: initial;
+}
+
+.entity-choice-dropdown {
+    display: none;
+    position: absolute;
+    background-color: #f6f6f6;
+    min-width: 230px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+    max-height: 250px;
+}
+
+
+.nuggets-view {
+    float: right;
+}
+
+
+#nuggetsViewTable > table > tbody > tr > td,
+#nuggetsViewTable > table > tbody > tr > th {
+    border-top: 0px;
+}
+
+table.no-borders > tbody > tr > th,
+table.no-borders > tbody > tr > td {
+    border-top: 0px;
+    padding: 3px;
+}
+
+
+.nuggets-nav {
+    height: 350pt;
+    overflow-y: scroll;
+}
+
+.nuggets-nav li {
+    border-bottom: 1pt solid #ddd;
+    position: relative; 
+    line-height: 20px;
+    display: inline-block;
+    width: 100%;
+    cursor: pointer;
+}
+
+.nuggets-nav li:last-child {
+    border-bottom: 0pt;
+}
+
+.nuggets-nav li:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 0px;
+}
+
+.nuggets-nav li.not-selected:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    height: 100%;
+    width: 0px;
+    /*background-color: #6C7A89;   */
+}
+
+.nuggets-nav li:hover:before,
+.nuggets-nav li.open:hover:before {
+    width: 100%;
+/*    -webkit-transition: width .2s ease-in;
+      -moz-transition:  width .2s ease-in;
+       -ms-transition:  width .2s ease-in;
+            transition: width .2s ease-in;*/
+}
+
+.nuggets-nav li a {
+    width: 100%;
+    display: inline-block;
+    /*color: #fff;*/
+    text-decoration: none;
+    padding: 10px 15px 10px 30px;    
+}
+
+#nuggetsListView {
+    height: 490px;
+    overflow-x: auto;
+    border: 1pt solid #ddd;
+}
+
+#definitionListView {
+    height: 490px;
+    overflow-x: auto;
+    border: 1pt solid #ddd;
+}
+
+.nuggets-nav li.selected {
+  background-color: #dae3ec;
+}
+
+.nuggets-nav li.selected.instantiation-link {
+  background-color: #f5e5e6;
+}
+
+
+.nuggets-nav li a:hover,
+.nuggets-nav li a:active,
+.nuggets-nav li a:focus,
+.nuggets-nav li.open a:hover,
+.nuggets-nav li.open a:active
+.nuggets-nav li.open a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+.nuggets-nav li.instantiation-link a:hover,
+.nuggets-nav li.instantiation-link a:active,
+.nuggets-nav li.instantiation-link a:focus,
+.nuggets-nav li.open.instantiation-link a:hover,
+.nuggets-nav li.open.instantiation-link a:active
+.nuggets-nav li.open.instantiation-link a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #f5e5e6;
+}
+
+.nuggets-nav li a p {
+    margin-bottom: 0px;
+}
+
+.nugget-desc {
+    display: inline-block;
+    float: right;
+}
+
+.nuggets-nav li a.inner-selector {
+    padding-left: 50pt;
+
+}

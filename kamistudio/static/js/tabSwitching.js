@@ -1,5 +1,5 @@
-function activateLink(element) {
-	var otherLinks = $(".nav-link.inner"),
+function activateGlobalLink(element) {
+	var otherLinks = $(".nav-link.global"),
 		currentLink = $(element);
 	otherLinks.removeClass("active");
 	otherLinks.parent().removeClass("active");
@@ -7,58 +7,43 @@ function activateLink(element) {
 	currentLink.parent().addClass("active");
 }
 
-function removeAGTransition() {
-	$("#agSidebarWrapper").addClass('notransition');
-	$("#agContentWrapper").addClass('notransition');
-	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
-	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+function loadModelsTab(element, corpusId, readonly=false) {
+	switchToModels(element);
+	// showModelList(corpusId, readonly);
+	$("#switchToModelsTab").attr("onClick", "switchToModels(this);");
 }
 
-function addAGTransition() {
-	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
-	$("#agSidebarWrapper").removeClass('notransition'); // Re-enable transitions
-
-	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
-	$("#agContentWrapper").removeClass('notransition'); // Re-enable transitions
+function loadHistoryTab(element, corpusId, readonly=false) {
+	switchToHistory(element);
+	// getData(
+	// 	corpusId + "/revision-history",
+	// 	renderHistoryView(corpusId, readonly));
+	$("#switchToHistory").attr("onClick", "switchToHistory(this);");
 }
 
-function switchToAG(element) {
-	activateLink(element);
-	addAGTransition()
-	$("#nuggets").css("visibility", "hidden");
-	$("#action_graph").css("visibility", "initial");
-	$("#definitions").css("visibility", "hidden");
+function switchToKnowledge(element) {
+	addAGTransition();
+	activateGlobalLink(element);
+	$("#knowledgeTab").css("visibility", "initial");
+	$("#modelsTab").css("visibility", "hidden");
+	$("#historyTab").css("visibility", "hidden");
+	$("#metaDataTab").css("visibility", "hidden");
 }
 
-function switchToNuggets(element, instantiated) {
-	activateLink(element);
-	removeAGTransition()
-	$("#nuggets").css("visibility", "initial");
-	$("#action_graph").css("visibility", "hidden");
-	if (!instantiated) {
-		$("#definitions").css("visibility", "hidden");
-	}
-}
-
-function loadNuggetsTab(element, modelId, instantiated=false, readonly=false) {
-	switchToNuggets(element, instantiated);
-	showNuggetList(modelId, instantiated, readonly);
-	$("#switchToNuggetsTab").attr("onClick", "switchToNuggets(this);");
-}
-
-function loadDefinitionsTab(element, modelId, readonly=false) {
-	switchToDefinitions(element);
-	getData(
-		modelId + "/definitions", renderDefinitionList(modelId, readonly));
-
-	$("#switchToDefinitionsTab").attr("onClick", "switchToDefinitions(this);");
-}
-
-
-function switchToDefinitions(element) {
+function switchToModels(element) {
 	removeAGTransition();
-	activateLink(element);
-	$("#definitions").css("visibility", "initial");
-	$("#nuggets").css("visibility", "hidden");
-	$("#action_graph").css("visibility", "hidden");
+	activateGlobalLink(element);
+	$("#knowledgeTab").css("visibility", "hidden");
+	$("#modelsTab").css("visibility", "initial");
+	$("#historyTab").css("visibility", "hidden");
+	$("#metaDataTab").css("visibility", "hidden");
+}
+
+function switchToHistory(element) {
+	removeAGTransition();
+	activateGlobalLink(element);
+	$("#knowledgeTab").css("visibility", "hidden");
+	$("#modelsTab").css("visibility", "hidden");
+	$("#historyTab").css("visibility", "initial");
+	$("#metaDataTab").css("visibility", "hidden");
 }

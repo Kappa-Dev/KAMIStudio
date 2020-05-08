@@ -1,5 +1,9 @@
 {% extends "new_base.html" %}
 
+{% block custom_styles %}
+<link href="{{url_for('static', filename='css/home.css')}}" rel="stylesheet" type="text/css">
+{% endblock %}
+
 {% block title %}KAMIStudio: home{% endblock %}
 
 {% block panel %}
@@ -43,7 +47,7 @@
                     </a>
                   </th>
                   <td>{{ corpus["meta_data"]["organism"] }}</td>
-                  <td><div class="faded">{{ corpus["meta_data"]["desc"] }}</div></td>
+                  <td><div class="small-faded">{{ corpus["meta_data"]["desc"] }}</div></td>
                   <td>{{ corpus["last_modified"] }}</td>
                 </tr>
                 {% endfor %}
@@ -51,7 +55,7 @@
           </table>
         </div>
         {% else %}
-          <p>No corpora</p>
+          <div class="faded">No corpora</div>
         {% endif %}
       </div>
     </div>

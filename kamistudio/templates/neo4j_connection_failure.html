@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 {% block title %}Cannot connect to Neo4j{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
 <h2 class="mb-6 corpus-action-brand">Internal server error 500</h2>
 {% endblock %}
 
-{% block tabs %}
+{% block inner_workspace %}
 <h4>Failed to establish connection with Neo4j bolt service at '{{uri}}'.</h4>
 <p>Note that starting a Neo4j DB may take a moment, try reloading the page after a short delay. Alternatively, check the status of your Neo4j DB and try restarting it. </p>
 {% endblock %}

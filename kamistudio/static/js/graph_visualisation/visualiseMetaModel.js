@@ -1,5 +1,5 @@
 var META_SIZES = {
-  "gene": 35 * 0.5,
+  "protoform": 35 * 0.5,
   "region":30 * 0.5,
   "site":15 * 0.5,
   "residue":10 * 0.5,
@@ -12,7 +12,7 @@ var META_SIZES = {
 function getMetaModelAndVisualize() {
   	// use AJAX to send request for retrieving the nugget data
   	$.ajax({
-	    url: "/raw-meta-model",
+	    url: "/home/raw-meta-model",
 	    type: 'get',
 	    dataType: "json",
 		xhr: function () {
@@ -31,7 +31,7 @@ function getMetaModelAndVisualize() {
 
 	    console.log(graph);
 	    var displayedNodes = [
-	    	"gene",
+	    	"protoform",
 	    	"region",
 	    	"site",
 	    	"residue",

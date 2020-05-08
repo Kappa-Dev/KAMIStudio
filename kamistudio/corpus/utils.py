@@ -6,6 +6,7 @@ import json
 from flask import jsonify, redirect, url_for
 from flask import current_app as app
 
+from regraph.audit import VersionedHierarchy
 from regraph.utils import attrs_to_json
 
 from kami.data_structures.corpora import KamiCorpus
@@ -47,7 +48,7 @@ def get_corpus(corpus_id):
     """Retreive corpus from the db."""
     corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
     if corpus_json and app.neo4j_driver:
-        return KamiCorpus(
+        corpus = KamiCorpus(
             corpus_id,
             annotation=CorpusAnnotation.from_json(corpus_json["meta_data"]),
             creation_time=corpus_json["creation_time"],
@@ -55,6 +56,10 @@ def get_corpus(corpus_id):
             backend="neo4j",
             driver=app.neo4j_driver,
         )
+        version_obj = VersionedHierarchy.from_json(
+            corpus._hierarchy, corpus_json["versioning"])
+        corpus._versioning = version_obj
+        return corpus
 
 
 def update_last_modified(corpus_id):
@@ -69,13 +74,14 @@ def update_last_modified(corpus_id):
 
 
 def add_new_corpus(corpus_id, creation_time, last_modified,
-                   annotation, ag_node_positions=None):
+                   annotation, versioning, ag_node_positions=None):
     """Add new corpus to the db."""
     d = {
         "id": corpus_id,
         "creation_time": creation_time,
         "last_modified": last_modified,
-        "meta_data": annotation
+        "meta_data": annotation,
+        "versioning": versioning
     }
     if ag_node_positions:
         d["node_positioning"] = ag_node_positions
@@ -92,8 +98,8 @@ def imported_interactions(filename, corpus_id):
             json_data = json.loads(f.read())
             for i, el in enumerate(json_data):
                 corpus.add_interaction(Interaction.from_json(el))
+                update_revision_history(corpus)
         update_last_modified(corpus_id)
-        corpus.print_revision_history()
         # except:
         # return render_template("500.html")
     return redirect(url_for('corpus.corpus_view', corpus_id=corpus_id))
@@ -135,6 +141,7 @@ def get_action_graph(knowledge_obj, json_repr, attrs):
 def merge_ag_nodes(kb, data):
     """Merge nodes of the action graph."""
     kb.merge_ag_nodes(data["nodes"])
+    update_revision_history(kb)
 
 
 def update_protein_definition(corpus_id, uniprot, name, product):
@@ -215,3 +222,46 @@ def get_nugget(knowledge_obj, nugget_id, instantiated=False):
         for vv in v:
             data["templateRelation"][vv] = k
     return jsonify(data), 200
+
+
+def update_revision_history(corpus):
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus._id})
+    corpus_json["versioning"] = corpus._versioning.to_json()
+    app.mongo.db.kami_corpora.update_one(
+        {"_id": corpus_json["_id"]},
+        {"$set": corpus_json},
+        upsert=False)
+
+
+def imported_model(filename, annotation):
+    """Internal handler of already imported model."""
+    if annotation["name"]:
+        model_id = _generate_unique_model_id(annotation["name"])
+    else:
+        model_id = _generate_unique_model_id("model")
+
+    model_id = _generate_unique_model_id("model")
+    creation_time = last_modified = datetime.datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S")
+    path_to_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.isfile(path_to_file):
+        with open(path_to_file, "r+") as f:
+            try:
+                json_data = json.loads(f.read())
+                json_data["model_id"] = model_id
+                node_positioning = None
+                if "node_positioning" in json_data:
+                    node_positioning = json_data["node_positioning"]
+                add_new_model(model_id, creation_time, last_modified,
+                              annotation, ag_node_positions=node_positioning)
+                model = KamiModel.load_json(
+                    model_id,
+                    os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                    annotation,
+                    creation_time=creation_time,
+                    last_modified=last_modified,
+                    backend="neo4j",
+                    driver=app.neo4j_driver)
+            except:
+                return render_template("500.html")
+    return redirect(url_for('model.model_view', model_id=model_id))

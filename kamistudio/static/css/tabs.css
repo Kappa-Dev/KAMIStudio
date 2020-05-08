@@ -1,0 +1,72 @@
+
+.tabs {
+    /*margin: 20px;*/
+    padding-left: 0px;
+    padding-top: 10px;
+}
+
+
+.tab-content {
+    position: absolute;
+    top: auto;
+    left: 0;
+    width: 100%;
+}
+
+.tab-pane {
+    margin: 20px;
+    position: absolute;
+    width: 95%;
+    top: 0;
+    left: 0;
+}
+
+
+.nav {
+    margin-left: 5pt;
+}
+
+.tab-pane {
+    margin-left: 5pt;
+    margin-right: 5pt;
+    width: 98%;
+}
+
+.tab-pane > .row {
+    margin-right: 0pt;
+    margin-left: 0pt;
+}
+
+.nav-pills > li + li {
+    margin-left: 5pt;
+    margin-top: 5pt;
+}
+
+.nav-pills > li:first-of-type {
+    margin-top: 5pt;
+}
+
+.nav-tabs > li:first-of-type {
+    margin-left: 16%;
+}
+
+.nav-pills > li {
+    float:none;
+    display:inline-block;
+    zoom:1;
+}
+
+.nav-pills > li > a {
+    transition: none;
+}
+
+.nav-pills {
+    text-align:center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15pt;
+}
+
+.container-fluid {
+    padding-right: 0pt;
+}
+

@@ -1,0 +1,55 @@
+
+.home-collection {
+    padding: 0px;
+    margin-bottom: 20px;
+}
+
+.home-collection a {
+  color: #337ab7;
+}
+
+@media (min-width: 768px) {
+  .home-collection {
+    padding: 20px;
+  }
+}
+
+
+h2.collection-brand {
+    display: inline-block;
+    margin-top: 0px;
+}
+
+.collection-buttons {
+    display: inline-block;
+    float: right;
+}
+
+
+.home-collection tr:hover,
+.home-collection tr:active,
+.home-collection tr:focus,
+.home-collection tr.open a:hover,
+.home-collection tr.open a:active
+.home-collection tr .open a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+
+.home-collection .table > tbody > tr > td,
+.home-collection .table > tbody > tr > th {
+  border: 0pt;
+}
+
+
+.home-collection .table thead > tr {
+    /*color: #dae3ec;*/
+    /*text-decoration: none;*/
+    pointer-events: none;
+}
+
+.home-collection .faded {
+  font-size: 14px;
+}

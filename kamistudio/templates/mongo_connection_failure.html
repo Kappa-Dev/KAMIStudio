@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 {% block title %}Cannot connect to MongoDB{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
 <h2 class="mb-6 corpus-action-brand">Internal server error 500</h2>
 {% endblock %}
 
-{% block tabs %}
+{% block inner_workspace %}
 <h4>Failed to establish connection with MongoDB server at '{{uri}}'.</h4>
 <p>Check the status of your MongoDB and try restarting it.</p>
 {% endblock %}

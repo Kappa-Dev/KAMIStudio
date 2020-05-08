@@ -13,14 +13,14 @@ function htmlToElement(html) {
 function singleValueToString(data, attr_name) {
 	// convert value of an attribute to innerText/innerHtml
 	var value = (attr_name in data) ? data[attr_name].data[0] : 
-		<p className="faded">not specified</p>;
+		<div className="small-faded">not specified</div>;
 	return value;
 };
 
 function multipleValuesToString(data, attr_name) {
 	// convert value of an attribute to innerText/innerHtml
 	var value = (attr_name in data) ? value = data[attr_name].data.join(", ") : 
-		<p className="faded">not specified</p>;
+		<div className="small-faded">not specified</div>;
 	return value;
 };
 

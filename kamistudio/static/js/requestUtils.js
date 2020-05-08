@@ -22,7 +22,7 @@ function sendUpdateNuggetDesc(modelId, nuggetId, desc) {
 function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCallback) {
     /** Send a request to update nugget node attrs*/
     $.ajax({
-          url:  modelId + "/nugget/" + nuggetId +"/update-node-attrs",
+          url:  modelId + "/nugget/" + nuggetId +"/update-nugget-node-attrs",
           type: 'post',
           data: JSON.stringify({
             "id": nodeId,
@@ -42,7 +42,7 @@ function sendUpdateNuggetNodeAttrs(modelId, nuggetId, nodeId, attrs, successCall
 function sendUpdateNuggetEdgeAttrs(modelId, nuggetId, sourceId, targetId, attrs) {
     /** Send a request to update nugget edge attrs*/
     $.ajax({
-          url:  modelId + "/nugget/" + nuggetId + "/update-edge-attrs",
+          url:  modelId + "/nugget/" + nuggetId + "/update-nugget-edge-attrs",
           type: 'post',
           data: JSON.stringify({
             "source": sourceId,

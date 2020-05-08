@@ -1,0 +1,90 @@
+
+#agView {
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    height: 440pt;
+}
+
+
+#agSidebarWrapper {
+    width: 30%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: 0.5s;
+}
+
+
+#agSidebarWrapper.collapsed {
+   width: 0%;
+}
+
+#agSidebarWrapper.collapsed .info-tooltip {
+    position: relative;
+}
+
+#agContentWrapper {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0%;
+    transition: 0.5s;
+}
+
+
+#agContentWrapper.collapsed {
+    width: 70%;
+    left: 30%;}
+
+#graphInfoBoxes {
+    height: 100%;
+    width: 100%;  
+    z-index: 1;
+    overflow-x: hidden;
+    /*position: fixed;
+    top: 0;
+    left: 0;*/
+}
+
+#agContent {
+    width: 100%;
+   /* position: fixed;
+    top: 0;
+    left: 0;*/
+}
+
+#agSidebar {
+    padding: 10pt;
+    padding-top: 0pt;
+}
+
+#graphInfoBoxes {
+    /*background: #dae3ec;*/
+    margin: 5pt;
+}
+
+#collapseButton {
+    padding-left: 5pt;
+    font-size: 20pt;
+    padding-bottom: 0pt;
+}
+
+#graphInfoBoxes  h4 {
+    color: #337ab7;
+}
+
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+}
+
+.action-graph-view > a{
+    margin-left: 0px;
+}
+

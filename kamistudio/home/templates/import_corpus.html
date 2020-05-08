@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 
 {% block title %}Import corpus{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
       <h1 class="mb-6 model-action-brand">Import corpus</h1>
@@ -11,7 +11,7 @@
   </div>
 {% endblock %}
 
-{% block tabs %}
+{% block inner_workspace %}
 
 <form id="corpusImportForm" name="corpusImportForm" novalidate="{{ url_for('home.import_model') }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
@@ -41,7 +41,7 @@
 			<div class="row form-row">
 				<div class="col-md-12">
 					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
-						<p>Importing corpus... It make take a moment.</p>
+						<div class="faded">Importing corpus... It make take a moment.</div>
 						<div id="loader"></div>
 					</div>
 				</div>
@@ -58,7 +58,7 @@
 
 {% if failed %}
 <div class="loading-error-message">
-	<p class="loading-error-message">
+	<div class="loading-error-message">
 		Failed to load a corpus: uploaded json is not valid!
 	</p>
 </div>

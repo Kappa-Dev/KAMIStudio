@@ -9,7 +9,9 @@
     <link href="{{url_for('static', filename='css/forms.css')}}" rel="stylesheet" type="text/css" />
     <link href="{{url_for('static', filename='css/loaders.css')}}" rel="stylesheet" type="text/css" />
     <link href="{{url_for('static', filename='css/graph_visualisation.css')}}" rel="stylesheet" type="text/css" />
+    {% block custom_styles %}{% endblock %}
 {% endblock %}
+
 
 {% block title %} KAMIStudio {% if readonly %}(read-only){% endif %} {% endblock %}
 
@@ -25,7 +27,6 @@
           </div>
         </a>
 
-
         <ul class="nav navbar-nav navbar-right" style="margin-top: 10px;"> 
           <li class="nav-item">
             <a class="nav-link" href="{{url_for('home.about_page')}}">About the project</a>
@@ -34,6 +35,21 @@
             <a class="nav-link" href="{{url_for('home.tutorial_page')}}">Tutorial</a>
           </li>
         </ul>
+
+        <div class="dropdown top-nav">
+          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            <span class="glyphicon glyphicon-menu-hamburger"></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('home.about_page')}}">About the project</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('home.tutorial_page')}}">Tutorial</a>
+            </li>
+          </ul>
+        </div>
+
 
       </div>
       <div class="col-sm-2 navbar-col">
@@ -56,7 +72,16 @@
       <div class="col-sm-12">
           <div class="row">
             <div class="col-sm-12">
-              {% block workspace %}{% endblock %}
+              {% block workspace %}
+                <div class="row">
+                  <div class="col-md-2"></div>
+                  <div class="col-md-8">
+                    {% block inner_workspace %}
+                    {% endblock %}
+                  </div>
+                  <div class="col-md-2"></div>
+                </div>
+              {% endblock %}
             </div>
           </div>
       </div>

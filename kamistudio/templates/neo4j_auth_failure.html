@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 {% block title %}Cannot connect to Neo4j{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
 <h2 class="mb-6 corpus-action-brand">Internal server error 500</h2>
 {% endblock %}
 
-{% block tabs %}
+{% block inner_workspace %}
 <h4>Authentication to Neo4j (bolt server '{{uri}}') failed for the user '{{user}}'.</h4>
 <p>Check your authentication credentials in KAMIStudio configuration file.</p>
 {% endblock %}
