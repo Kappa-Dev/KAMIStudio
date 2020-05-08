@@ -1,24 +1,30 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 
 {% block title %}Add variant{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
-    <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: new variant</h2>
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a> / New variant</h2>
     </div>
   </div>
 {% endblock %}
 
-{% block tabs %}
-  <p>Interact with the protoform graph to create a variant. You can remove nodes and specify key residue values.</p>
+{% block workspace %}
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="faded" style="margin-top: 20pt;">Interact with the protoform graph to create a variant. You can remove nodes and specify key residue values.</div>
 
-  <div id="variantFormContainer">
-    <div id="loadingBlock"  class="col-md-6 loading-elements center-block">
-        <p>Loading...</p>
-      <div id="loader"></div>
+      <div id="variantFormContainer">
+        <div id="loadingBlock"  class="col-md-6 loading-elements center-block">
+            <div class="faded" style="margin-top: 20pt;" >Loading...</div>
+          <div id="loader"></div>
+        </div>
+      </div>
     </div>
+    <div class="col-md-2"></div>
   </div>
 
 {% endblock %}

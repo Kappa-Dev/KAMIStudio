@@ -293,11 +293,15 @@ a.disabled {
 }   
 
 .home-collection {
-	border-radius: 25px;
+	/*border-radius: 25px;*/
 /*background: #e5b2b4;*/
 	padding: 20px;
-	border: 1px solid #ccc;
+	/*border: 1px solid #ccc;*/
 	margin-bottom: 20px;
+}
+
+.home-collection a {
+  color: #337ab7;
 }
 
 h2.collection-brand {
@@ -626,7 +630,9 @@ ul.selection-items li {
 }
 
 .faded {
+  color: #aaa;
 	margin-bottom: 0pt;
+  font-size: 14pt;
 }
 
 
@@ -790,9 +796,13 @@ li.subitem.selected-subitem a {
     min-width: 0pt;
 }
 
+.panel {
+  margin-top: 0pt;
+}
+
 .row.panel {
-    padding-top: 10pt;
-    padding-bottom: 10pt;
+    padding-top: 20pt;
+    padding-bottom: 20pt;
     margin-left: 5pt;
     margin-right: 5pt;
 }
@@ -860,12 +870,12 @@ li.subitem.selected-subitem a {
 /*@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";*/
 
 body {
-  font-family: 'Poppins', sans-serif;
+  /*font-family: 'Poppins', sans-serif;*/
   background: #fafafa;
 }
 
 p {
-  font-family: 'Poppins', sans-serif;
+  /*font-family: 'Poppins', sans-serif;*/
   font-size: 1.1em;
   font-weight: 300;
   line-height: 1.7em;
@@ -1007,4 +1017,32 @@ span {
   -moz-transition: none !important;
   -o-transition: none !important;
   transition: none !important;
+}
+
+.home-collection tr:hover,
+.home-collection tr:active,
+.home-collection tr:focus,
+.home-collection tr.open a:hover,
+.home-collection tr.open a:active
+.home-collection tr .open a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+
+.home-collection .table > tbody > tr > td,
+.home-collection .table > tbody > tr > th {
+  border: 0pt;
+}
+
+
+.home-collection .table thead > tr {
+    /*color: #dae3ec;*/
+    /*text-decoration: none;*/
+    pointer-events: none;
+}
+
+.kb-action-brand a {
+  color: #337ab7;
 }

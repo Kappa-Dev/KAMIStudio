@@ -1,51 +1,29 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
 {% block title %}KAMIStudio: home{% endblock %}
 
-{% block main_content %}
-  <h3>Recently modified</h3>
-   <div class="row">
-    {%for i in range(0, 3)%} 
-      <div class="col-md-4">
-        {% if recent[i] %}
-          {% if recent[i][1] == "corpus" %}
-            <div class="highlighted-item">
-              <p class="highighted-item-brand">Corpus <a href="{{ url_for('corpus.corpus_view', corpus_id=recent[i][0]['id']) }}">{{ recent[i][0]["meta_data"]["name"] }} </a></p>
-              <p>{{ recent[i][0]["meta_data"]["desc"] }}</p>
-              <p>Organism: {{ recent[i][0]["meta_data"]["organism"] }}</p><p>Modified: {{ recent[i][0]["last_modified"] }}</p>
-            </div>         
-          {% else %}
-             <div class="highlighted-item instance">   
-               <p class="highighted-item-brand">Model <a class="instantiation-link" href="{{ url_for('model.model_view', model_id=recent[i][0]['id']) }}">{{ recent[i][0]["meta_data"]["name"] }} </a></p>
-               <p>{{ recent[i][0]["meta_data"]["desc"] }}</p>
-               <p>Organism: {{ recent[i][0]["meta_data"]["organism"] }}</p>
-               <p>Modified: {{ recent[i][0]["last_modified"] }}</p>
-             </div> 
-          {% endif %}
-              
-        {% endif %}
-       </div>
-    {% endfor%} 
+{% block panel %}
+<div class="row">
+  <div class="col-md-4">
+    <h2 class="collection-brand">Corpora</h2>
   </div>
+  <div class="col-md-8">
+    <div class="collection-buttons">
+      {% if not readonly %}
+        <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
+        <a href="{{ url_for('home.import_corpus') }}" class="btn btn-primary btn-md panel-button-right">Import corpus</a>
+      {% endif %}
+    </div>
+  </div>
+</div>     
+{% endblock %}
 
+{% block workspace %}
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
       <div class="home-collection">
-        <div class="row">
-          <div class="col-md-4">
-            <h2 class="collection-brand">Corpora</h2>
-          </div>
-          <div class="col-md-8">
-            <div class="collection-buttons">
-              {% if not readonly %}
-                <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
-                <a href="{{ url_for('home.import_corpus') }}" class="btn btn-primary btn-md panel-button-right">Import corpus</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        <!-- <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a> -->
-        {% if corpora|length > 0 %}
+          {% if corpora|length > 0 %}
           <div class="table-responsive">
             <table class="table">
             <thead>
@@ -65,7 +43,7 @@
                     </a>
                   </th>
                   <td>{{ corpus["meta_data"]["organism"] }}</td>
-                  <td><p class="faded">{{ corpus["meta_data"]["desc"] }}</p></td>
+                  <td><div class="faded">{{ corpus["meta_data"]["desc"] }}</div></td>
                   <td>{{ corpus["last_modified"] }}</td>
                 </tr>
                 {% endfor %}
@@ -77,55 +55,7 @@
         {% endif %}
       </div>
     </div>
-       
-    <div class="col-md-6">
-      <div class="home-collection">
-      	<div class="row">
-          <div class="col-md-4">
-            <h2 class="collection-brand">Models</h2>
-          </div>
-          <div class="col-md-8">
-            <div class="collection-buttons">
-              {% if not readonly %}
-                <a href="{{ url_for('home.new_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">New model</a>
-                <a href="{{ url_for('home.import_model') }}" class="btn btn-primary btn-md panel-button-right instantiation">Import model</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        <!-- <a class="btn btn-default btn-md panel-button panel-button-right disabled" id="delete-models">Delete</a> -->
-        {% if models|length > 0 %}
-          <div class="table-responsive">
-            <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Organism</th>
-                <th scope="col">Description</th>
-                <th scope="col">Last modified</th>
-              </tr>
-            </thead>
-              <tbody>
-                {% for model in models %}
-                <tr>
-                  <th scope="row">
-                    <a class="instantiation-link" href="{{ url_for('model.model_view', model_id=model['id']) }}">
-                      {{ model["meta_data"]["name"] }}
-                    </a>
-                  </th>
-                  <td>{{ model["meta_data"]["organism"] }}</td>
-                  <td><p class="faded">{{ model["meta_data"]["desc"] }}</p></td>
-                  <td>{{ model["last_modified"] }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-          </table>
-        </div>
-        {% else %}
-          <p>No models</p>
-        {% endif %}
-      </div>
-    </div>
+    <div class="col-md-2"></div>
   </div>
 {% endblock %}
 
