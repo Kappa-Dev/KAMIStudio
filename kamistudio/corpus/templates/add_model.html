@@ -1,17 +1,16 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
+{% block title %}{{ corpus.annotation.name }}: instantiate{% endblock %}
 
-{% block title %}Instantiate{% endblock %}
-
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
-    <h2 class="mb-6 kb-action-brand">{{ corpus.annotation.name }}: instantiate a KAMI-model</h2>
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a> / New model </h2>
     </div>
   </div>
 {% endblock %}
 
-{% block tabs %}
+{% block inner_workspace %}
 
 <div id="instantiationForm">
   <div class="col-md-6">

@@ -38,17 +38,18 @@ class KBMetaDataBox extends React.Component {
 	}
 
 	render() {
+
 		var items = [
 			["name", "Name", this.props.kbName ? this.props.kbName : <p className="faded">not specified</p>],
 			["desc", "Desciption", this.props.desc ? this.props.desc : <p className="faded">not specified</p>],
-			["organism", "Organism", this.props.organism ? this.props.organism : <p className="faded">not specified</p>],
+			// ["organism", "Organism", this.props.organism ? this.props.organism : <p className="faded">not specified</p>],
 			["creation_time", "Created", this.props.creation_time],
 			["last_modified", "Last modified", this.props.last_modified]
 		];
 		var data = {
 			"name": this.props.kbName,
 			"desc": this.props.desc,
-			"organism": this.props.organism,
+			// "organism": this.props.organism,
 			"creation_time": this.props.creation_time,
 			"last_modified": this.props.last_modified
 		}
@@ -62,7 +63,7 @@ class KBMetaDataBox extends React.Component {
 						 onDataUpdate={this.props.onDataUpdate}
 						 data={data}
 						 noBorders={true}
-						 expandable={false}
+						 expandable={this.props.expandable}
 						 expanded={true}
 						 protected={this.props.protected}
 						 instantiated={this.props.instantiated}
@@ -97,6 +98,8 @@ class InteractionsDataBox extends React.Component {
 		]);
 	}
 }
+
+
 
 
 class ModelDataBox extends React.Component {

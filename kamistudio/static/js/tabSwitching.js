@@ -7,10 +7,17 @@ function activateGlobalLink(element) {
 	currentLink.parent().addClass("active");
 }
 
-function loadModelsTab(element, corpusId, readonly=false) {
+function loadKnowledgeTab(element, corpusId, webWorkerUrl, readonly=false) {
+	console.log("here");
+	switchToKnowledge(element);
+	showActionGraph(corpusId, webWorkerUrl, readonly);
+	$("#switchToKnowledgeTab").attr("onClick", "switchToKnowledge(this);");
+}
+ 
+function loadModelsTab(element, corpusId, modelId=null, readonly=false) {
 	switchToModels(element);
-	// showModelList(corpusId, readonly);
 	$("#switchToModelsTab").attr("onClick", "switchToModels(this);");
+	showModelList(corpusId, modelId, readonly);
 }
 
 function loadHistoryTab(element, corpusId, readonly=false) {
@@ -24,26 +31,22 @@ function loadHistoryTab(element, corpusId, readonly=false) {
 function switchToKnowledge(element) {
 	addAGTransition();
 	activateGlobalLink(element);
-	$("#knowledgeTab").css("visibility", "initial");
-	$("#modelsTab").css("visibility", "hidden");
-	$("#historyTab").css("visibility", "hidden");
-	$("#metaDataTab").css("visibility", "hidden");
+	$(".tab-pane").removeClass("active")
+	$("#knowledgeTab").addClass("active");
+	$("#action_graph").addClass("active");
 }
 
 function switchToModels(element) {
-	removeAGTransition();
 	activateGlobalLink(element);
-	$("#knowledgeTab").css("visibility", "hidden");
-	$("#modelsTab").css("visibility", "initial");
-	$("#historyTab").css("visibility", "hidden");
-	$("#metaDataTab").css("visibility", "hidden");
+	removeAGTransition();
+	$(".tab-pane").removeClass("active");
+	$("#modelsTab").addClass("active");
+	
 }
 
 function switchToHistory(element) {
 	removeAGTransition();
 	activateGlobalLink(element);
-	$("#knowledgeTab").css("visibility", "hidden");
-	$("#modelsTab").css("visibility", "hidden");
-	$("#historyTab").css("visibility", "initial");
-	$("#metaDataTab").css("visibility", "hidden");
+	$(".tab-pane").removeClass("active")
+	$("#historyTab").addClass("active");
 }

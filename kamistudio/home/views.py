@@ -23,8 +23,8 @@ from regraph import Neo4jHierarchy
 home_blueprint = Blueprint('home', __name__, template_folder='templates')
 
 
-@home_blueprint.route('/')
 @home_blueprint.route('/home')
+@home_blueprint.route('/')
 @check_dbs
 def index():
     """Handler of index page."""

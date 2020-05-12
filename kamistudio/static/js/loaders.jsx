@@ -64,3 +64,19 @@ function removeProgressBlock() {
 		progressBlock.parentNode.removeChild(progressBlock);
 	}
 }
+
+
+// function renderLoader(instantiated, father) {
+//     /* Turn on the loader of the nuggets view */
+//     ReactDOM.render(
+//         <div id="progressBlock"
+//              style={{"padding-top": "0pt", "margin-top": "20pt"}}>
+//             <div id="progressMessage">Loading...</div>
+//             <div id="loadingBlock" className="loading-elements center-block"
+//                   style={{"margin-bottom": "20pt"}}>
+//                 <div id={instantiated ? "loaderModel" : "loader"}></div>
+//             </div>
+//         </div>,
+//         document.getElementById(father)
+//     );
+// }

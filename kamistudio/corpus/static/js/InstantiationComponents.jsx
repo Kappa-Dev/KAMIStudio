@@ -1,3 +1,38 @@
+function GeneList(props) {
+	var listItems = props.items.map(
+		(item) =>
+				<li className="not-selected gene-item" >
+					<a className="gene-link" onClick={() => props.onItemClick(item[0], item[1])}>
+	  					{item[0]}
+	  					<div style={{"float": "right", "margin-left": "5pt"}}>{item[1]}</div>
+	  					<div style={{"float": "right"}}>{item[2] ? item[2].join(", ") : ""}</div>
+  					</a>
+				</li>
+    );
+	return <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+	     		{listItems}
+	       </ul>;
+}
+
+function SelectableGeneList(props) {
+	var listItems = props.items.map(
+		function(item) {
+			var synomyms = item[2] ? item[2].concat([item[1]]) : [item[1]];
+	
+			return (<li className="not-selected gene-item" >
+					<label class="gene-item">
+						<input type="checkbox" class="gene-selector" id={item[0]} name={item[0]}/> 
+						{item[0]}
+	  					<div class="synonyms">{synomyms ? synomyms.join(", ") : ""}</div>
+  					</label>
+				</li>);
+		}
+    );
+	return <ul className="nav nuggets-nav list-group-striped list-unstyled components">
+	     		{listItems}
+	       </ul>;
+}
+
 
 function VariantSelectionDialog(props) {
 	var filteredList = <FilteredList 
@@ -5,6 +40,25 @@ function VariantSelectionDialog(props) {
 			onItemClick={props.onItemClick}
 			filterItems={props.filterItems}
 			listComponent={GeneList}
+			itemFilter={
+				(item, value) => item.join(", ").toLowerCase().search(
+		    			value.toLowerCase()) !== -1
+			}/>;
+	return (
+		<Dialog
+			id={props.id}
+			title={props.title}
+			onRemove={props.onRemove}
+			content={filteredList} />
+	);
+}
+
+function GeneSelectionDialog(props) {
+	var filteredList = <FilteredList 
+			onFetchItems={props.onFetchItems}
+			onItemClick={props.onItemClick}
+			filterItems={props.filterItems}
+			listComponent={SelectableGeneList}
 			itemFilter={
 				(item, value) => item.join(", ").toLowerCase().search(
 		    			value.toLowerCase()) !== -1
@@ -121,36 +175,51 @@ class InstantiationForm extends React.Component {
 			default_brk_rate: null,
 			default_mod_rate: null,
 			choices: [],
-			activeDialog: false
+			activeVariantSelectioDialog: false,
+			activeGeneSelectionDialog: false,
 		};
 
-		this.onButtonClick = this.onButtonClick.bind(this);
-		this.onRemoveDialog = this.onRemoveDialog.bind(this);
-		this.onItemClick = this.onItemClick.bind(this);
+		this.onSelectVariantButtonClick = this.onSelectVariantButtonClick.bind(this);
+		this.onSelectGenesButtonClick = this.onSelectGenesButtonClick.bind(this);
+		this.onRemoveVariantSelectionDialog = this.onRemoveVariantSelectionDialog.bind(this);
+		this.onRemoveGeneSelectionDialog = this.onRemoveGeneSelectionDialog.bind(this);
+		this.onVariantItemClick = this.onVariantItemClick.bind(this);
 		this.onSubitemChange = this.onSubitemChange.bind(this);
 		this.onSubmit = this.onSubmit.bind(this);
 		this.handleFieldChange = this.handleFieldChange.bind(this);
 		this.onRemoveItem = this.onRemoveItem.bind(this);
 	}
 
-	onButtonClick() {
+	onSelectVariantButtonClick() {
 		var state = Object.assign({}, this.state);
-		state.activeDialog = true;
+		state.activeVariantSelectioDialog = true;
 		this.setState(state);
 	}
 
-	onRemoveDialog() {
+	onSelectGenesButtonClick() {
 		var state = Object.assign({}, this.state);
-		state.activeDialog = false;
+		state.activeGeneSelectionDialog = true;
 		this.setState(state);
 	}
 
-	onItemClick(uniprotid, hgnc) {
+	onRemoveVariantSelectionDialog() {
+		var state = Object.assign({}, this.state);
+		state.activeVariantSelectioDialog = false;
+		this.setState(state);
+	}
+
+	onRemoveGeneSelectionDialog() {
+		var state = Object.assign({}, this.state);
+		state.activeGeneSelectionDialog = false;
+		this.setState(state);
+	}
+
+	onVariantItemClick(uniprotid, hgnc) {
 		// console.log(uniprotid, hgnc);
 		var state = Object.assign({}, this.state),
 			variants = {};
 
-		state.activeDialog = false;
+		state.activeVariantSelectioDialog = false;
 		
 		state["choices"].push({
 			"uniprotid": uniprotid,
@@ -179,7 +248,7 @@ class InstantiationForm extends React.Component {
 	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
 
 	        const data = this.state;
-	        const url = "/corpus/" + this.props.modelId + "/instantiate";
+	        const url = "/corpus/" + this.props.modelId + "/new-model";
 	        $.ajax({
 			    url: url,
 			    type: 'post',
@@ -230,16 +299,29 @@ class InstantiationForm extends React.Component {
 						   noSubitemsMessage={" Wild Type (no variants found, default selection)"}/>),
 			dialog = null;
 
-		if (this.state.activeDialog) {
+		if (this.state.activeVariantSelectioDialog) {
 			dialog = <VariantSelectionDialog
 				id={this.props.id + "SelectionDialog"}
 				modelId={this.props.modelId}
 				title={this.props.selectionDialogTitle}
-				onRemove={this.onRemoveDialog}
+				onRemove={this.onRemoveVariantSelectionDialog}
 				onFetchItems={this.props.onFetchItems}
-				onItemClick={this.onItemClick}
+				onItemClick={this.onVariantItemClick}
 				filterItems={this.state.choices.map((item) => item["uniprotid"])}/>;
 		}
+
+		if (this.state.activeGeneSelectionDialog) {
+			dialog = <GeneSelectionDialog
+				id={this.props.id + "GeneSelectionDialog"}
+				modelId={this.props.modelId}
+				title={this.props.selectionDialogTitle}
+				onRemove={this.onRemoveGeneSelectionDialog}
+				onFetchItems={this.props.onFetchItems}
+				onItemClick={() => console.log("Clicked")}
+				filterItems={this.state.choices.map((item) => item["uniprotid"])}/>;
+		}
+
+		var geneSelectionDialog = null, genesContent = null;
 
 		return (
 			<form id="instantationForm">
@@ -292,8 +374,26 @@ class InstantiationForm extends React.Component {
 						</div>
 
 						<div class="row form-row">
-						    <label for="desc">Variant selection</label>
-						    <p>Select non-wild-type variants for instantation of the model</p>
+						    <label for="desc">Seed protoforms</label>
+						    <p>Select a set of seed protoforms (all genes are selected by default)</p>
+						    <div id="geneSelectionWidget">
+						    	{geneSelectionDialog}
+								<div id={this.props.id + "Selection"}>
+									<ul className="selection-items">
+										{genesContent}
+									</ul>
+								</div>
+								<a type="button"
+								   onClick={this.onSelectGenesButtonClick}
+								   className="btn btn-default btn-md panel-button add-button add-enzyme-region">
+								   <span className="glyphicon glyphicon-filter"></span> Select genes
+								</a>
+						    </div>
+						</div>
+
+						<div class="row form-row">
+						    <label for="desc">Variants</label>
+						    <p>Select variants (wild-type variants are selected by default)</p>
 						    <div id="variantSelectionWidget">
 						    	{dialog}
 								<div id={this.props.id + "Selection"}>
@@ -302,16 +402,15 @@ class InstantiationForm extends React.Component {
 									</ul>
 								</div>
 								<a type="button"
-								   onClick={this.onButtonClick}
+								   onClick={this.onSelectVariantButtonClick}
 								   className="btn btn-default btn-md panel-button add-button add-enzyme-region">
 								   <span className="glyphicon glyphicon-plus"></span> {this.props.buttonLabel}
 								</a>
 								<div className="row form-row">
 									<div className="col-md-6">
 										<div id="progressBlock" style={{"padding-top": "10px", "display": "none"}}>
-	          								<div id="progressMessage">Instantiating the corpus... It may take a moment.</div>
+	          								<div id="progressMessage">Creating a new model...</div>
 											<div id="loadingBlock"  className="loading-elements center-block">
-												<p>Loading...</p>
 												<div id="loader"></div>
 											</div>
 										</div>
@@ -322,7 +421,7 @@ class InstantiationForm extends React.Component {
 												name="importForm"
 												disabled={this.props.readonly}
 												onClick={this.onSubmit}>
-												<span className="glyphicon glyphicon-play"></span> Instantiate
+												Create
 										</button> 
 									</div>
 								</div>

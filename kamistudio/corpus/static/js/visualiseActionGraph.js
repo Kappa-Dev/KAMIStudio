@@ -90,6 +90,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 	        return xhr;
 	    }
 	}).done(function (data) {
+		console.log("Got graph");
 	    var graph = data["actionGraph"],
 	    	semantics = data["semantics"],
 	    	metaTyping = data["metaTyping"],
@@ -479,6 +480,7 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
  	       				 	 semantics={d.semantics}
 		       				 elementType="node"
 		       				 editable={false}
+		       				 fixedtooltip={true}
 		       				 readonly={readonly}/>;
 		    }
 
@@ -489,13 +491,15 @@ function getActionGraphAndVisualize(model_id, workerUrl, instantiated=false,
 		      				   elementType="node"
 		      				   metaType={metaTyping[d.id]}
 		      				   editable={false}
+		       				   fixedtooltip={true}
 		      				   instantiated={instantiated}/>,
 		       <MetaDataBox id="metaData"
 		       				   elementId={d.id}
 		       				   elementType="node"
 		       				   metaType={metaTyping[d.id]}
 		       				   attrs={d.attrs}
-		       				   editable={true}
+		       				   editable={true} 
+		       				   fixedtooltip={true}
 		       				   readonly={readonly}
 		       				   instantiated={instantiated}
 		       				   onDataUpdate={updateNodeAttrs(d, i)}/>,
@@ -620,3 +624,29 @@ $(document).ready(function() {
   var button = $('#collapseButton'); 
   button.on('click', toggleSideBar);
 });
+
+
+function showActionGraph(corpusId, webWorkerUrl, readonly) {
+	ReactDOM.render(
+        [<ElementInfoBox id="graphElement" 
+                   items={[]}
+                   fixedtooltip={true}/>,
+         <MetaDataBox id="metaData"
+                      items={[]}
+                      fixedtooltip={true}/>,
+         <SemanticsBox id="semantics"
+                     items={[]}
+                     fixedtooltip={true}/>,
+
+        ],
+        document.getElementById('graphInfoBoxes')
+      );
+	// ReactDOM.render(
+	// 	<ActionGraphView empty={empty} readonly={readOnly}/>,
+	// 	document.getElementById("agView"));
+  	getActionGraphAndVisualize(
+    	corpusId,
+   		webWorkerUrl,
+   		false,
+    	readonly);
+}

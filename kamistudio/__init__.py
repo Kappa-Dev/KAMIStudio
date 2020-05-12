@@ -5,7 +5,7 @@ import sys
 import datetime
 import subprocess
 
-from flask import Flask, url_for, render_template
+from flask import Flask, url_for, render_template, redirect
 from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
@@ -129,6 +129,11 @@ app.register_blueprint(model_blueprint, url_prefix="/model")
 app.register_blueprint(corpus_blueprint, url_prefix="/corpus")
 
 
+@app.route("/")
+def go_home():
+    return redirect(url_for('home.index'))
+
+
 @app.context_processor
 def override_url_for():
     """Override url_for function with dated url."""
@@ -143,18 +148,22 @@ def page_not_found(e):
 
 def dated_url_for(endpoint, **values):
     """Add a time stamp to an url."""
-    if endpoint == 'static':
+    if endpoint == 'static' or endpoint == 'corpus.static':
         filename = values.get('filename', None)
         if filename:
+            endpoint_address = (
+                endpoint
+                if endpoint == 'static'
+                else 'corpus/static'
+            )
             file_path = os.path.join(app.root_path,
-                                     endpoint, filename)
+                                     endpoint_address, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
     elif endpoint == 'model.generate_kappa' or\
             endpoint == 'model.download_model':
         values['q'] = datetime.datetime.now().timestamp()
     elif endpoint == 'corpus.download_corpus':
         values['q'] = datetime.datetime.now().timestamp()
-
     return url_for(endpoint, **values)
 
 

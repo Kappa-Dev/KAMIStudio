@@ -75,3 +75,8 @@
 .tabs.loading .loading-elements {
     display: block;
 }
+
+
+#loadingBlock {
+    margin-top: 15pt;
+}

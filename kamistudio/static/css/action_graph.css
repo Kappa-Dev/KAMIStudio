@@ -88,3 +88,24 @@
     margin-left: 0px;
 }
 
+
+#actionGraphSvg {
+    margin-top: -40pt;
+}
+
+#showLabelsButton,
+#saveLayoutButton {
+    background-color: white;
+    position: relative;
+    z-index:1000
+}
+
+
+
+#agSidebarWrapper .info-tooltip {
+    position: fixed;
+}
+
+#agSidebarWrapper.collapsed .info-tooltip {
+    position: relative;
+}

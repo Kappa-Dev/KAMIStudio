@@ -1,4 +1,5 @@
 """Views of corpus blueprint."""
+import datetime
 import json
 import os
 
@@ -19,7 +20,6 @@ from kami.aggregation.identifiers import EntityIdentifier
 from kami.exceptions import KamiError
 
 from kamistudio.utils import authenticate, check_dbs
-from kamistudio.model.views import add_new_model
 
 from kamistudio.corpus.form_parsing import parse_interaction
 from kamistudio.corpus.utils import (get_corpus, update_last_modified,
@@ -28,7 +28,7 @@ from kamistudio.corpus.utils import (get_corpus, update_last_modified,
                                      update_protein_definition,
                                      update_revision_history,
                                      get_action_graph, merge_ag_nodes,
-                                     get_nugget)
+                                     get_nugget, add_new_model)
 
 
 corpus_blueprint = Blueprint(
@@ -59,8 +59,6 @@ def corpus_view(corpus_id):
             user=app.config["NEO4J_USER"])
 
     if corpus is not None:
-        corpus.print_revision_history()
-
         n_nuggets = len(corpus.nuggets())
 
         genes = {}
@@ -79,8 +77,10 @@ def corpus_view(corpus_id):
             {"corpus_id": corpus_id})
 
         n_defs = len(list(raw_defs))
-
-        return render_template("n_corpus.html",
+        model_id = None
+        if "model_id" in request.args:
+            model_id = request.args["model_id"]
+        return render_template("corpus.html",
                                kb_id=corpus_id,
                                kb=corpus,
                                n_nuggets=n_nuggets,
@@ -89,6 +89,7 @@ def corpus_view(corpus_id):
                                bindings=json.dumps(bindings),
                                modifications=json.dumps(modifications),
                                instantaited=False,
+                               model_id=model_id,
                                readonly=app.config["READ_ONLY"])
     else:
         return render_template("corpus_not_found.html",
@@ -221,90 +222,6 @@ def preview_nugget(corpus_id):
             readonly=app.config["READ_ONLY"])
     except KamiError:
         return jsonify({}), 200
-
-
-@corpus_blueprint.route("/<corpus_id>/instantiate",
-                        methods=["GET", "POST"])
-@check_dbs
-def instantiate(corpus_id):
-    """Handle corpus instantiation."""
-    if request.method == "GET":
-        corpus = get_corpus(corpus_id)
-        return render_template(
-            "instantiation.html",
-            corpus=corpus,
-            readonly=app.config["READ_ONLY"])
-    else:
-        if app.config["READ_ONLY"]:
-            return render_template("403.html")
-        else:
-            json_data = request.get_json()
-            corpus = get_corpus(corpus_id)
-
-            if corpus:
-                model_name = json_data["name"]
-                model_desc = json_data["desc"]
-
-                default_bnd_rate = None
-                default_brk_rate = None
-                default_mod_rate = None
-                if "default_bnd_rate" in json_data:
-                    default_bnd_rate = json_data["default_bnd_rate"]
-                if "default_brk_rate" in json_data:
-                    default_brk_rate = json_data["default_brk_rate"]
-                if "default_mod_rate" in json_data:
-                    default_mod_rate = json_data["default_mod_rate"]
-
-                definitions = []
-                definition_ids = []
-                for element in json_data["choices"]:
-                    uniprotid = element["uniprotid"]
-                    definition_json = app.mongo.db.kami_new_definitions.find_one({
-                        "corpus_id": corpus_id,
-                        "protoform": uniprotid
-                    })
-                    if definition_json is not None:
-                        # definition_ids.append([definition_json["id"]])
-                        selected_products = element["selectedVariants"]
-                        new_def = {
-                            "corpus_id": definition_json["corpus_id"],
-                            "protoform": definition_json["protoform"],
-                            "products": {}
-                        }
-                        for p in selected_products:
-                            new_def["products"][p] = definition_json["products"][p]
-                        definitions.append(Definition.from_json(new_def))
-
-                model_id = _generate_unique_model_id(model_name, corpus._id)
-                annotation = {
-                    "name": model_name,
-                    "desc": model_desc,
-                    "organism": corpus.annotation.organism
-                }
-                model = corpus.instantiate(
-                    model_id,
-                    definitions,
-                    annotation=CorpusAnnotation.from_json(annotation),
-                    default_bnd_rate=default_bnd_rate,
-                    default_brk_rate=default_brk_rate,
-                    default_mod_rate=default_mod_rate
-                )
-                corpus_jsoon = app.mongo.db.kami_corpora.find_one(
-                    {"id": corpus_id})
-
-                add_new_model(model_id, model.creation_time,
-                              model.last_modified, annotation,
-                              corpus_id=corpus._id,
-                              definitions=definition_ids,
-                              seed_genes=[],
-                              default_bnd_rate=default_bnd_rate,
-                              default_brk_rate=default_brk_rate,
-                              default_mod_rate=default_mod_rate,
-                              ag_node_positions=corpus_jsoon["node_positioning"])
-                data = {
-                    "redirect": url_for('model.model_view', model_id=model_id)
-                }
-                return jsonify(data), 200
 
 
 @corpus_blueprint.route("/<corpus_id>/add-generated-nugget",
@@ -1155,54 +1072,107 @@ def remove_variant(corpus_id, definition_id, variant_id):
         return jsonify({"success": False}), 200
 
 
-@corpus_blueprint.route("/new-model", methods=["GET"])
+@corpus_blueprint.route("<corpus_id>/new-model", methods=["GET", "POST"])
 @authenticate
 @check_dbs
-def new_model():
+def new_model(corpus_id):
     """New model handler."""
-    return render_template("new_model.html")
+    if request.method == "GET":
+        corpus = get_corpus(corpus_id)
+        return render_template(
+            "add_model.html",
+            corpus=corpus,
+            readonly=app.config["READ_ONLY"])
+    else:
+        if not app.config["READ_ONLY"]:
+            json_data = request.get_json()
+            corpus = get_corpus(corpus_id)
+
+            if corpus:
+                model_name = json_data["name"]
+                model_desc = json_data["desc"]
+
+                default_bnd_rate = None
+                default_brk_rate = None
+                default_mod_rate = None
+                if "default_bnd_rate" in json_data:
+                    default_bnd_rate = json_data["default_bnd_rate"]
+                if "default_brk_rate" in json_data:
+                    default_brk_rate = json_data["default_brk_rate"]
+                if "default_mod_rate" in json_data:
+                    default_mod_rate = json_data["default_mod_rate"]
+
+                definitions = []
+                definition_ids = []
+                for element in json_data["choices"]:
+                    uniprotid = element["uniprotid"]
+                    definition_json = app.mongo.db.kami_new_definitions.find_one({
+                        "corpus_id": corpus_id,
+                        "protoform": uniprotid
+                    })
+                    if definition_json is not None:
+                        # definition_ids.append([definition_json["id"]])
+                        selected_products = element["selectedVariants"]
+                        new_def = {
+                            "corpus_id": definition_json["corpus_id"],
+                            "protoform": definition_json["protoform"],
+                            "products": {}
+                        }
+                        for p in selected_products:
+                            new_def["products"][p] = definition_json["products"][p]
+                        definitions.append(Definition.from_json(new_def))
+
+                model_id = _generate_unique_model_id(model_name, corpus._id)
+                annotation = {
+                    "name": model_name,
+                    "desc": model_desc,
+                    "organism": corpus.annotation.organism
+                }
+                creation_time = last_modified = datetime.datetime.now().strftime(
+                    "%d-%m-%Y %H:%M:%S")
+                add_new_model(model_id, creation_time,
+                              last_modified, annotation,
+                              corpus_id=corpus._id,
+                              definitions=definition_ids,
+                              seed_genes=[],
+                              default_bnd_rate=default_bnd_rate,
+                              default_brk_rate=default_brk_rate,
+                              default_mod_rate=default_mod_rate)
+                data = {
+                    "redirect": url_for(
+                        'corpus.corpus_view', corpus_id=corpus_id,
+                        model_id=model_id)
+                }
+                return jsonify(data), 200
+        else:
+            return render_template("403.html")
 
 
-@corpus_blueprint.route("/new-model", methods=["POST"])
+@corpus_blueprint.route("<corpus_id>/models", methods=["GET"])
+@check_dbs
+def get_models(corpus_id):
+    """Get models of the corpus."""
+    models = list(app.mongo.db.kami_models.find(
+        {"corpus_id": corpus_id}).sort(
+        "last_modified", -1))
+    data = {"items": []}
+    for model in models:
+        del model["_id"]
+        data["items"].append(model)
+    return jsonify(data), 200
+
+
+@corpus_blueprint.route("<corpus_id>/import-model", methods=['GET', 'POST'])
 @authenticate
 @check_dbs
-def create_new_model():
-    """Handler for creation of a new corpus."""
-    annotation = {}
-    if request.form["name"]:
-        annotation["name"] = request.form["name"]
-    if request.form["desc"]:
-        annotation["desc"] = request.form["desc"]
-    if request.form["organism"]:
-        annotation["organism"] = request.form["organism"]
-    # TODO: handle annotation
-
-    # creation_time = last_modified = datetime.datetime.now().strftime(
-    #     "%d-%m-%Y %H:%M:%S")
-
-    # if request.form["name"]:
-    #     model_id = _generate_unique_model_id(request.form["name"])
-    # else:
-    #     model_id = _generate_unique_model_id("model")
-    # model = KamiModel(
-    #     model_id,
-    #     annotation,
-    #     creation_time, last_modified,
-    #     backend="neo4j",
-    #     driver=app.neo4j_driver)
-    # model.create_empty_action_graph()
-    # add_new_model(model_id, creation_time, last_modified, annotation)
-    return redirect(url_for('model.model_view', model_id=model_id))
-
-
-@corpus_blueprint.route("/import-model", methods=['GET', 'POST'])
-@authenticate
-@check_dbs
-def import_model():
+def import_model(corpus_id):
     """Handler of model import."""
     if request.method == "GET":
         failed = request.args.get('failed')
-        return render_template('import_model.html', failed=failed)
+        corpus = get_corpus(corpus_id)
+        return render_template(
+            'import_model.html',
+            corpus=corpus, failed=failed)
     else:
         # check if the post request has the file part
         annotation = {}

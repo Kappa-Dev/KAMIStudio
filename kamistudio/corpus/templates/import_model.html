@@ -1,19 +1,18 @@
-{% extends "base.html" %}
+{% extends "new_base.html" %}
 
-{% block title %}New model{% endblock %}
+{% block title %}'{{ corpus.annotation.name }}': import model{% endblock %}
 
-{% block panel_buttons %}
+{% block panel %}
   <div class="row">
     <div class="col-md-12">
-      <h1 class="mb-6 model-action-brand">New model</h1>
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=corpus._id) }}">{{ corpus.annotation.name }}</a> / Import model </h2>
     </div>
   </div>
 {% endblock %}
 
+{% block inner_workspace %}
 
-{% block tabs %}
-
-<form id="newModelForm" novalidate="{{ url_for('home.new_model') }}" method="post">
+<form id="modelImportForm" novalidate="{{ url_for('corpus.import_model', corpus_id=corpus_id) }}" method="post" enctype="multipart/form-data">
 	<div class="col-md-6">
 	    <div class="model-input-form-block">
 			<div class="row form-row">
@@ -29,16 +28,21 @@
 			 </div>
 
 			 <div class="row form-row">
-			    <!-- <div class="col-md-6"> -->
 			      <label for="desc">Organism</label>
 			      <input type="text" class="form-control" name="organism" id="organism" placeholder="" value="">
-			    <!-- </div> -->
-			 </div>
+			</div>
+
+			<div class="row form-row">
+				<!-- <div class="col-md-6"> -->
+					<label for="file">Choose a file...</label>
+					<input type="file" name="file">
+				<!-- </div> -->
+			</div>
 
 			<div class="row form-row">
 				<div class="col-md-12">
 					<div id="loadingBlock" class="loading-elements center-block" style="display: none;">
-						<p>Loading...</p>
+						<p>Importing model... It make take a moment.</p>
 						<div id="loaderModel"></div>
 					</div>
 				</div>
@@ -46,11 +50,20 @@
 			<div class="row form-row">
 				<div class="col-md-6"></div>
 				<div class="col-md-6" style="text-align: right;">
-					<button type="submit" class="btn btn-primary btn-lg instantiation" name="importForm" action="submit" onClick="showLoader(this);">Create</button> 
+					<a type="button" class="btn btn-primary btn-lg instantiation" name="importForm" onclick="showLoaderAndSubmit('modelImportForm');">Import</a> 
 				</div>
 			</div>
 		</div>
 	</div>
 </form>
+
+{% if failed %}
+<div class="loading-error-message">
+	<p class="loading-error-message">
+		Failed to load a model: uploaded json is not valid!
+	</p>
+</div>
+{% endif %}
+
 
 {% endblock %}

@@ -1,0 +1,10 @@
+#modelsView {
+    /*height: 200pt;*/
+/*    overflow-y: scroll;
+    border-bottom: 1px solid #ddd;*/
+    margin-bottom: 0pt;
+}
+
+.model-info-box {
+    margin: 15pt;
+}

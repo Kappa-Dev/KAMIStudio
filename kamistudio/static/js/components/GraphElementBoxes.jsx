@@ -87,6 +87,7 @@ class ElementInfoBox extends React.Component {
 				data={{}}
 				expandable={true}
 				expanded={true}
+				fixedtooltip={this.props.fixedtooltip}
 				instantiated={this.props.instantiated}
 				editable={this.props.editable}/>
 		);
@@ -125,6 +126,7 @@ class MetaDataBox extends React.Component {
 						 message={message}
 						 readonly={this.props.readonly}
 						 editable={this.props.editable}
+						 fixedtooltip={this.props.fixedtooltip}
 						 protected={[]}
 						 data={data}
 						 onInfo={
@@ -165,6 +167,7 @@ function SemanticsBox(props) {
 					 readonly={props.readonly}
 					 editable={false}
 					 protected={[]}
+					 fixedtooltip={props.fixedtooltip}
 					 data={data}
 					 onInfo={
 						"Protein-protein interation semantic role of an element"
@@ -209,6 +212,7 @@ function NuggetSemanticBox(props) {
 					 message={message}
 					 readonly={props.readonly}
 					 editable={false}
+					 fixedtooltip={props.fixedtooltip}
 					 protected={[]}
 					 data={data}
 					 onInfo={
@@ -448,6 +452,7 @@ class ReferenceElementBox extends React.Component {
 						 protected={[]}
 						 data={data}
 						 expandable={true}
+						 fixedtooltip={this.props.fixedtooltip}
 						 expanded={false}
 						 onInfo={
 						 	"Identification by a reference element of the action graph"

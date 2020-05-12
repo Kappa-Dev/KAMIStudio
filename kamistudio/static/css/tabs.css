@@ -15,22 +15,20 @@
 
 .tab-pane {
     margin: 20px;
+    margin-left: 5pt;
+    margin-right: 5pt;
+    width: 98%;
     position: absolute;
-    width: 95%;
     top: 0;
     left: 0;
+    display: initial !important;
+    visibility: hidden;
 }
-
 
 .nav {
     margin-left: 5pt;
 }
 
-.tab-pane {
-    margin-left: 5pt;
-    margin-right: 5pt;
-    width: 98%;
-}
 
 .tab-pane > .row {
     margin-right: 0pt;
@@ -70,3 +68,7 @@
     padding-right: 0pt;
 }
 
+
+.tab-pane.active {
+    visibility: initial;
+}

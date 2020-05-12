@@ -447,8 +447,11 @@ ol.pale {
 	color: #727272;
 }
 
-.info-tooltip {
+.info-tooltip.fixed {
   position: fixed;
+}
+
+.info-tooltip {
   display: inline-block;
   border-bottom: 1px dotted black;
 }
@@ -463,7 +466,7 @@ ol.pale {
   border-radius: 6px;
   padding: 10px 0;
   position: absolute;
-  z-index: 1;
+  z-index: 1000;
   bottom: 125%;
   left: 50%;
   margin-left: -150px;
@@ -595,4 +598,77 @@ li.subitem.selected-subitem a {
 
 #deletionConfirmDialog .modal-dialog {
   width: 50%;
+}
+
+
+@media (min-width: 768px) {
+  #variantSelectionWidget .modal-dialog {
+    width: 40%;
+  }  
+}
+
+.gene-link {
+    color: #337ab7;
+    display: inline-block !important;
+}
+
+.gene-link:hover {
+    color: #2e6da4 !important;
+    text-decoration: none;
+    background-color: #dae3ec !important;
+}
+
+.gene-selector {
+    display: inline-block;
+}
+
+.gene-item {
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 30pt;
+    overflow-y: hidden;
+}
+
+li.gene-item:hover,
+li.gene-item:active,
+li.gene-item:focus,
+li.gene-item.open a:hover,
+li.gene-item.open a:active
+li.gene-item.open a:focus,
+li.gene-item.open label:hover,
+li.gene-item.open label:active
+li.gene-item.open label:focus {
+    color: #2e6da4;
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+
+label.gene-item {
+  text-decoration: none;
+  display: block;
+  margin-left: 10pt;
+  padding-left: 15px;
+  text-indent: -15px;
+  line-height: 30pt;
+  font-weight: 400;
+}
+
+input.gene-selector {
+  width: 15pt;
+  height: 15pt;
+  padding: 0;
+  vertical-align: bottom;
+  position: relative;
+  top: -9pt;
+  *overflow: hidden;
+  margin-right: 5pt;
+}
+
+.synonyms {
+    display: inline;
+    padding-left: 15px;
+    text-indent: -15px;
+    float: right;
+    margin-right: 10pt;
 }

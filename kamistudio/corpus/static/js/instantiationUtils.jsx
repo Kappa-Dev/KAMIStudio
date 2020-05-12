@@ -3,23 +3,6 @@
  */
 
 
-function GeneList(props) {
-	var listItems = props.items.map(
-		(item) =>
-				<li className="not-selected">
-					<a onClick={() => props.onItemClick(item[0], item[1])}>
-	  					{item[0]}
-	  					<div style={{"float": "right", "margin-left": "5pt"}}>{item[1]}</div>
-	  					<div style={{"float": "right"}}>{item[2] ? item[2].join(", ") : ""}</div>
-  					</a>
-				</li>
-    );
-	return <ul className="nav nuggets-nav list-group-striped list-unstyled components">
-	     		{listItems}
-	       </ul>;
-}
-
-
 
 function getGenes(modelId) {
 	return function(el, filterItems) {

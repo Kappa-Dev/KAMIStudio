@@ -8,6 +8,16 @@
   color: #337ab7;
 }
 
+.home-collection a:hover {
+  background-color: #337ab7;
+}
+
+
+.home-collection.instantiated a {
+  color: #a11117;
+}
+
+
 @media (min-width: 768px) {
   .home-collection {
     padding: 20px;
@@ -26,6 +36,14 @@ h2.collection-brand {
 }
 
 
+.home-collection.instantiated {
+  overflow-y: scroll;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0pt;
+  padding-bottom: 0pt;
+  padding-right: 0pt;
+}
+
 .home-collection tr:hover,
 .home-collection tr:active,
 .home-collection tr:focus,
@@ -36,6 +54,23 @@ h2.collection-brand {
     text-decoration: none;
     background-color: #dae3ec;
 }
+
+.home-collection.instantiated tr:hover,
+.home-collection.instantiated tr:active,
+.home-collection.instantiated tr:focus,
+.home-collection.instantiated tr.open a:hover,
+.home-collection.instantiated tr.open a:active
+.home-collection.instantiated tr .open a:focus{
+    /*color: #dae3ec;*/
+    text-decoration: none;
+    background-color: #f5e5e6;
+}
+
+.home-collection.instantiated tr.selected {
+    background-color: #f5e5e6;
+}
+
+
 
 
 .home-collection .table > tbody > tr > td,
@@ -48,6 +83,10 @@ h2.collection-brand {
     /*color: #dae3ec;*/
     /*text-decoration: none;*/
     pointer-events: none;
+}
+
+.home-collection .table tbody > tr {
+    cursor:pointer;
 }
 
 .home-collection .faded {

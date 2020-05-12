@@ -180,16 +180,16 @@ class EditableBox extends React.Component {
 			}
 			if (this.state.expanded) {
 				title = 
-					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h4 className={"editable-box" + suffix}>
+					<a className={"info-box-title" + suffix} onClick={this.handleCollapse}>
+						<h4 className={"editable-box"}>
 							<span className="glyphicon glyphicon-menu-down"></span> {this.props.name}
 						</h4>
 					</a>;
 				
 			} else {
 				title =
-					<a className="info-box-title" onClick={this.handleCollapse}>
-						<h4 className={"editable-box" + suffix}>
+					<a className={"info-box-title" + suffix} onClick={this.handleCollapse}>
+						<h4 className={"editable-box"}>
 							<span className="glyphicon glyphicon-menu-right"></span> {this.props.name}
 						</h4>
 					</a>;

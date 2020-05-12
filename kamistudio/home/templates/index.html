@@ -14,53 +14,47 @@
   <div class="col-md-8">
     <div class="collection-buttons">
       {% if not readonly %}
-        <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
         <a href="{{ url_for('home.import_corpus') }}" class="btn btn-primary btn-md panel-button-right">Import corpus</a>
+        <a href="{{ url_for('home.new_corpus') }}" class="btn btn-primary btn-md panel-button-right">New corpus</a>
       {% endif %}
     </div>
   </div>
 </div>     
 {% endblock %}
 
-{% block workspace %}
-  <div class="row">
-    <div class="col-md-2"></div>
-    <div class="col-md-8">
-      <div class="home-collection">
-          {% if corpora|length > 0 %}
-          <div class="table-responsive">
-            <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Organism</th>
-                <th scope="col">Description</th>
-                <th scope="col">Last modified</th>
-              </tr>
-            </thead>
-              <tbody>
-                {% for corpus in corpora %}
-                <tr>
-                  <th scope="row">
-                    <a href="{{ url_for('corpus.corpus_view', corpus_id=corpus['id']) }}">
-                      {{ corpus["meta_data"]["name"] }}
-                    </a>
-                  </th>
-                  <td>{{ corpus["meta_data"]["organism"] }}</td>
-                  <td><div class="small-faded">{{ corpus["meta_data"]["desc"] }}</div></td>
-                  <td>{{ corpus["last_modified"] }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-          </table>
-        </div>
-        {% else %}
-          <div class="faded">No corpora</div>
-        {% endif %}
-      </div>
-    </div>
-    <div class="col-md-2"></div>
+{% block inner_workspace %}
+<div class="home-collection">
+    {% if corpora|length > 0 %}
+    <div class="table-responsive">
+      <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Organism</th>
+          <th scope="col">Description</th>
+          <th scope="col">Last modified</th>
+        </tr>
+      </thead>
+        <tbody>
+          {% for corpus in corpora %}
+          <tr>
+            <th scope="row">
+              <a href="{{ url_for('corpus.corpus_view', corpus_id=corpus['id']) }}">
+                {{ corpus["meta_data"]["name"] }}
+              </a>
+            </th>
+            <td>{{ corpus["meta_data"]["organism"] }}</td>
+            <td><div class="small-faded">{{ corpus["meta_data"]["desc"] }}</div></td>
+            <td>{{ corpus["last_modified"] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+    </table>
   </div>
+  {% else %}
+    <div class="faded">No corpora</div>
+  {% endif %}
+</div>
 {% endblock %}
 
 

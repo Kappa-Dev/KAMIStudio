@@ -54,3 +54,14 @@
 #interactionForm {
     margin-bottom: 30pt;
 }
+
+
+#instantiationForm .col-md-6 {
+    width: 70%
+}
+
+@media (min-width: 1268px) {
+    #instantiationForm .col-md-6 {
+        width: 50%
+    }
+}

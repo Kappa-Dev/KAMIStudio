@@ -1,0 +1,129 @@
+{% extends "knowledge_base.html" %}
+
+
+{% block title %}Corpus: {{ kb.annotation.name }}{% endblock %}
+
+{% block action_buttons %}
+    <div class="kb-action-buttons">
+        <a href="{{ url_for('corpus.instantiate', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-play"></span> Instantiate</a>
+        <a href="{{ url_for('corpus.kappa_from_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-cog"></span> Generate Kappa</a>
+        <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}" type="button" class="btn btn-default btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
+        <button {% if not readonly %}onClick="showConfirmDeletion('{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}', '{{ url_for('home.index') }}');"{% endif %} class="btn btn-default btn-md panel-button" {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-trash"></span> Delete</button>
+        <div id="deletionConfirmDialog"></div>
+    </div>
+{% endblock %}
+
+
+{% block sidebar_items %}
+<div class="container-fluid tabs">
+	<!-- <h2 class="mb-6 kb-action-brand">Corpus overview</h2> -->
+  <ul class="nav nav-tabs corpus" role="tablist">
+    <li class="nav-item active">
+      <a id="switchToInfo" class="nav-link active" onclick="switchToInfo(this);" role="tab">    
+        <h4>Meta-data</h4>
+      </a>
+    </li>
+    <li class="nav-item corpus">
+      <a id="switchToModels" class="nav-link" onclick="loadModelsTab(this);" role="tab">
+        <h4>Models</h4>
+      </a>
+    </li>
+    <li class="nav-item corpus">
+      <a id="switchToAudit" class="nav-link" onclick="loadHistory(this);" role="tab">
+        <h4>History</h4>
+      </a>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active corpus" id="corpusMetaData" role="tabpanel">
+    	<div id="corpusData">
+        <div id="loadingBlock" class="loading-elements center-block">
+          <div id="loader"></div>
+        </div> 
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block no_nuggets_message %}
+ 	Corpus does not contain any nuggets
+{% endblock %}
+
+
+{% block definitions_tab %}
+	<li class="nav-item">
+	  <a id="switchToDefinitionsTab" class="nav-link" role="tab" onclick="loadDefinitionsTab(this, '{{ kb_id }}', {% if readonly %}true{%else%}false{%endif%});">Protein variants ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
+	</li>
+{% endblock %}
+
+{% block definitions_pane %}
+	<div class="tab-pane" id="definitions" style="display: initial; visibility: hidden;" role="tabpanel">
+	  {% if n_definitons == 0  %}
+	      Corpus does not contain any variant definitions
+	  {% else %}
+	      <!-- Definitions list column -->
+	      <div class="col-sm-6">
+	          <div class="row">
+	            <div class="col-sm-12">
+	              <h3>Definitions</h3>
+	            </div>
+	          </div>
+	          <div id="definitionView"></div>
+	      </div>
+	      <!-- End of nugget list column -->
+	      <!-- Definition preview column -->
+	      <div class="col-sm-6">
+	        <div class="row">
+
+	        </div>
+	        <div id="definitionViewWidget">
+           <div id="progressBlock">
+              <div id="progressMessage">Retrieving definitions...</div>
+              <div id="loadingBlock" class="loading-elements center-block">
+                <div id="loader"></div>
+              </div>
+            </div> 
+          </div>
+	      </div>
+	      <!-- End of definition preview column -->
+	    </div>
+	  {% endif %}
+	</div>
+{% endblock %}
+
+{% block info_boxes_rendering %}
+  <script type="text/babel">
+    ReactDOM.render(
+      [<CorpusDataBox 
+      {% if readonly %}
+          readonly={true}
+      {% else %}
+          readonly={false}
+      {% endif %}
+      {% if kb.annotation.name %}
+          kbName='{{kb.annotation.name}}'
+      {% endif %}
+      {% if kb.annotation.desc %}
+          desc='{{kb.annotation.desc}}'
+      {% endif %}
+      {% if kb.annotation.organism %}
+          organism='{{kb.annotation.organism}}'
+      {% endif %}
+          creation_time='{{kb.creation_time}}'
+          last_modified='{{kb.last_modified}}'
+          onDataUpdate={handleModelUpdate('{{ kb._id }}')}
+          genes='{{ genes }}' 
+          bindings='{{ bindings }}'
+          modifications='{{ modifications }}'
+         />,
+         <div id="interactionsButtons">
+           <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button" class="btn btn-primary btn-md panel-button add-interaction-button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+           <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} class="btn btn-primary btn-md panel-button add-interaction-button"  {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+          </div>
+        ],
+      document.getElementById('corpusData')
+    );
+  </script>
+{% endblock %}

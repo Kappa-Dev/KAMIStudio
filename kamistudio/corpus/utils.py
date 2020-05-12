@@ -3,7 +3,7 @@ import os
 import datetime
 import json
 
-from flask import jsonify, redirect, url_for
+from flask import jsonify, redirect, url_for, render_template
 from flask import current_app as app
 
 from regraph.audit import VersionedHierarchy
@@ -265,3 +265,67 @@ def imported_model(filename, annotation):
             except:
                 return render_template("500.html")
     return redirect(url_for('model.model_view', model_id=model_id))
+
+
+def get_model(model_id):
+    """Retreive corpus from the db."""
+    try:
+        model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+    except:
+        model_json = None
+    if model_json and app.neo4j_driver:
+        corpus_id = None
+        if "corpus_id" in model_json["origin"].keys():
+            corpus_id = model_json["origin"]["corpus_id"]
+        seed_genes = None
+        if "seed_genes" in model_json["origin"].keys():
+            seed_genes = model_json["origin"]["seed_genes"]
+        definitions = None
+        if "definitions" in model_json["origin"].keys():
+            definitions = model_json["origin"]["definitions"]
+        default_bnd_rate = None
+        default_brk_rate = None
+        default_mod_rate = None
+        if "default_bnd_rate" in model_json.keys():
+            default_bnd_rate = model_json["default_bnd_rate"]
+        if "default_brk_rate" in model_json.keys():
+            default_brk_rate = model_json["default_brk_rate"]
+        if "default_mod_rate" in model_json.keys():
+            default_mod_rate = model_json["default_mod_rate"]
+        return KamiModel(
+            model_id,
+            annotation=CorpusAnnotation.from_json(model_json["meta_data"]),
+            creation_time=model_json["creation_time"],
+            last_modified=model_json["last_modified"],
+            corpus_id=corpus_id,
+            seed_genes=seed_genes,
+            definitions=definitions,
+            backend="neo4j",
+            driver=app.neo4j_driver,
+            default_bnd_rate=default_bnd_rate,
+            default_brk_rate=default_brk_rate,
+            default_mod_rate=default_mod_rate
+        )
+
+
+def add_new_model(model_id, creation_time, last_modified, annotation,
+                  corpus_id=None, seed_genes=None, definitions=None,
+                  default_bnd_rate=None, default_brk_rate=None,
+                  default_mod_rate=None, ag_node_positions=None):
+    """Add new model to the db."""
+    json_data = {
+        "id": model_id,
+        "creation_time": creation_time,
+        "last_modified": last_modified,
+        "meta_data": annotation,
+        "corpus_id": corpus_id,
+        "seed_genes": seed_genes,
+        "definitions": definitions,
+        "default_bnd_rate": default_bnd_rate,
+        "default_brk_rate": default_brk_rate,
+        "default_mod_rate": default_mod_rate,
+        "kappa_models": []
+    }
+    if ag_node_positions is not None:
+        json_data["node_positioning"] = ag_node_positions
+    app.mongo.db.kami_models.insert_one(json_data)
