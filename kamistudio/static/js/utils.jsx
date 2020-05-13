@@ -204,9 +204,3 @@ $('tr').click( function() {
 }).hover( function() {
     $(this).toggleClass('hover');
 });
-
-$('li').click( function() {
-    window.location = $(this).find('a').attr('href');
-}).hover( function() {
-    $(this).toggleClass('hover');
-});

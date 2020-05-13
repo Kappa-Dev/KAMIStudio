@@ -167,7 +167,7 @@ class EditableBox extends React.Component {
 			saveButton = 
 				<button 
 				   type="button" onClick={() => this.handleSaveClick()}
-				   className="btn btn-primary btn-sm panel-button editable-box right-button">
+				   className={"btn btn-primary btn-sm panel-button editable-box right-button" + (this.props.instantiated ? " instantiation" : "")}>
 				   Save
 				</button>;
 		}

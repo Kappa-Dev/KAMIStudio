@@ -9,7 +9,7 @@
 }
 
 .home-collection a:hover {
-  background-color: #337ab7;
+  color: #337ab7;
 }
 
 
@@ -91,4 +91,8 @@ h2.collection-brand {
 
 .home-collection .faded {
   font-size: 14px;
+}
+
+.home-collection table {
+  margin-bottom: 0pt;
 }

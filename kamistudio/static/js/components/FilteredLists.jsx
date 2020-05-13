@@ -2,13 +2,14 @@
  * Collection of React components for lists and filtered lists.
  */
 
+
 class FilteredList extends React.Component {
 
 	constructor(props) {
 		super(props);
 
 		this.filterList = this.filterList.bind(this);
-		this.componentWillMount = this.componentWillMount.bind(this);
+		this.componentDidMount = this.componentDidMount.bind(this);
 
 		this.state = {
 			initialItems: [],
@@ -17,7 +18,7 @@ class FilteredList extends React.Component {
 		}
 	}
 
-	componentWillMount() {
+	componentDidMount() {
 		if (this.props.onFetchItems) {
 		    this.props.onFetchItems(this, this.props.filterItems);
 		}
@@ -44,7 +45,7 @@ class FilteredList extends React.Component {
 				loader = 
 					<div id="loadingBlock" style={{"margin":"auto"}} className="loading-elements center-block" display="none;">
 						<p>Loading...</p>
-						<div id="loader"></div>
+						<div id={this.props.instantiated ? "loaderModel" : "loader"}></div>
 					</div>;
 			} else {
 				message = <p style={{"margin-left": "15pt"}}>No elements</p>;

@@ -81,3 +81,53 @@ class InBlockDialog extends React.Component {
 		);
 	}
 }
+
+class ConfirmDialog extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		this.onConfirm = this.onConfirm.bind(this);
+	}
+
+	onConfirm() {
+        $("#" + this.props.id + "ConfirmButton").attr("disabled", true);
+        $("#" + this.props.id + "CancelButton").attr("disabled", true);        
+        $("#" + this.props.id + "LoadingBlock").css("display", "block");
+       	this.props.onConfirm();
+    }
+
+	render() {
+		content = <div style={{"text-align": "center"}}>
+            <h5>{this.props.text}</h5>
+
+            <div style={{"margin-top": "15pt"}}>
+                <button 
+                   type="button" onClick={this.props.onCancel}
+                   id={this.props.id + "CancelButton"}
+                   className={"btn btn-primary btn-sm panel-button editable-box right-button " + (this.props.instantiated ? "instantiation" : "")}>
+                    Cancel
+                </button>
+                <button 
+                   type="button" onClick={this.onConfirm}
+                   id={this.props.id + "ConfirmButton"}
+                   className={"btn btn-default btn-sm panel-button editable-box right-button"
+               			+ (this.props.instantiated ? " instantiation" : "")}>
+                    {this.props.confirmText}
+                </button>
+                <div id={this.props.id + "LoadingBlock"} class="loading-elements center-block"
+                          style={{"margin-bottom": "20pt", "display": "none"}}>
+                    <div class="small-faded">{this.props.loadingMessage}</div>
+                    <div id={this.props.instantiated ? "loaderModel" : "loader"}></div>
+                </div>
+            </div>
+          </div>;
+
+        return (
+          <Dialog title={this.props.title}
+                  content={content}
+                  onRemove={this.props.onCancel}
+                  customStyle={this.props.customStyle} />
+        );
+	}
+}

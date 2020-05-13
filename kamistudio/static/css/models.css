@@ -5,6 +5,65 @@
     margin-bottom: 0pt;
 }
 
+#modelMetaData {
+    margin-left: 10pt;
+}
+
+#contextView {
+    margin-left: 10pt;
+}
+
+#instantiatedView {
+    margin-left: 10pt;
+}
+
 .model-info-box {
     margin: 15pt;
+}
+
+
+.model-meta-data,
+.model-dynamics {
+    width: 100%;
+}
+
+@media (min-width: 1268px) {
+    .model-meta-data{
+        width: 50%;
+        margin-top: -30pt;
+    }
+
+    .model-dynamics {
+        width: 50%;
+    }
+}
+
+.nav-pills > li > a.instantiation-link {
+    border: 1px solid #ccc;
+}
+
+#contextView ul.nuggets-nav {
+    height: 100pt;
+    border: solid 1px #ddd;
+    border-radius: 5pt;
+}
+
+#contextView input:focus {
+    border-color: #8d0e14;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(183, 61, 61, 0.6);
+}
+
+#contextView .gene-link {
+    color: #8d0e14;
+}
+
+
+#contextView li:not(:first-child) {
+    margin-top: -5pt;
+}
+
+
+#contextView .gene-link:hover {
+    color: #8d0e14 !important;
+    background-color: #f5e5e6 !important;
 }

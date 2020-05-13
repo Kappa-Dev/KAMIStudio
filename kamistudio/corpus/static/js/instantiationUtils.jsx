@@ -37,7 +37,7 @@ function getVariants(modelId) {
 		}).done(
 			function(data) {
 				var state = Object.assign({}, el.state);
-				state["choices"][index]["variants"] = data["products"];
+				state["variantChoices"][index]["variants"] = data["products"];
 				el.setState(state);
 			}
 		).fail(function (e) {

@@ -34,6 +34,7 @@
     /*margin: 0 auto;*/
     font-size: 20pt;
     height: 100%;
+    padding-bottom: 7pt;
 }
 
 .navabar-col {
@@ -42,7 +43,7 @@
 
 .navbar {
 	margin-bottom: 5px;
-	min-height: 70px;
+	/*min-height: 70px;*/
 }
 
 .container {
@@ -60,7 +61,7 @@ ul.navbar-right {
 
 .top-nav {
     float: right;
-    margin-top: 13pt;
+    margin-top: 8pt;
     display: inline-block;
 }
 
@@ -73,4 +74,8 @@ ul.navbar-right {
         display: inline-block;
     }
 
+}
+
+ul.nav.navbar-nav.navbar-right {
+  margin-top: 3pt;
 }

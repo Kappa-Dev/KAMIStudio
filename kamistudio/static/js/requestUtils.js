@@ -78,6 +78,25 @@ function postDataWithRedirect(data, url) {
 }
 
 
+function postData(data, url, successCallback=null, failCallback=null) {
+  $.ajax({
+        url:  url,
+        type: 'post',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: 'application/json',
+  }).done(function (data) {
+      if (successCallback) {
+        successCallback(data);
+      }
+  }).fail(function (xhr, status, error) {
+      if (failCallback) {
+        failCallback(status, error);
+      }
+  });
+}
+
+
 function getData(url, successCallback=null, failCallback=null) {
   $.ajax({
       url:  url,

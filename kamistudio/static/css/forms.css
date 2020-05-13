@@ -65,3 +65,149 @@
         width: 50%
     }
 }
+
+
+@media (min-width: 768px) {
+  #variantSelectionWidget .modal-dialog {
+    width: 40%;
+  }  
+}
+
+.gene-link {
+    color: #337ab7;
+    display: block;
+}
+
+.gene-link:hover {
+    color: #2e6da4 !important;
+    text-decoration: none;
+    background-color: #dae3ec !important;
+}
+
+.gene-selector {
+    display: inline-block;
+}
+
+.gene-item {
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 30pt;
+    overflow-y: hidden;
+}
+
+li.gene-item:hover,
+li.gene-item:active,
+li.gene-item:focus,
+li.gene-item.open a:hover,
+li.gene-item.open a:active
+li.gene-item.open a:focus,
+li.gene-item.open label:hover,
+li.gene-item.open label:active
+li.gene-item.open label:focus {
+    color: #2e6da4;
+    text-decoration: none;
+    background-color: #dae3ec;
+}
+
+
+label.gene-item {
+  text-decoration: none;
+  display: block;
+  margin-left: 10pt;
+  padding-left: 15px;
+  text-indent: -15px;
+  line-height: 20pt;
+  font-weight: 400;
+  padding: 10px 15px;
+  color: #337ab7;
+}
+
+input.gene-selector {
+  width: 15pt;
+  height: 15pt;
+  padding: 0;
+  vertical-align: bottom;
+  position: relative;
+  top: -3pt;
+  *overflow: hidden;
+  margin-right: 5pt;
+}
+
+.synonyms {
+    display: inline;
+    padding-left: 15px;
+    text-indent: -15px;
+    float: right;
+    margin-right: 10pt;
+}
+/*
+li.gene-item.fixed{
+    pointer-events: none;
+}
+*/
+li.gene-item.fixed:hover,
+li.gene-item.fixed:active,
+li.gene-item.fixed:focus,
+li.gene-item.fixed.open a:hover,
+li.gene-item.fixed.open a:active
+li.gene-item.fixed.open a:focus,
+li.gene-item.fixed.open label:hover,
+li.gene-item.fixed.open label:active
+li.gene-item.fixed.open label:focus {
+    background-color: unset !important;
+    color: unset !important;
+}
+
+
+.center-button-wrapper {
+    width: 100%;
+    text-align: center;
+    padding-top: 10pt;
+}
+
+.gene-selection-items {
+    padding-left: 0pt;
+}
+
+#geneSelection {
+    height: 200pt;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border: 1px solid #ddd;
+    border-radius: 5pt;
+}
+
+.var-selection-header {
+    display: inline-block;
+}
+
+
+input.search {
+    width: 94%;
+    margin: auto;
+    margin-top: 15pt;
+    margin-bottom: 15pt;
+}
+
+a.cancel-link {
+    float: right;
+    margin-top: 10pt;
+    margin-right: 10pt;
+}
+
+a.cancel-link span {
+    font-size: 16pt;
+}
+
+ul.selection-items {
+    list-style-type: none;
+    padding-left: 0pt
+}
+
+ul.selection-items li {
+    border: solid 1px #ddd;
+    border-radius: 5pt;
+    padding: 10px;
+    margin: 10px;
+    margin-left: 0pt;
+}

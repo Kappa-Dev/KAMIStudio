@@ -754,20 +754,6 @@ def get_corpus_nuggets(corpus_id):
     return jsonify(data), 200
 
 
-# @corpus_blueprint.route("/model/<model_id>/nuggets")
-# def get_model_nuggets(model_id):
-#     model = get_model(model_id)
-#     nuggets = {}
-#     for nugget in model.nuggets():
-#             nuggets[nugget] = (
-#                 model.get_nugget_desc(nugget),
-#                 model.get_nugget_type(nugget)
-#             )
-#     data = {}
-#     data["nuggets"] = nuggets
-#     return jsonify(data), 200
-
-
 @corpus_blueprint.route("/<corpus_id>/raw-nugget/<nugget_id>")
 def corpus_nugget_json(corpus_id, nugget_id):
     corpus = get_corpus(corpus_id)
@@ -801,7 +787,7 @@ def raw_nugget_json(corpus_id, nugget_id):
 
 
 @corpus_blueprint.route("/<corpus_id>/nugget/<nugget_id>/update-nugget-desc",
-                         methods=["POST"])
+                        methods=["POST"])
 @authenticate
 def update_corpus_nugget(corpus_id, nugget_id):
     json_data = request.get_json()
@@ -857,7 +843,7 @@ def get_gene_adjacency(kb):
 
 
 @corpus_blueprint.route("/<corpus_id>/get-gene-adjacency",
-                         methods=["GET"])
+                        methods=["GET"])
 def get_corpus_gene_adjacency(corpus_id):
     """Generate a nugget table."""
     corpus = get_corpus(corpus_id)
@@ -1102,25 +1088,15 @@ def new_model(corpus_id):
                 if "default_mod_rate" in json_data:
                     default_mod_rate = json_data["default_mod_rate"]
 
-                definitions = []
-                definition_ids = []
-                for element in json_data["choices"]:
+                definitions = {}
+                for element in json_data["variantChoices"]:
                     uniprotid = element["uniprotid"]
                     definition_json = app.mongo.db.kami_new_definitions.find_one({
                         "corpus_id": corpus_id,
                         "protoform": uniprotid
                     })
                     if definition_json is not None:
-                        # definition_ids.append([definition_json["id"]])
-                        selected_products = element["selectedVariants"]
-                        new_def = {
-                            "corpus_id": definition_json["corpus_id"],
-                            "protoform": definition_json["protoform"],
-                            "products": {}
-                        }
-                        for p in selected_products:
-                            new_def["products"][p] = definition_json["products"][p]
-                        definitions.append(Definition.from_json(new_def))
+                        definitions[uniprotid] = element["selectedVariants"]
 
                 model_id = _generate_unique_model_id(model_name, corpus._id)
                 annotation = {
@@ -1133,8 +1109,8 @@ def new_model(corpus_id):
                 add_new_model(model_id, creation_time,
                               last_modified, annotation,
                               corpus_id=corpus._id,
-                              definitions=definition_ids,
-                              seed_genes=[],
+                              definitions=definitions,
+                              seed_genes=json_data["seedGenes"],
                               default_bnd_rate=default_bnd_rate,
                               default_brk_rate=default_brk_rate,
                               default_mod_rate=default_mod_rate)
@@ -1156,9 +1132,34 @@ def get_models(corpus_id):
         {"corpus_id": corpus_id}).sort(
         "last_modified", -1))
     data = {"items": []}
+    # corpus = get_corpus(corpus_id)
     for model in models:
         del model["_id"]
+        # seed_genes_with_data = []
+        # for g in model["seed_genes"]:
+        #     gene_id = corpus.get_protoform_by_uniprot(g)
+        #     seed_genes_with_data.append((
+        #         g,
+        #         corpus.get_hgnc_symbol(gene_id),
+        #         corpus.get_synonyms(gene_id)
+        #     ))
+        # model["seed_genes"] = seed_genes_with_data
         data["items"].append(model)
+    return jsonify(data), 200
+
+
+@corpus_blueprint.route("<corpus_id>/get-gene-data", methods=["POST"])
+def get_gene_data(corpus_id):
+    """Get HGNC symbols and synonyms of genes."""
+    json_data = request.get_json()
+    data = {"items": {}}
+    corpus = get_corpus(corpus_id)
+    for up in json_data["uniprots"]:
+        gene_id = corpus.get_protoform_by_uniprot(up)
+        data["items"][up] = [
+            corpus.get_hgnc_symbol(gene_id),
+            corpus.get_synonyms(gene_id)
+        ]
     return jsonify(data), 200
 
 
@@ -1197,3 +1198,15 @@ def import_model(corpus_id):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return imported_model(filename, annotation)
+
+
+@corpus_blueprint.route("/<corpus_id>/delete-model/<model_id>")
+@authenticate
+@check_dbs
+def delete_model(corpus_id, model_id):
+    """Handle removal of the model."""
+    try:
+        app.mongo.db.kami_models.remove({"id": model_id})
+        return jsonify({"success": True}), 200
+    except:
+        return render_template("model_not_found.html", model_id=model_id)

@@ -28,11 +28,11 @@ function showModelList(corpusId, modelId=null, readonly=false) {
 function renderModelList(corpusId, modelId, readonly) {
     return function (data) {
         var component = ReactDOM.render(
-            <ModelList items={data.items} readonly={readonly} />,
+            <ModelList items={data.items} corpusId={corpusId} readonly={readonly} />,
             document.getElementById("modelsView")
         );
         if (modelId) {
-            component.setSelectedItem(modelId);
+            component.setSelectedItemById(modelId);
         }
     }
 }
@@ -43,20 +43,79 @@ class ModelList extends React.Component {
         super(props);
 
         this.state = {
-            selected: null
+            selected: null,
+            loadedFullGeneData: false,
+            geneData: null
         };
 
         this.onItemClick = this.onItemClick.bind(this);
+        this.setSelectedModel = this.setSelectedModel.bind(this);
+        this.fetchGeneData = this.fetchGeneData.bind(this);
+        this.loadAllGenes = this.loadAllGenes.bind(this);
+    }
+
+    loadAllGenes(element) {
+        // Load all protoforms in the corpus
+        var genes = {};
+
+        var url = "/corpus/" + this.props.corpusId + "/genes";
+        $.ajax({
+            url: url,
+            type: 'get',
+            dataType: "json"
+        }).done(
+            function(data) {
+                element.setState({
+                    initialItems: data["genes"],
+                    items: data["genes"]
+                });
+                // update my state
+                var geneData = {};
+                for (var i = data["genes"].length - 1; i >= 0; i--) {
+                    geneData[data["genes"][i][0]] = [
+                        data["genes"][i][1],
+                        data["genes"][i][2]
+                    ];
+                }
+                var state = Object.assign({}, this.state);
+                state.geneData = geneData;
+                state.loadedFullGeneData = true;
+                this.setState(state);
+            }
+        ).fail(function (e) {
+            console.log("Failed to load genes");
+        });
     }
 
     onItemClick(item) {
-        this.setState({ selected: item });
+        this.setSelectedModel(item);
+    }
+
+    setSelectedModel(item) {
+        var state = Object.assign({}, this.state);
+        state.selected = item;
+        this.setState(state);
+        this.fetchGeneData(item);
+    }
+
+    fetchGeneData(item) {
+        if (!this.state.loadedFullGeneData) {
+            var url = "/corpus/" + this.props.corpusId + "/get-gene-data";
+            postData(
+                {"uniprots": item["seed_genes"]},
+                url,
+                (data) => {
+                    var state = Object.assign({}, this.state);
+                    state.geneData = data["items"];
+                    this.setState(state);
+                });
+        }
     }
 
     setSelectedItemById(itemId) {
-        for (var i = Things.length - 1; i >= 0; i--) {
+        for (var i = this.props.items.length - 1; i >= 0; i--) {
             if (this.props.items[i]["id"] == itemId) {
-                this.setState({ selected: this.props.items[i] });
+                this.setSelectedModel(this.props.items[i]);
                 break;
             }
         }
@@ -97,7 +156,7 @@ class ModelList extends React.Component {
                 </div>
             );
         } else {
-            content = <div className="faded">No models</div>;
+            content = <div className="faded" style={{"marginBottom": "10pt"}}>No models</div>;
         }
 
         // If there is a model selected generate a preview
@@ -107,7 +166,10 @@ class ModelList extends React.Component {
             //                           desc={this.state.selected["meta_data"]["desc"]}/>;
             modelPreview = (
                 <ModelView readonly={this.props.readonly}
-                           model={this.state.selected} />
+                           geneData={this.state.geneData}
+                           model={this.state.selected} 
+                           onLoadAllGenes={this.loadAllGenes}
+                           corpusId={this.props.corpusId}/>
             );
         }
 
@@ -121,16 +183,89 @@ class ModelList extends React.Component {
 }
 
 class ModelView extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.showConfirmDeletion = this.showConfirmDeletion.bind(this);
+        this.onConfirmDelete = this.onConfirmDelete.bind(this);
+        this.onCancelDelete = this.onCancelDelete.bind(this);
+    }
+
+    onConfirmDelete() {
+        getData(
+            "/corpus/" + this.props.corpusId + "/delete-model/" + this.props.model["id"],
+            () => showModelList(this.props.corpusId, null, this.props.readonly));
+        
+    }    
+
+    onCancelDelete() {
+      ReactDOM.render(
+        null,
+        document.getElementById("modelDeletionConfirmDialog")
+      );
+    }
+
+    showConfirmDeletion() {
+        ReactDOM.render(
+            <ConfirmDialog
+                id="deleteModel"
+                text="Are you sure you want to delete this model? This is irreversible, all the data will be lost."
+                confirmText="Delete"
+                instantiated={true}
+                loadingMessage="Cleaning up the database..."
+                onConfirm={this.onConfirmDelete}
+                onCancel={this.onCancelDelete}
+                customStyle={{"width": "50%"}} />,
+            document.getElementById("modelDeletionConfirmDialog")
+        );
+    }
+
     render() {
+        var seedGenes = [];
+        if (this.props.geneData) {
+            for (var i = this.props.model["seed_genes"].length - 1; i >= 0; i--) {
+                seedGenes.push(
+                    [this.props.model["seed_genes"][i]].concat(
+                        this.props.geneData[this.props.model["seed_genes"][i]])
+                );
+            }
+        }
+        this.props.geneData
         return (
-            <div id="modelMetaData" class="model-info-box">
-                <ModelMetaDataBox readonly={this.props.readonly}
-                                  name={this.props.model["meta_data"]["name"]}
-                                  desc={this.props.model["meta_data"]["desc"]}
-                                  creation_time={this.props.model["creation_time"]}
-                                  last_modified={this.props.model["last_modified"]}/>
-                <ContextView expanded={true} id={"contextView"}/>
-                <DynamicsView expanded={true} id={"dynamicsView"}/>
+            <div id="modelViewWidget" className="model-info-box">
+                <div id="modelDeletionConfirmDialog"></div>
+                <div className="row" id="modelOptions">
+                    <button disabled={this.props.readonly}
+                            onClick={this.showConfirmDeletion} 
+                            className="btn btn-default btn-md panel-button-right instantiation">
+                        <span className="glyphicon glyphicon-trash"></span> Delete model
+                    </button>
+                    <button className="btn btn-default btn-md panel-button-right instantiation">
+                        <span className="glyphicon glyphicon-cog"></span> Generate Kappa
+                    </button>
+                </div>
+                <div className="row">
+                    <div className="col-md-8 model-meta-data">
+                        <ModelMetaDataBox readonly={this.props.readonly}
+                                          name={this.props.model["meta_data"]["name"]}
+                                          desc={this.props.model["meta_data"]["desc"]}
+                                          creation_time={this.props.model["creation_time"]}
+                                          last_modified={this.props.model["last_modified"]}/>
+                    </div>
+                </div>
+                <ContextView expanded={true}
+                             id={"contextView"}
+                             corpusId={this.props.corpusId}
+                             readonly={this.props.readonly}
+                             onLoadAllGenes={this.props.onLoadAllGenes}
+                             definitions={this.props.model["definitions"]}
+                             seedGenes={seedGenes}/>
+                <DynamicsView expanded={true}
+                              id={"dynamicsView"}
+                              bndRate={this.props.model["default_bnd_rate"]}
+                              brkRate={this.props.model["default_brk_rate"]}
+                              modRate={this.props.model["default_mod_rate"]}/>
                 <InstantiatedView expanded={true} id={"instantiatedView"}/>
             </div>
         )
@@ -146,7 +281,7 @@ class ModelMetaDataBox extends React.Component {
 
     render() {
         return ([
-            <div id="modelMetaData">
+            <div id="modelMetaDataView">
                 <KBMetaDataBox
                     id="modelMetaData"
                     name={"Meta-data"}
@@ -185,9 +320,10 @@ class Collapsable extends React.Component {
     }
 
     render() {
-        var arrow, title, content;
+        var arrow, title, content = null;
         if (this.state.expanded) {
             arrow = "down";
+            content = this.props.content;
         } else {
             arrow = "right";
         }
@@ -205,17 +341,113 @@ class Collapsable extends React.Component {
                 </div>
             </div>,
             <div id={this.props.id}>
-                {this.props.content}
+                {content}
             </div>,
         ]);
+    }
+}
+
+
+class ModifiableGeneListView extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            activeDialog: false
+        };
+
+        this.onModifySeedGenes = this.onModifySeedGenes.bind(this);
+        this.onRemoveDialog = this.onRemoveDialog.bind(this);
+    }
+
+    onModifySeedGenes() {
+        var state = Object.assign({}, this.state);
+        state.activeDialog = true;
+        this.setState(state);
+    }
+
+    onRemoveDialog() {
+        var state = Object.assign({}, this.state);
+        state.activeDialog = false;
+        this.setState(state);
+    }
+
+    render() {
+        var filteredList = <FilteredList
+            instantiated={true}
+            items={this.props.items}
+            listComponent={GeneList}
+            itemFilter={
+                (item, value) => item.join(", ").toLowerCase().search(
+                        value.toLowerCase()) !== -1
+            }/>;
+        var changeButton = (
+            <button type="button"
+                    onClick={this.onModifySeedGenes}
+                    style={{
+                        "float": "right",
+                        "margin-top": "10pt",
+                        "margin-right": "0pt"
+                    }}
+                    className="btn btn-default panel-button editable-box right-button instantiation">
+                <span className="glyphicon glyphicon-pencil"></span> Modify
+            </button>
+        );
+        var dialog;
+        if (this.state.activeDialog) {
+            var dialogContent = (
+                <GeneSelectionWidget 
+                    instantiated={true}
+                    id={"geneSelectionWidget"}
+                    modelId={this.props.modelId}
+                    onFetchItems={this.props.onLoadAllGenes} />
+            );
+            dialog = (
+                <div id="modifySeedGenesDialog">
+                    <Dialog
+                        id="modifySeedGenes"
+                        title="Select seed protoforms"
+                        onRemove={this.onRemoveDialog}
+                        content={dialogContent}
+                        customStyle={{"width": "50%"}} />
+                </div>
+            );
+        }
+        return [
+            filteredList,
+            dialog,
+            changeButton
+        ]
+    }
+}
+
+class ModifiableVariantsListView extends React.Component {
+    render() {
+
     }
 }
 
 class ContextView extends React.Component {
 
     render() {
-        
-        var content = null;
+        var content = [
+            <div className="row">
+                <div className={"col-sm-12"}>
+                    <h4 className="editable-box">Seed protoforms</h4>
+                    <ModifiableGeneListView
+                        onLoadAllGenes={this.props.onLoadAllGenes}
+                        corpusId={this.props.corpusId}
+                        items={this.props.seedGenes}/>
+                </div>
+            </div>,
+            <div className="row">
+                <div className={"col-sm-12"}>
+                    <h4 className="editable-box">Definitions</h4>
+                    {/*<ModifiableVariantsView />*/}
+                </div>
+            </div>
+        ];
 
         return ([
             <Collapsable title={"Context"}
@@ -229,7 +461,45 @@ class ContextView extends React.Component {
 class DynamicsView extends React.Component {
     render() {
         
-        var content = null;
+        var items = [
+            [
+                "default_bnd_rate",
+                "Binding rate",
+                this.props.default_bnd_rate ? this.props.default_bnd_rate : <div className="small-faded">not specified</div>
+            ],
+            [
+                "default_brk_rate",
+                "Unbinding rate",
+                this.props.default_brk_rate ? this.props.default_brk_rate : <div className="small-faded">not specified</div>
+            ],
+            [
+                "default_mod_rate",
+                "Modification rate",
+                this.props.default_mod_rate ? this.props.default_mod_rate : <div className="small-faded">not specified</div>
+            ],
+        ];
+        var data = {
+            "default_bnd_rate": this.props.default_bnd_rate,
+            "default_brk_rate": this.props.default_brk_rate,
+            "default_mod_rate": this.props.default_mod_rate,
+        }
+
+        content = (
+            <div className="col-md-8 model-dynamics">
+                <EditableBox id={this.props.id}
+                             name="Default rates"
+                             items={items}
+                             editable={true}
+                             readonly={this.props.readonly}
+                             onDataUpdate={this.props.onDataUpdate}
+                             data={data}
+                             noBorders={true}
+                             expanded={true}
+                             expandable={false}
+                             protected={[]}
+                             instantiated={true}/>
+            </div>
+        );
 
         return ([
             <Collapsable title={"Dynamics"}
@@ -243,7 +513,29 @@ class DynamicsView extends React.Component {
 class InstantiatedView extends React.Component {
     render() {
         
-        var content = null;
+        var content = [
+            <div class="small-faded" style={{"marginBottom": "10pt"}}>
+                Use the following buttons to preview knowledge graphs instantiated
+                given the model's context. Note that, for large knowledge corpora, 
+                loading the instantiated action graph may take a moment.
+            </div>,
+            <ul class="nav nav-pills">
+              <li>
+                <a id="switchToModelAGTab"
+                   class="nav-link inner instantiation-link"
+                   onClick="instantiateAG(this);"
+                   role="tab">
+                    <span className="glyphicon glyphicon-play"></span> Instantiate action graph
+                </a>
+              </li>
+              <li>
+                <a id="switchToModelNuggetsTab"
+                   class="nav-link inner instantiation-link"
+                   onClick="loadModelNuggetsTab(this);"
+                   role="tab">Instantiated nuggets</a>
+              </li>
+            </ul>
+        ];
 
         return ([
             <Collapsable title={"Instantiated view"}

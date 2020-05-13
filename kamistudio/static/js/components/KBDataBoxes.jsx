@@ -40,8 +40,8 @@ class KBMetaDataBox extends React.Component {
 	render() {
 
 		var items = [
-			["name", "Name", this.props.kbName ? this.props.kbName : <p className="faded">not specified</p>],
-			["desc", "Desciption", this.props.desc ? this.props.desc : <p className="faded">not specified</p>],
+			["name", "Name", this.props.kbName ? this.props.kbName : <div className="small-faded">not specified</div>],
+			["desc", "Desciption", this.props.desc ? this.props.desc : <div className="small-faded">not specified</div>],
 			// ["organism", "Organism", this.props.organism ? this.props.organism : <p className="faded">not specified</p>],
 			["creation_time", "Created", this.props.creation_time],
 			["last_modified", "Last modified", this.props.last_modified]
