@@ -5,7 +5,7 @@ function GeneList(props) {
 
 			return (
 				<li className="not-selected gene-item" >
-					<a className="gene-link" onClick={() => props.onItemClick(item[0], item[1])}>
+					<a className="gene-link" onClick={() => props.onItemClick(item[0], item[1], item[2])}>
 	  					{item[0]}
 	  					<div className="synonyms">{synomyms ? synomyms.join(", ") : ""}</div>
   					</a>
@@ -22,12 +22,6 @@ function getSynonyms(item) {
 }
 
 
-function removeItem(array, item) {
-	var index = array.indexOf(item);
-	if (index !== -1) array.splice(index, 1);
-}
-
-
 class SelectableGeneList extends React.Component {
 	constructor(props) {
 		super(props);
@@ -36,9 +30,16 @@ class SelectableGeneList extends React.Component {
 		this.geneIsSelected = this.geneIsSelected.bind(this);
 		this.onSelectAll = this.onSelectAll.bind(this);
 
+
+		var initialSelectedIds = [],
+			targetItems = this.props.preselectedItems ? this.props.preselectedItems : this.props.items;
+		for (var i = targetItems.length - 1; i >= 0; i--) {
+			initialSelectedIds.push(targetItems[i][0]);
+		}
+
 		this.state = {
-			selected: [...this.props.items],
-			selectedAll: true
+			selected: initialSelectedIds,
+			selectedAll: this.props.preselectedItems ? false : true
 		}
 		if (this.props.onSelectionUpdate) {
 			this.props.onSelectionUpdate(this.props.items);
@@ -49,6 +50,11 @@ class SelectableGeneList extends React.Component {
 		if (this.state.selectedAll) {
 			return true;
 		} else {
+			for (var i = this.state.selected.length - 1; i >= 0; i--) {
+				if (item[0] == this.state.selected[i]) {
+					return true;
+				}
+			}
 			return this.state.selected.includes(item);
 		}
 	}
@@ -58,16 +64,18 @@ class SelectableGeneList extends React.Component {
 		if (this.state.selectedAll) {
 			newState.selectedAll = false;
 			// newState.selected = [...this.props.items];
-			removeItem(newState.selected, item);
+			removeItem(newState.selected, item[0]);
 		} else {
-			if (this.state.selected.includes(item)) {
-				removeItem(newState.selected, item);
+			if (this.geneIsSelected(item)) {
+				removeItem(newState.selected, item[0]);
 			} else {
-				newState.selected.push(item);
+				newState.selected.push(item[0]);
 			}
 		}
 		this.setState(newState);
-		this.props.onSelectionUpdate(newState.selected);
+		if (this.props.onSelectionUpdate) {
+			this.props.onSelectionUpdate(newState.selected);
+		}
 	}
 
 	onSelectAll(item) {
@@ -76,16 +84,21 @@ class SelectableGeneList extends React.Component {
 		if (!newState.selectedAll) {
 			newState.selected = [];
 		} else {
-			newState.selected = [...this.props.items];
+			var allItems = [];
+			for (var i = this.props.items.length - 1; i >= 0; i--) {
+				allItems.push(this.props.items[i][0]);
+			}
+			newState.selected = allItems;
 		}
 		this.setState(newState);
-		this.props.onSelectionUpdate(newState.selected);
+		if (this.props.onSelectionUpdate) {
+			this.props.onSelectionUpdate(newState.selected);
+		}
 	}
 
 	render() {
 		var listItems = this.props.items.map(
-			(item) => (
-				<li className="not-selected gene-item" >
+				(item) => (<li className="not-selected gene-item" >
 					<label className="gene-item">
 						<input type="checkbox"
 							   className="gene-selector"
@@ -144,7 +157,10 @@ function GeneSelectionWidget(props) {
 			onFetchItems={props.onFetchItems}
 			filterItems={props.filterItems}
 			listComponent={SelectableGeneList}
-			listComponentProps={{"onSelectionUpdate": props.onUpdateSelected}}
+			listComponentProps={{
+				"onSelectionUpdate": props.onUpdateSelected,
+				"preselectedItems": props.preselectedItems
+			}}
 			itemFilter={
 				(item, value) => item.join(", ").toLowerCase().search(
 		    			value.toLowerCase()) !== -1}
@@ -162,9 +178,14 @@ class VariantSelectionItem extends React.Component {
 		this.isSelected = this.isSelected.bind(this);
 		this.defaultItem = this.defaultItem.bind(this);
 		this.getDefaultItem = this.getDefaultItem.bind(this);
+		this.onShowVariantClick = this.onShowVariantClick.bind(this);
+		this.onRemoveShowVariantDialog = this.onRemoveShowVariantDialog.bind(this);
 
 		this.state = {
 			selected: [],
+			activeShowVariantDialog: false,
+			activeVariant: null,
+			activeVariantGraph: false,
 			defaultDeselected: false
 		}
 	}
@@ -187,6 +208,37 @@ class VariantSelectionItem extends React.Component {
 		} else {
 			return this.state.selected.includes(item);
 		}
+	}
+
+	onShowVariantClick(variantId) {
+		var state = Object.assign({}, this.state);
+		state.activeShowVariantDialog = true;
+		state.activeVariant = variantId;
+		this.setState(state);
+		getRawDefinition(
+			this.props.corpusId,
+			this.props.selectionId,
+			(data) => {
+				var state = Object.assign({}, this.state);
+				state.activeVariantGraph = true;
+				this.setState(state);
+				var productData = generateProductGraph(
+					data, this.state.activeVariant);
+				drawDefinitionGraph(
+					this.props.corpusId, null, "variant",
+					productData[0],
+					productData[1],
+					true, false);
+			}
+		);
+	}
+
+	onRemoveShowVariantDialog() {
+		var state = Object.assign({}, this.state);
+		state.activeShowVariantDialog = false;
+		state.activeVariant = null;
+		state.activeVariantGraph = false;
+		this.setState(state);
 	}
 
 	onSelection(selectionId, item) {
@@ -219,15 +271,22 @@ class VariantSelectionItem extends React.Component {
 		if (Object.keys(this.props.subitems).length > 0) { 
 			var subitems = Object.keys(this.props.subitems).map(
 				(item) => [
-					<br/>,
-					<div class="variant-checkbox">
-						<input type="checkbox"
+					<li className="not-selected gene-item variant-checkbox">
+						<label className="gene-item"><input type="checkbox"
 							onChange={() => this.onSelection(this.props.selectionId, item)}
 							name={this.props.selectionId}
 							value={this.props.selectionId + item}
 							checked={this.isSelected(item)}/>
-					 	{" " + item + " (" + this.props.subitems[item][0] + ")"}
-					</div>
+					 	{" " + item + (
+					 		this.props.subitems[item][0] ? (" (" + this.props.subitems[item][0] + ")") : ""
+					 	)}
+					 	</label>
+					 	<div className="synonyms show-link">
+					 		<a onClick={() => this.onShowVariantClick(item)}>
+					 			<span className="glyphicon glyphicon-eye-open"></span> Show variant
+					 		</a>
+					 	</div>
+					</li>
 				]
 			);
 		} 
@@ -237,19 +296,50 @@ class VariantSelectionItem extends React.Component {
 			<div className="no-vars-message">
 				No variants specified, the wild type is selected by default
 			</div>];
-		var message = Object.keys(this.props.subitems).length > 0 ? "" : noVarsMessage;
+		var message = Object.keys(this.props.subitems).length > 0 ? "" : noVarsMessage,
+			protoformSynonyms = getSynonyms(
+				[null, this.props.selectionHGNC, this.props.selectionSynonyms]),
+			protoformRepr = this.props.selectionId + (
+					protoformSynonyms ? (" (" + protoformSynonyms.join(", ") + ")") : ""
+				);
+
+		var dialog = null;
+		if (this.state.activeShowVariantDialog) {
+			var dialogContent = (
+				<DefinitionGraphView
+						loading={!this.state.activeVariantGraph}
+	            		title={"Variant '" + this.state.activeVariant + "' of the protoform " + protoformRepr}
+	            		svgId="variantSvg"
+	            		svgDisplay="inline-block"
+	            		removable={false}
+	            		readonly={this.props.readonly}
+	            		elementInfoBoxId="variantGraphElementInfo"
+	            		metaDataBoxId="varianGraphMetaModelInfo"/>
+	        );
+
+			dialog = (
+				<Dialog id="showVariantDialog"
+						title="Variant preview"
+						onRemove={this.onRemoveShowVariantDialog}
+						content={dialogContent} />
+			);
+		}
+
 		return (
 			<li>
 				<div className="var-selection-header">
-					{this.props.selectionId}
-				</div>
-				<button type="button" className="close"
+					{protoformRepr}
+					<button type="button" className="close"
 						onClick={() => this.props.onRemove(this.props.selectionId)}
 						ariaLabel="Close">
-		          <span aria-hidden="true">&times;</span>
-		        </button>
+			          <span aria-hidden="true">&times;</span>
+			        </button>
+				</div>
+				{dialog}
 				{message}
-				{subitems}
+				<ul className="nav nuggets-nav list-group-striped list-unstyled components">
+					{subitems}
+				</ul>
 			</li>
 		);
 	}
@@ -293,7 +383,7 @@ class InstantiationForm extends React.Component {
 	}
 
 
-	onVariantItemClick(uniprotid, hgnc) {
+	onVariantItemClick(uniprotid, hgnc, synonyms) {
 		var state = Object.assign({}, this.state),
 			variants = {};
 
@@ -302,6 +392,7 @@ class InstantiationForm extends React.Component {
 		state["variantChoices"].push({
 			"uniprotid": uniprotid,
 			"hgnc": hgnc,
+			"synonyms": synonyms,
 			"variants": variants,
 			"selectedVariants": []
 		})
@@ -380,7 +471,11 @@ class InstantiationForm extends React.Component {
 
 	render() {
 		var content = this.state.variantChoices.map((item, key) =>
-			<VariantSelectionItem selectionId={item["uniprotid"]}
+			<VariantSelectionItem 
+						   corpusId={this.props.corpusId}
+						   selectionId={item["uniprotid"]}
+						   selectionHGNC={item["hgnc"]}
+						   selectionSynonyms={item["synonyms"]}
 						   selectionText={String(item["uniprotid"]) + item["hgnc"]}
 						   subitems={item["variants"]} 
 						   onSubitemChange={this.onSubitemChange}
@@ -475,7 +570,7 @@ class InstantiationForm extends React.Component {
 						</div>
 
 						<div className="row form-row">
-						    <label for="desc">Variants</label>
+						    <label for="desc">Non-wild type variants</label>
 						    <p>Select variants (wild-type variants are selected by default)</p>
 						    <div id="variantSelectionWidget">
 						    	{dialog}

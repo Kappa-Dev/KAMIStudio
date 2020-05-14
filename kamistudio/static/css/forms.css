@@ -179,8 +179,31 @@ li.gene-item.fixed.open label:focus {
 
 .var-selection-header {
     display: inline-block;
+    font-size: 12pt;
+    border-bottom: 1pt solid #ddd;
+    width: 100%;
+    /*margin-bottom: 10pt;*/
+    padding: 10pt;
+    color: #2e6da4;
 }
 
+#variantsSelection .nuggets-nav li {
+  border: 0pt;
+  padding: 0px;
+  margin: 0px;
+  border-radius: 0pt;
+  line-height: 15pt;
+}
+
+#variantsSelection label.gene-item {
+  display: inline-block;
+  margin-bottom: 0pt;
+}
+
+.show-link {
+  margin-top: 10pt;
+  color: #2e6da4;
+}
 
 input.search {
     width: 94%;
@@ -207,7 +230,31 @@ ul.selection-items {
 ul.selection-items li {
     border: solid 1px #ddd;
     border-radius: 5pt;
-    padding: 10px;
     margin: 10px;
     margin-left: 0pt;
+}
+
+
+.no-vars-message {
+  padding: 10pt;
+}
+
+.modal-header h3 {
+  width: 90%;
+}
+
+#showVariantDialog h3 {
+  font-size: 12pt;
+}
+
+#showVariantDialog .modal-body {
+  /*text-align: center;*/
+}
+
+.svg-wrapper {
+  text-align: center;
+}
+
+#variantSvg {
+  height: 200pt;
 }

@@ -67,3 +67,18 @@
     color: #8d0e14 !important;
     background-color: #f5e5e6 !important;
 }
+
+#modifySeedGenesDialog ul.nuggets-nav {
+    height: 300pt;
+}
+
+
+#modifySeedGenesDialog .modal-dialog {
+    width: 30%;
+}
+
+.model-update-button {
+    float: right;
+    margin-top: 10pt !important;
+    margin-right: 0pt;
+}

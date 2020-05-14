@@ -52,39 +52,76 @@ class ModelList extends React.Component {
         this.setSelectedModel = this.setSelectedModel.bind(this);
         this.fetchGeneData = this.fetchGeneData.bind(this);
         this.loadAllGenes = this.loadAllGenes.bind(this);
+        this.onSeedGenesUpdate = this.onSeedGenesUpdate.bind(this);
+        this.onMetaDataUpdate = this.onMetaDataUpdate.bind(this);
+        this.onRatesUpdate = this.onRatesUpdate.bind(this);
+        this.updateModel = this.updateModel.bind(this);
+    }
+
+    updateModel(modelId, updateDict) {
+        postData(
+            {"updated": updateDict},
+            "/corpus/" + this.props.corpusId + "/update-model/" + modelId);
+    }
+
+    onMetaDataUpdate(updatedData) {
+        var state = Object.assign({}, this.state),
+            dataQuery = {};
+        for (var k in updatedData) {
+            dataQuery["meta_data." + k] = updatedData[k];
+            state.selected["meta_data"][k] = updatedData[k];
+
+        }
+        this.updateModel(
+            this.state.selected["id"], dataQuery);
+        this.setState(state);
+    }
+
+    onRatesUpdate(updatedData) {
+        console.log(updatedData);
+        var state = Object.assign({}, this.state);
+        for (var k in updatedData) {
+            state.selected[k] = updatedData[k];
+        }
+        this.updateModel(
+            this.state.selected["id"], updatedData);
+        this.setState(state);
+    }
+
+    onSeedGenesUpdate(newSeedGenes) {
+        var state = Object.assign({}, this.state);
+        state.selected["seed_genes"] = newSeedGenes;
+        this.updateModel(
+            state.selected["id"], {"seed_genes": newSeedGenes});
+        this.setState(state);
     }
 
     loadAllGenes(element) {
         // Load all protoforms in the corpus
-        var genes = {};
-
-        var url = "/corpus/" + this.props.corpusId + "/genes";
-        $.ajax({
-            url: url,
-            type: 'get',
-            dataType: "json"
-        }).done(
-            function(data) {
-                element.setState({
-                    initialItems: data["genes"],
-                    items: data["genes"]
+        if (!this.state.loadedFullGeneData) {
+            var genes = {},
+                url = "/corpus/" + this.props.corpusId + "/genes";
+            getData(
+                url,
+                (data) => {
+                    element.setState({
+                        initialItems: data["genes"],
+                        items: data["genes"]
+                    });
+                    // update my state
+                    var geneData = {};
+                    for (var i = data["genes"].length - 1; i >= 0; i--) {
+                        geneData[data["genes"][i][0]] = [
+                            data["genes"][i][1],
+                            data["genes"][i][2]
+                        ];
+                    }
+                    var state = Object.assign({}, this.state);
+                    state.geneData = geneData;
+                    state.loadedFullGeneData = true;
+                    this.setState(state);
                 });
-                // update my state
-                var geneData = {};
-                for (var i = data["genes"].length - 1; i >= 0; i--) {
-                    geneData[data["genes"][i][0]] = [
-                        data["genes"][i][1],
-                        data["genes"][i][2]
-                    ];
-                }
-                var state = Object.assign({}, this.state);
-                state.geneData = geneData;
-                state.loadedFullGeneData = true;
-                this.setState(state);
-            }
-        ).fail(function (e) {
-            console.log("Failed to load genes");
-        });
+        }
     }
 
     onItemClick(item) {
@@ -168,8 +205,11 @@ class ModelList extends React.Component {
                 <ModelView readonly={this.props.readonly}
                            geneData={this.state.geneData}
                            model={this.state.selected} 
+                           onSeedGenesUpdate={this.onSeedGenesUpdate}
                            onLoadAllGenes={this.loadAllGenes}
-                           corpusId={this.props.corpusId}/>
+                           corpusId={this.props.corpusId}
+                           onMetaDataUpdate={this.onMetaDataUpdate}
+                           onRatesUpdate={this.onRatesUpdate}/>
             );
         }
 
@@ -251,18 +291,21 @@ class ModelView extends React.Component {
                                           name={this.props.model["meta_data"]["name"]}
                                           desc={this.props.model["meta_data"]["desc"]}
                                           creation_time={this.props.model["creation_time"]}
-                                          last_modified={this.props.model["last_modified"]}/>
+                                          last_modified={this.props.model["last_modified"]}
+                                          onDataUpdate={this.props.onMetaDataUpdate}/>
                     </div>
                 </div>
                 <ContextView expanded={true}
                              id={"contextView"}
                              corpusId={this.props.corpusId}
                              readonly={this.props.readonly}
+                             onSeedGenesUpdate={this.props.onSeedGenesUpdate}
                              onLoadAllGenes={this.props.onLoadAllGenes}
                              definitions={this.props.model["definitions"]}
                              seedGenes={seedGenes}/>
                 <DynamicsView expanded={true}
                               id={"dynamicsView"}
+                              onRatesUpdate={this.props.onRatesUpdate}
                               bndRate={this.props.model["default_bnd_rate"]}
                               brkRate={this.props.model["default_brk_rate"]}
                               modRate={this.props.model["default_mod_rate"]}/>
@@ -354,11 +397,14 @@ class ModifiableGeneListView extends React.Component {
         super(props);
 
         this.state = {
-            activeDialog: false
+            activeDialog: false,
+            selectedGenes: null
         };
 
         this.onModifySeedGenes = this.onModifySeedGenes.bind(this);
         this.onRemoveDialog = this.onRemoveDialog.bind(this);
+        this.onSelectionUpdate = this.onSelectionUpdate.bind(this);
+        this.onSubmitSelection = this.onSubmitSelection.bind(this);
     }
 
     onModifySeedGenes() {
@@ -373,6 +419,19 @@ class ModifiableGeneListView extends React.Component {
         this.setState(state);
     }
 
+    onSelectionUpdate(newSelectedGenes) {
+        var state = Object.assign({}, this.state);
+        state.selectedGenes = newSelectedGenes;
+        this.setState(state);
+    }
+
+    onSubmitSelection() {
+        if (this.state.selectedGenes) {
+            this.props.onSelectionUpdate(this.state.selectedGenes);
+        }
+        this.onRemoveDialog();
+    }
+
     render() {
         var filteredList = <FilteredList
             instantiated={true}
@@ -385,12 +444,7 @@ class ModifiableGeneListView extends React.Component {
         var changeButton = (
             <button type="button"
                     onClick={this.onModifySeedGenes}
-                    style={{
-                        "float": "right",
-                        "margin-top": "10pt",
-                        "margin-right": "0pt"
-                    }}
-                    className="btn btn-default panel-button editable-box right-button instantiation">
+                    className="btn model-update-button btn-default panel-button editable-box right-button instantiation">
                 <span className="glyphicon glyphicon-pencil"></span> Modify
             </button>
         );
@@ -400,9 +454,15 @@ class ModifiableGeneListView extends React.Component {
                 <GeneSelectionWidget 
                     instantiated={true}
                     id={"geneSelectionWidget"}
+                    preselectedItems={this.props.items}
                     modelId={this.props.modelId}
-                    onFetchItems={this.props.onLoadAllGenes} />
-            );
+                    onUpdateSelected={this.onSelectionUpdate}
+                    onFetchItems={this.props.onLoadAllGenes}/>);
+            var footerContent = (<button type="button"
+                        onClick={this.onSubmitSelection}
+                        className="btn model-update-button btn-primary panel-button editable-box right-button instantiation">
+                        Save
+                </button>);
             dialog = (
                 <div id="modifySeedGenesDialog">
                     <Dialog
@@ -410,6 +470,7 @@ class ModifiableGeneListView extends React.Component {
                         title="Select seed protoforms"
                         onRemove={this.onRemoveDialog}
                         content={dialogContent}
+                        footerContent={footerContent}
                         customStyle={{"width": "50%"}} />
                 </div>
             );
@@ -430,21 +491,73 @@ class ModifiableVariantsListView extends React.Component {
 
 class ContextView extends React.Component {
 
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            definitionsData: null
+        }
+
+        this.componentDidMount = this.componentDidMount.bind(this);
+    }
+
+    componentDidMount() {
+        var url = "/corpus/" + this.props.corpusId + "/get-variants-data";
+        postData(
+            this.props.definitions,
+            url,
+            (data) => {
+                var state = Object.assign({}, this.state);
+                state.definitionsData = data;
+                this.setState(state);
+            }
+        );
+    }
+
     render() {
-        var content = [
+
+        var seedGenes = [
             <div className="row">
                 <div className={"col-sm-12"}>
                     <h4 className="editable-box">Seed protoforms</h4>
                     <ModifiableGeneListView
+                        onSelectionUpdate={this.props.onSeedGenesUpdate}
                         onLoadAllGenes={this.props.onLoadAllGenes}
                         corpusId={this.props.corpusId}
                         items={this.props.seedGenes}/>
                 </div>
-            </div>,
+            </div>
+        ];
+
+        var definitonItems;
+        if (this.state.definitionsData) {
+            console.log(this.state.definitionsData);
+            definitonItems = Object.entries(this.state.definitionsData).map(
+                ([key, value]) => (
+                    <VariantSelectionItem 
+                       corpusId={this.props.corpusId}
+                       selectionId={key}
+                       selectionHGNC={null}
+                       selectionSynonyms={null}
+                       selectionText={null}
+                       subitems={value} 
+                       onSubitemChange={null}
+                       onRemove={null}
+                       noSubitemsMessage={" Wild Type (no variants found, default selection)"}/>
+                )
+            );
+        } else {
+            definitonItems = (
+                <div id="loadingBlock" className="loading-elements center-block">
+                    <div id="loaderModel"></div>
+                </div>
+            );
+        }
+        var definitions = [
             <div className="row">
                 <div className={"col-sm-12"}>
                     <h4 className="editable-box">Definitions</h4>
-                    {/*<ModifiableVariantsView />*/}
+                    {definitonItems}
                 </div>
             </div>
         ];
@@ -452,7 +565,7 @@ class ContextView extends React.Component {
         return ([
             <Collapsable title={"Context"}
                          id={this.props.id}
-                         content={content}
+                         content={[seedGenes, definitions]}
                          expanded={this.props.expanded}/>
         ]);
     }
@@ -460,28 +573,27 @@ class ContextView extends React.Component {
 
 class DynamicsView extends React.Component {
     render() {
-        
         var items = [
             [
                 "default_bnd_rate",
                 "Binding rate",
-                this.props.default_bnd_rate ? this.props.default_bnd_rate : <div className="small-faded">not specified</div>
+                this.props.bndRate ? this.props.bndRate : <div className="small-faded">not specified</div>
             ],
             [
                 "default_brk_rate",
                 "Unbinding rate",
-                this.props.default_brk_rate ? this.props.default_brk_rate : <div className="small-faded">not specified</div>
+                this.props.brkRate ? this.props.brkRate : <div className="small-faded">not specified</div>
             ],
             [
                 "default_mod_rate",
                 "Modification rate",
-                this.props.default_mod_rate ? this.props.default_mod_rate : <div className="small-faded">not specified</div>
+                this.props.modRate ? this.props.modRate : <div className="small-faded">not specified</div>
             ],
         ];
         var data = {
-            "default_bnd_rate": this.props.default_bnd_rate,
-            "default_brk_rate": this.props.default_brk_rate,
-            "default_mod_rate": this.props.default_mod_rate,
+            "default_bnd_rate": this.props.bndRate,
+            "default_brk_rate": this.props.brkRate,
+            "default_mod_rate": this.props.modRate,
         }
 
         content = (
@@ -491,7 +603,7 @@ class DynamicsView extends React.Component {
                              items={items}
                              editable={true}
                              readonly={this.props.readonly}
-                             onDataUpdate={this.props.onDataUpdate}
+                             onDataUpdate={this.props.onRatesUpdate}
                              data={data}
                              noBorders={true}
                              expanded={true}

@@ -180,8 +180,8 @@ function getAllComponents(graph, typing, draggedNodeId) {
     var edgeList = [];
 	for (var i=0; i < graph.links.length; i++) {
 		edgeList.push(
-			[graph.links[i].source.id,
-			 graph.links[i].target.id]);
+			[graph.links[i].source.id ? graph.links[i].source.id : graph.links[i].source,
+			 graph.links[i].target.id ? graph.links[i].target.id : graph.links[i].target ]);
 	}
 
 	var allPredecessors = predecessors(graph, edgeList, draggedNodeId),
@@ -231,4 +231,41 @@ function getNodeAttributes(d) {
 	  attrs = "No attributes to display";
 	}
 	return attrs;
+}
+
+
+function removeGraphComponent(svg, graph, metaTyping, componentId, callbackFunction) {
+	var subcomponents = getAllComponents(graph, metaTyping, componentId);
+	const target = (el) => el == componentId || subcomponents.includes(el);
+
+	var nodesToRemove = graph.nodes.filter(
+		(d) => target(d.id));
+	var linksToRemove = graph.links.filter(
+		(d) => target(d.source.id) || target(d.target.id) || target(d.source) || target(d.target));
+
+	console.log(nodesToRemove);
+	console.log(linksToRemove);
+
+	for (var i = nodesToRemove.length - 1; i >= 0; i--) {
+		removeItem(graph.nodes, nodesToRemove[i]);
+	}
+
+	for (var i = linksToRemove.length - 1; i >= 0; i--) {
+		removeItem(graph.links, linksToRemove[i]);
+	}
+
+	if (svg) {
+		svg.selectAll(".node")
+		   .filter(
+		   		(d) => target(d.id))
+		   .remove();
+		svg.selectAll(".link")
+			.filter(
+				(d) => target(d.source.id) || target(d.target.id))
+			.remove();
+	}
+
+	if (callbackFunction) {
+  		callbackFunction();
+  	}
 }

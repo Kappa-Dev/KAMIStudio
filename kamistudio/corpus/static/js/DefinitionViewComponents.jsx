@@ -132,12 +132,29 @@ function DefinitionGraphView(props) {
     	boxes = null;
     }
 
+    var content;
+    if (props.loading) {
+        content = (
+            <div id="loadingBlock" className="loading-elements center-block">
+                <div id="loader"></div>
+             </div>
+        );
+    } else {
+        content = [
+            <div class="svg-wrapper">
+                <svg id={props.svgId} style={{"display": props.svgDisplay}} preserveAspectRatio="xMinYMin meet"
+    viewBox="0 0 300 300"></svg>
+            </div>,
+            boxes
+        ];
+    }
+
 	return ([
-		<h4 style={{"display": "inline-block"}}>{props.title}</h4>,
-		removeButton,
-		<svg id={props.svgId} style={{"display": props.svgDisplay}} preserveAspectRatio="xMinYMin meet"
-    viewBox="0 0 300 300"></svg>,
-        boxes
+        <div>
+    	    <h4 style={{"display": "inline-block"}}>{props.title}</h4>
+		    {removeButton}
+        </div>,
+        content
  	]);
 }
 
@@ -291,7 +308,8 @@ class VariantForm extends React.Component {
 
 	onRemoveComponent(component, metaType) {
 		var newState = Object.assign({}, this.state);
-		newState.removedComponents.push([component.id, component.attrs, metaType]);
+		newState.removedComponents.push(
+            [component.id, component.attrs, metaType]);
 		this.setState(newState);
 	}
 

@@ -14,7 +14,7 @@ function Dialog(props) {
 			 aria-labelledby="exampleModalCenterTitle"
 			 aria-hidden="true"
 			 style={{"display": "block"}}>
-		  <div className="modal-dialog modal-dialog-centered" role="document" style={props.customStyle}>
+		  <div id={props.id} className="modal-dialog modal-dialog-centered" role="document" style={props.customStyle}>
 		    <div className="modal-content">
 		      <div className="modal-header">
 		        <h3 className="modal-title" id="exampleModalLongTitle">{props.title}</h3>

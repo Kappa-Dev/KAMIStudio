@@ -473,6 +473,26 @@ def get_genes(corpus_id):
     return response
 
 
+@corpus_blueprint.route("/<corpus_id>/get-variants-data",
+                        methods=["POST"])
+@check_dbs
+def get_variants_data(corpus_id):
+    json_data = request.get_json()
+    definitions_data = {}
+    for k, v in json_data.items():
+        record = app.mongo.db.kami_new_definitions.find_one({
+            "corpus_id": corpus_id,
+            "protoform": k
+        })
+        definitions_data[k] = {}
+        for vv in v:
+            definitions_data[k][vv] = [
+                record["products"][vv]["desc"],
+                record["products"][vv]["wild_type"]
+            ]
+    return jsonify(definitions_data), 200
+
+
 @corpus_blueprint.route("/<corpus_id>/add-variant/<gene_node_id>",
                         methods=["GET", "POST"])
 @check_dbs
@@ -508,6 +528,7 @@ def add_variant(corpus_id, gene_node_id):
         else:
             try:
                 json_data = request.get_json()
+                print(json_data)
                 variant_name = json_data["variant_name"]
                 desc = json_data["desc"]
                 wt = json_data["wt"]
@@ -527,35 +548,36 @@ def add_variant(corpus_id, gene_node_id):
 
                 # TODO: think about removal of states
                 for [c_id, c, c_type] in raw_removed_components:
-                    attrs = {k: v["data"] for k, v in c.items()}
+                    print(c_id, c, c_type)
+                    # attrs = {k: v["data"] for k, v in c.items()}
                     if c_type == "region":
-                        start, end = corpus.get_fragment_location(c_id)
-                        if start is not None:
-                            attrs["start"] = start
-                        if end is not None:
-                            attrs["end"] = end
-                        components["regions"].append(attrs)
+                        # start, end = corpus.get_fragment_location(c_id)
+                        # if start is not None:
+                        #     attrs["start"] = start
+                        # if end is not None:
+                        #     attrs["end"] = end
+                        components["regions"].append(c_id)
                     elif c_type == "site":
-                        start, end = corpus.get_fragment_location(c_id)
-                        if start is not None:
-                            attrs["start"] = start
-                        if end is not None:
-                            attrs["end"] = end
-                        components["sites"].append(attrs)
+                        # start, end = corpus.get_fragment_location(c_id)
+                        # if start is not None:
+                        #     attrs["start"] = start
+                        # if end is not None:
+                        #     attrs["end"] = end
+                        components["sites"].append(c_id)
                     elif c_type == "residue":
-                        loc = corpus.get_residue_location(c_id)
-                        if loc is not None:
-                            attrs["loc"] = loc
-                        components["residues"].append(attrs)
+                        # loc = corpus.get_residue_location(c_id)
+                        # if loc is not None:
+                        #     attrs["loc"] = loc
+                        components["residues"].append(c_id)
 
-                residues = []
+                residues = {}
                 for [c_id, c, aa] in raw_selected_aa:
-                    attrs = {k: v["data"] for k, v in c.items()}
-                    loc = corpus.get_residue_location(c_id)
-                    if loc is not None:
-                        attrs["loc"] = loc
-                    attrs["aa"] = aa
-                    residues.append(attrs)
+                    # attrs = {k: v["data"] for k, v in c.items()}
+                    # loc = corpus.get_residue_location(c_id)
+                    # if loc is not None:
+                        # attrs["loc"] = loc
+                    # attrs["aa"] = aa
+                    residues[c_id] = aa
 
                 product = {
                     "desc": desc,
@@ -968,35 +990,50 @@ def fetch_definition(corpus_id, gene_id):
         "corpus_id": corpus_id,
         "protoform": gene_id
     })
+    del definition_json["_id"]
 
     corpus = get_corpus(corpus_id)
 
     if corpus is not None and definition_json is not None:
-        definition = Definition.from_json(definition_json)
+        gene_node_id = corpus.get_protoform_by_uniprot(gene_id)
 
-        protoform_graph, gene_node = definition._generate_protoform_graph(
-            corpus.action_graph, corpus.get_action_graph_typing())
-        product_graphs = {}
-        for el in definition.products:
-            product_graphs[el.name] = el.generate_graph(
-                protoform_graph, gene_node)
+        # Find all the subcomponents of the protoform and the graph they induce
+        protoform_subcomponents = corpus.subcomponent_nodes(gene_node_id)
+        protoform_graph = corpus.action_graph.to_d3_json(
+            nodes=protoform_subcomponents)
+        ag_meta_typing = corpus.get_action_graph_typing()
+        protoform_meta_typing = {
+            c: ag_meta_typing[c] for c in protoform_subcomponents
+        }
 
-        data = {}
-        wild_type_name = None
-        for k, v in definition_json["products"].items():
-            if v["wild_type"]:
-                wild_type_name = k
-        data["wild_type"] = wild_type_name
-        data["protoform_graph"] = graph_to_d3_json(protoform_graph.graph)
-        data["protoform_graph_meta_typing"] = protoform_graph.meta_typing
-        data["product_graphs"] = {}
-        data["product_graphs_meta_typing"] = {}
-        for k, v in product_graphs.items():
-            data["product_graphs"][k] = graph_to_d3_json(v.graph)
-            data["product_graphs_meta_typing"][k] = v.meta_typing
+        definition_json["protoform_graph"] = protoform_graph
+        definition_json["protoform_meta_typing"] = protoform_meta_typing
 
-        return jsonify(data), 200
+        return jsonify(definition_json), 200
     return jsonify({"success": False}), 404
+    # if corpus is not None and definition_json is not None:
+    #     definition = Definition.from_json(definition_json)
+
+    #     protoform_graph, gene_node = definition._generate_protoform_graph(
+    #         corpus.action_graph, corpus.get_action_graph_typing())
+    #     product_graphs = {}
+    #     for el in definition.products:
+    #         product_graphs[el.name] = el.generate_graph(
+    #             protoform_graph, gene_node)
+
+    #     data = {}
+    #     wild_type_name = None
+    #     for k, v in definition_json["products"].items():
+    #         if v["wild_type"]:
+    #             wild_type_name = k
+    #     data["wild_type"] = wild_type_name
+    #     data["protoform_graph"] = graph_to_d3_json(protoform_graph.graph)
+    #     data["protoform_graph_meta_typing"] = protoform_graph.meta_typing
+    #     data["product_graphs"] = {}
+    #     data["product_graphs_meta_typing"] = {}
+    #     for k, v in product_graphs.items():
+    #         data["product_graphs"][k] = graph_to_d3_json(v.graph)
+    #         data["product_graphs_meta_typing"][k] = v.meta_typing
 
 
 @corpus_blueprint.route("/<corpus_id>/variants/uniprot/<uniprot_id>")
@@ -1132,18 +1169,8 @@ def get_models(corpus_id):
         {"corpus_id": corpus_id}).sort(
         "last_modified", -1))
     data = {"items": []}
-    # corpus = get_corpus(corpus_id)
     for model in models:
         del model["_id"]
-        # seed_genes_with_data = []
-        # for g in model["seed_genes"]:
-        #     gene_id = corpus.get_protoform_by_uniprot(g)
-        #     seed_genes_with_data.append((
-        #         g,
-        #         corpus.get_hgnc_symbol(gene_id),
-        #         corpus.get_synonyms(gene_id)
-        #     ))
-        # model["seed_genes"] = seed_genes_with_data
         data["items"].append(model)
     return jsonify(data), 200
 
@@ -1161,6 +1188,17 @@ def get_gene_data(corpus_id):
             corpus.get_synonyms(gene_id)
         ]
     return jsonify(data), 200
+
+
+@corpus_blueprint.route("<corpus_id>/update-model/<model_id>", methods=["POST"])
+def update_model_data(corpus_id, model_id):
+    """Update model data."""
+    json_data = request.get_json()
+    if "updated" in json_data:
+        app.mongo.db.kami_models.update_one(
+            {"id": model_id},
+            {"$set": json_data["updated"]})
+    return jsonify({"success": True}), 200
 
 
 @corpus_blueprint.route("<corpus_id>/import-model", methods=['GET', 'POST'])

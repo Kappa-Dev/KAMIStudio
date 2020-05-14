@@ -204,3 +204,8 @@ $('tr').click( function() {
 }).hover( function() {
     $(this).toggleClass('hover');
 });
+
+function removeItem(array, item) {
+	var index = array.indexOf(item);
+	if (index !== -1) array.splice(index, 1);
+}

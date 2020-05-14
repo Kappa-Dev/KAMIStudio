@@ -556,7 +556,7 @@ function visualiseGraph(graph, svgId,
 
 
 	function translateLinks(linkSelector, nodeSelector) {
-		// translate links according to their source/target node pos
+        // translate links according to their source/target node pos
 		var arrow = linkSelector.selectAll(".arrow"),
 			linkBox = linkSelector.selectAll(".linkbox");
 	    linkBox

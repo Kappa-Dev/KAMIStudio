@@ -24,7 +24,6 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 			graph, metaTyping, META_COLORS),
 		highlight = HIGHLIGHT_COLOR;
 
-
     // initLinkStrengthDistance(graph, metaTyping, 1);
 	initCircleRadius(graph, metaTyping, NUGGET_META_SIZES, 0.5);
 
@@ -123,24 +122,9 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
 	      );
 
 	      function removeComponent(d) {
-	      	var componentId = d.id;
-	      	var subcomponents = getAllComponents(graph, metaTyping, componentId);
-	      	const target = (el) => el == componentId || subcomponents.includes(el);
-
-	      	svg.selectAll(".node")
-	      	   .filter((d) => target(d.id))
-	      	   .remove();
-	      	graph.nodes.filter(
-	      		(d) => target(d.id));
-
-	      	svg.selectAll(".link")
-	      		.filter((d) => target(d.source.id) || target(d.target.id))
-	      		.remove();
-	      	graph.links.filter(
-	      		(d) => target(d.source.id) || target(d.target.id));
-	      	if (onRemoveComponent) {
-		      	onRemoveComponent(d, metaTyping[componentId]);
-		    }
+	      	removeGraphComponent(
+	      		svg, graph, metaTyping, d.id, 
+	      		() => onRemoveComponent(d, metaTyping[d.id]));
 	      }
 	}
 
@@ -228,6 +212,60 @@ function hideDeleteConfirmationDialog() {
 }
 
 
+function getRawDefinition(modelId, protoformGene, successCallback) {
+	var url = "/corpus/" + modelId + "/raw-definition/" + protoformGene;
+	$.ajax({
+	    url: url,
+	    type: 'get',
+	    dataType: "json"
+	}).done(
+		function(data) {
+			if (successCallback) {
+				successCallback(data);
+			}
+		}
+	).fail(function (e) {
+	    console.log("Failed to load a definition");
+	});
+}
+
+
+function generateProductGraph(data, productName) {
+	var productGraph = JSON.parse(JSON.stringify(data["protoform_graph"]));
+	var productGraphMetaTyping = {};
+
+	for (var i = productGraph.nodes.length - 1; i >= 0; i--) {
+		productGraphMetaTyping[productGraph.nodes[i].id] = data[
+			"protoform_meta_typing"][productGraph.nodes[i].id];
+	}
+
+
+	// remove components
+	var toRemove = data["products"][productName]["removed_components"];
+
+	for (var k in toRemove) {
+		for (var i = toRemove[k].length - 1; i >= 0; i--) {
+			removeGraphComponent(
+				null, productGraph,
+				productGraphMetaTyping,
+				toRemove[k][i]);
+		}
+	}
+
+	// set residues
+	for (var c in data["products"][productName]["residues"]) {
+		for (var i = productGraph.nodes.length - 1; i >= 0; i--) {
+			if (productGraph.nodes[i]["id"] == c) {
+				productGraph.nodes[i]["attrs"]["aa"]["data"] = [
+					data["products"][productName]["residues"][c]
+				];
+			}
+		}
+	}
+	return [productGraph, productGraphMetaTyping]
+}
+
+
 function viewDefinition(modelId, readonly, allDefinitions) {
 	return function(definitionId, protoformGene, products, callback) {
 
@@ -297,73 +335,71 @@ function viewDefinition(modelId, readonly, allDefinitions) {
 		}
 
 
-
 		ReactDOM.render(
 			<DefinitionPreview
 				readonly={readonly}
 			 	loading={true}/>,
 			document.getElementById("definitionViewWidget"));
 
-		var url = "/corpus/" + modelId + "/raw-definition/" + protoformGene;
-		$.ajax({
-		    url: url,
-		    type: 'get',
-		    dataType: "json"
-		}).done(
-			function(data) {
-				function viewProduct(productName) {
-					ReactDOM.render(
-						 <DefinitionPreview
-							readonly={readonly}
-						 	wildType={productName == data["wild_type"]}
-				            id={definitionId}
-				            productId={productName}
-				            onRemove={() => showDeleteConfirmationDialog(productName)}
-				            protoformGene={protoformGene}
-				            productNames={products.map((item) => item[0])}
-				            editable={false}
-				            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
-				    	document.getElementById("definitionViewWidget"));
-
-					d3.select("#productSvg").selectAll("*").remove();
-					drawDefinitionGraph(
-						modelId,
-						definitionId,
-						"product",
-						data["product_graphs"][productName],
-						data["product_graphs_meta_typing"][productName],
-						readonly);
-				}
-
+		function plotGraphs(data) {
+			function viewProduct(productName) {
 				ReactDOM.render(
-			        <DefinitionPreview
+					 <DefinitionPreview
 						readonly={readonly}
-			        	wildType={false}
+					 	wildType={productName == data["wild_type"]}
 			            id={definitionId}
+			            productId={productName}
+			            onRemove={() => showDeleteConfirmationDialog(productName)}
 			            protoformGene={protoformGene}
 			            productNames={products.map((item) => item[0])}
 			            editable={false}
 			            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
-			        document.getElementById('definitionViewWidget')
-			    );
+			    	document.getElementById("definitionViewWidget"));
 
-			    // viewProduct(products[0][0]);
-				callback(viewProduct);
+				var svg = d3.select("#productSvg");
 
-				d3.select("#protoformSvg").selectAll("*").remove();
-    			d3.selectAll(".product-svg").selectAll("*").remove();
-				// console.log(data);
+				// generate a product graph
+				var productData = generateProductGraph(data, productName);
+
+				svg.selectAll("*").remove();
+
 				drawDefinitionGraph(
 					modelId,
 					definitionId,
-					"protoform",
-					data["protoform_graph"],
-					data["protoform_graph_meta_typing"],
+					"product",
+					productData[0],
+					productData[1],
 					readonly);
 			}
-		).fail(function (e) {
-		    console.log("Failed to load a definition");
-		});
+
+			ReactDOM.render(
+		        <DefinitionPreview
+					readonly={readonly}
+		        	wildType={false}
+		            id={definitionId}
+		            protoformGene={protoformGene}
+		            productNames={products.map((item) => item[0])}
+		            editable={false}
+		            onDataUpdate={updateDefinitionDesc(modelId, definitionId)}/>,
+		        document.getElementById('definitionViewWidget')
+		    );
+
+		    // viewProduct(products[0][0]);
+			callback(viewProduct);
+
+			d3.select("#protoformSvg").selectAll("*").remove();
+			d3.selectAll(".product-svg").selectAll("*").remove();
+
+			drawDefinitionGraph(
+				modelId,
+				definitionId,
+				"protoform",
+				JSON.parse(JSON.stringify(data["protoform_graph"])),
+				data["protoform_meta_typing"],
+				readonly);
+		}
+
+		getRawDefinition(modelId, protoformGene, plotGraphs);
 	}
 }
 
