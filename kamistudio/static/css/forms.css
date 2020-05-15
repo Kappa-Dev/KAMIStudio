@@ -185,6 +185,7 @@ li.gene-item.fixed.open label:focus {
     /*margin-bottom: 10pt;*/
     padding: 10pt;
     color: #2e6da4;
+    background-color: #dae3ec;
 }
 
 #variantsSelection .nuggets-nav li {
@@ -201,7 +202,7 @@ li.gene-item.fixed.open label:focus {
 }
 
 .show-link {
-  margin-top: 10pt;
+  margin-top: 13pt;
   color: #2e6da4;
 }
 

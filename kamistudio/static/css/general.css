@@ -578,3 +578,15 @@ li.subitem.selected-subitem a {
 #titleP img {
     margin-top: -5pt;
 }
+
+.nuggets-nav li .info-table a {
+    display: initial;
+    text-decoration: none;
+    padding: 0px;
+}
+
+.nuggets-nav li .info-table a:hover,
+.nuggets-nav li .info-table a:active,
+.nuggets-nav li .info-table a:focus {
+    background-color: unset;
+}

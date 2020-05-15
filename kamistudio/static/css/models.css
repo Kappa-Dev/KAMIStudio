@@ -11,6 +11,7 @@
 
 #contextView {
     margin-left: 10pt;
+    margin-bottom: 15pt;
 }
 
 #instantiatedView {
@@ -43,9 +44,42 @@
 }
 
 #contextView ul.nuggets-nav {
-    height: 100pt;
+    height: 150pt;
     border: solid 1px #ddd;
     border-radius: 5pt;
+}
+
+#contextView ul.definitions {
+    overflow-y: scroll;
+    margin-top: 5pt;
+    height: 191pt;
+}
+
+
+#contextView ul.definitions label {
+    display: inline-block;
+    display: inline-block;
+    margin-bottom: 0pt;
+    padding-bottom: 0pt;
+    padding-top: 4pt;
+}
+
+#contextView ul.definitions ul.components {
+    height: auto;
+    overflow-y: hidden;
+    border: 0pt;
+    border-radius: 0pt;
+    margin-left: 0pt;
+    margin-bottom: -4pt;
+}
+
+
+#contextView ul.definitions .synonyms {
+    text-align: right;
+    float: right;
+    margin-top: 0pt;
+    /*display: inline-block;*/
+    text-indent: 0pt;
 }
 
 #contextView input:focus {
@@ -57,6 +91,33 @@
     color: #8d0e14;
 }
 
+#contextView .var-selection-header {
+    color: #8d0e14;
+    background-color: #f5e5e6;
+    cursor: auto;
+    font-size: 14px;
+}
+
+#contextView li.gene-item:hover,
+#contextView li.gene-item:active,
+#contextView li.gene-item:focus,
+#contextView li.gene-item.open a:hover,
+#contextView li.gene-item.open a:active li.gene-item.open a:focus,
+#contextView li.gene-item.open label:hover, 
+#contextView li.gene-item.open label:active li.gene-item.open label:focus,
+#contextView li.gene-item .show-link a:hover,
+#contextView li.gene-item .show-link a:active,
+#contextView li.gene-item .show-link a:focus {
+    color: #8d0e14;
+    text-decoration: none;
+    background-color: #f5e5e6;
+}
+
+#contextView li.gene-item label,
+#contextView li.gene-item .show-link
+{
+    color: #8d0e14;
+}
 
 #contextView li:not(:first-child) {
     margin-top: -5pt;
@@ -66,6 +127,10 @@
 #contextView .gene-link:hover {
     color: #8d0e14 !important;
     background-color: #f5e5e6 !important;
+}
+
+#contextView input.search {
+    margin-top: 5pt;
 }
 
 #modifySeedGenesDialog ul.nuggets-nav {
@@ -79,6 +144,29 @@
 
 .model-update-button {
     float: right;
-    margin-top: 10pt !important;
+    margin-top: 5pt;
     margin-right: 0pt;
+}
+
+#contextView h4.editable-box {
+    display: inline-block;
+}
+
+@media (min-width: 768px) {
+  #contextView .modal-dialog {
+    width: 40%;
+  }  
+}
+
+.nuggets-nav li a.info-box-title {
+    width: auto;
+    padding: 0pt;
+}
+
+.nuggets-nav li a.info-box-title:hover {
+    background-color: unset;
+}
+
+#modifyDefinitionsDialog ul.nuggets-nav {
+    height: 80%;
 }

@@ -209,3 +209,7 @@ function removeItem(array, item) {
 	var index = array.indexOf(item);
 	if (index !== -1) array.splice(index, 1);
 }
+
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}

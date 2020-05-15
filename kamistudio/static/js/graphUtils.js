@@ -243,9 +243,6 @@ function removeGraphComponent(svg, graph, metaTyping, componentId, callbackFunct
 	var linksToRemove = graph.links.filter(
 		(d) => target(d.source.id) || target(d.target.id) || target(d.source) || target(d.target));
 
-	console.log(nodesToRemove);
-	console.log(linksToRemove);
-
 	for (var i = nodesToRemove.length - 1; i >= 0; i--) {
 		removeItem(graph.nodes, nodesToRemove[i]);
 	}

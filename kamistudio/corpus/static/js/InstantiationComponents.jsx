@@ -41,8 +41,10 @@ class SelectableGeneList extends React.Component {
 			selected: initialSelectedIds,
 			selectedAll: this.props.preselectedItems ? false : true
 		}
-		if (this.props.onSelectionUpdate) {
-			this.props.onSelectionUpdate(this.props.items);
+		if (!this.props.preselectedItems) {
+			if (this.props.onSelectionUpdate) {
+				this.props.onSelectionUpdate(this.props.items);
+			}
 		}
 	}
 
@@ -138,6 +140,7 @@ function VariantSelectionDialog(props) {
 			onItemClick={props.onItemClick}
 			filterItems={props.filterItems}
 			listComponent={GeneList}
+			instantiated={props.instantiated}
 			itemFilter={
 				(item, value) => item.join(", ").toLowerCase().search(
 		    			value.toLowerCase()) !== -1
@@ -147,6 +150,7 @@ function VariantSelectionDialog(props) {
 			id={props.id}
 			title={props.title}
 			onRemove={props.onRemove}
+			instantiated={props.instantiated}
 			content={filteredList} />
 	);
 }
@@ -182,7 +186,7 @@ class VariantSelectionItem extends React.Component {
 		this.onRemoveShowVariantDialog = this.onRemoveShowVariantDialog.bind(this);
 
 		this.state = {
-			selected: [],
+			selected: this.props.preselectedItems ? Object.keys(this.props.preselectedItems) : [],
 			activeShowVariantDialog: false,
 			activeVariant: null,
 			activeVariantGraph: false,
@@ -191,7 +195,11 @@ class VariantSelectionItem extends React.Component {
 	}
 
 	defaultItem(item) {
-		return this.props.subitems[item][1];
+		if (this.props.defaultDisabled) {
+			return false;
+		} else {
+			return this.props.subitems[item][1];
+		}
 	}
 
 	getDefaultItem() {
@@ -263,23 +271,25 @@ class VariantSelectionItem extends React.Component {
 		}
 
 		this.props.onSubitemChange(
-			this.props.selectionId, allSelected);
+			this.props.selectionId, allSelected, item);
 	}
 
 	render() {
 		var subitems = null;
 		if (Object.keys(this.props.subitems).length > 0) { 
 			var subitems = Object.keys(this.props.subitems).map(
-				(item) => [
+				(item) => (
 					<li className="not-selected gene-item variant-checkbox">
-						<label className="gene-item"><input type="checkbox"
-							onChange={() => this.onSelection(this.props.selectionId, item)}
-							name={this.props.selectionId}
-							value={this.props.selectionId + item}
-							checked={this.isSelected(item)}/>
-					 	{" " + item + (
-					 		this.props.subitems[item][0] ? (" (" + this.props.subitems[item][0] + ")") : ""
-					 	)}
+						<label className="gene-item">
+							{[this.props.editable ? (
+								<input type="checkbox"
+									onChange={() => this.onSelection(this.props.selectionId, item)}
+									name={this.props.selectionId}
+									value={this.props.selectionId + item}
+									checked={this.isSelected(item)}/>) : null,
+						 	" " + item + (
+						 		this.props.subitems[item][0] ? (" (" + this.props.subitems[item][0] + ")") : "")
+						 	]}
 					 	</label>
 					 	<div className="synonyms show-link">
 					 		<a onClick={() => this.onShowVariantClick(item)}>
@@ -287,7 +297,7 @@ class VariantSelectionItem extends React.Component {
 					 		</a>
 					 	</div>
 					</li>
-				]
+				)
 			);
 		} 
 
@@ -307,6 +317,7 @@ class VariantSelectionItem extends React.Component {
 		if (this.state.activeShowVariantDialog) {
 			var dialogContent = (
 				<DefinitionGraphView
+						instantiated={this.props.instantiated}
 						loading={!this.state.activeVariantGraph}
 	            		title={"Variant '" + this.state.activeVariant + "' of the protoform " + protoformRepr}
 	            		svgId="variantSvg"
@@ -325,15 +336,21 @@ class VariantSelectionItem extends React.Component {
 			);
 		}
 
+		var removeButton;
+		if (this.props.editable) {
+			removeButton = (
+				<button type="button" className="close"
+						onClick={() => this.props.onRemove(this.props.selectionId)}
+						ariaLabel="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+			);
+		}
 		return (
 			<li>
 				<div className="var-selection-header">
 					{protoformRepr}
-					<button type="button" className="close"
-						onClick={() => this.props.onRemove(this.props.selectionId)}
-						ariaLabel="Close">
-			          <span aria-hidden="true">&times;</span>
-			        </button>
+					{removeButton}
 				</div>
 				{dialog}
 				{message}
@@ -389,6 +406,7 @@ class InstantiationForm extends React.Component {
 
 		state.activeVariantSelectioDialog = false;
 		
+		
 		state["variantChoices"].push({
 			"uniprotid": uniprotid,
 			"hgnc": hgnc,
@@ -396,6 +414,7 @@ class InstantiationForm extends React.Component {
 			"variants": variants,
 			"selectedVariants": []
 		})
+
 		this.setState(state);
 		this.props.onFetchSubitems(this, state["variantChoices"].length - 1, uniprotid);
 	}
@@ -472,6 +491,7 @@ class InstantiationForm extends React.Component {
 	render() {
 		var content = this.state.variantChoices.map((item, key) =>
 			<VariantSelectionItem 
+						   editable={true}
 						   corpusId={this.props.corpusId}
 						   selectionId={item["uniprotid"]}
 						   selectionHGNC={item["hgnc"]}

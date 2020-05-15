@@ -136,7 +136,7 @@ function DefinitionGraphView(props) {
     if (props.loading) {
         content = (
             <div id="loadingBlock" className="loading-elements center-block">
-                <div id="loader"></div>
+                <div id={props.instantiated ? "loaderModel" : "loader"}></div>
              </div>
         );
     } else {

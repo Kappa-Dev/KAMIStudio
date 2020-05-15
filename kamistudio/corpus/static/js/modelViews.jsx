@@ -45,7 +45,8 @@ class ModelList extends React.Component {
         this.state = {
             selected: null,
             loadedFullGeneData: false,
-            geneData: null
+            geneData: null,
+            definitionsData: {}
         };
 
         this.onItemClick = this.onItemClick.bind(this);
@@ -56,6 +57,7 @@ class ModelList extends React.Component {
         this.onMetaDataUpdate = this.onMetaDataUpdate.bind(this);
         this.onRatesUpdate = this.onRatesUpdate.bind(this);
         this.updateModel = this.updateModel.bind(this);
+        this.onDefinitionsUpdate = this.onDefinitionsUpdate.bind(this);
     }
 
     updateModel(modelId, updateDict) {
@@ -78,7 +80,6 @@ class ModelList extends React.Component {
     }
 
     onRatesUpdate(updatedData) {
-        console.log(updatedData);
         var state = Object.assign({}, this.state);
         for (var k in updatedData) {
             state.selected[k] = updatedData[k];
@@ -94,6 +95,66 @@ class ModelList extends React.Component {
         this.updateModel(
             state.selected["id"], {"seed_genes": newSeedGenes});
         this.setState(state);
+    }
+
+    onDefinitionsUpdate(newDefinitions) {
+        var data = {};
+        for (var key in newDefinitions) {
+            data[key] = newDefinitions[key]["selectedVariants"];
+        }
+        console.log(data);
+        var state = Object.assign({}, this.state);
+        state.selected["definitions"] = data;
+        this.updateModel(
+            state.selected["id"], {"definitions": data});
+        this.setState(state);
+    }
+
+    onItemClick(item) {
+        this.setSelectedModel(item);
+    }
+
+    setSelectedModel(item) {
+        var state = Object.assign({}, this.state);
+        state.selected = item;
+        this.setState(state);
+        this.fetchGeneData(item);
+        this.fetchDefinitionData(item);
+    }
+
+    fetchDefinitionData(item) {
+        for (var k in item["definitions"]) {
+            if (!Object.keys(this.state.definitionsData).includes(k)) {
+                // Load new definitions data
+                var url = "/corpus/" + this.props.corpusId + "/get-variants-data";
+                postData(
+                    item["definitions"],
+                    url,
+                    (data) => {
+                        var state = Object.assign({}, this.state);
+                        state.definitionsData = data;
+                        this.setState(state);
+                    }
+                );
+            }
+        }
+    }
+
+    fetchGeneData(item) {
+        if (!this.state.loadedFullGeneData) {
+            var url = "/corpus/" + this.props.corpusId + "/get-gene-data";
+            postData(
+                {
+                    "uniprots": item["seed_genes"].concat(
+                        Object.keys(item["definitions"]))
+                },
+                url,
+                (data) => {
+                    var state = Object.assign({}, this.state);
+                    state.geneData = data["items"];
+                    this.setState(state);
+                });
+        }
     }
 
     loadAllGenes(element) {
@@ -121,31 +182,18 @@ class ModelList extends React.Component {
                     state.loadedFullGeneData = true;
                     this.setState(state);
                 });
-        }
-    }
+        } else {
+            var genes = [];
+            for (var k in this.state.geneData) {
+                genes.push([
+                    k, this.state.geneData[k][0], this.state.geneData[k][1]
+                ]);
+            }
 
-    onItemClick(item) {
-        this.setSelectedModel(item);
-    }
-
-    setSelectedModel(item) {
-        var state = Object.assign({}, this.state);
-        state.selected = item;
-        this.setState(state);
-        this.fetchGeneData(item);
-    }
-
-    fetchGeneData(item) {
-        if (!this.state.loadedFullGeneData) {
-            var url = "/corpus/" + this.props.corpusId + "/get-gene-data";
-            postData(
-                {"uniprots": item["seed_genes"]},
-                url,
-                (data) => {
-                    var state = Object.assign({}, this.state);
-                    state.geneData = data["items"];
-                    this.setState(state);
-                });
+            element.setState({
+                initialItems: genes,
+                items: genes
+            });
         }
     }
 
@@ -201,11 +249,31 @@ class ModelList extends React.Component {
             // modelPreview = <ModelView id={this.state.selected["id"]}
             //                           name={this.state.selected["meta_data"]["name"]}
             //                           desc={this.state.selected["meta_data"]["desc"]}/>;
+            var extraProtoforms = {};
+            if (this.state.geneData) {
+                for (var k in this.state.selected["definitions"]) {
+                    var notFound = true;
+                    for (var i = this.state.selected["seed_genes"].length - 1; i >= 0; i--) {
+                        if (this.state.selected["seed_genes"][i][0] == k) {
+                            notFound = false;
+                            break;
+                        }
+                    }
+                    if (notFound) {
+                        extraProtoforms[k] = this.state.geneData[k];
+                    }
+                }
+            }
+
+
             modelPreview = (
                 <ModelView readonly={this.props.readonly}
                            geneData={this.state.geneData}
+                           definitionsData={this.state.definitionsData}
+                           extraDefinitionProtoforms={extraProtoforms}
                            model={this.state.selected} 
                            onSeedGenesUpdate={this.onSeedGenesUpdate}
+                           onDefinitionsUpdate={this.onDefinitionsUpdate}
                            onLoadAllGenes={this.loadAllGenes}
                            corpusId={this.props.corpusId}
                            onMetaDataUpdate={this.onMetaDataUpdate}
@@ -271,7 +339,20 @@ class ModelView extends React.Component {
                 );
             }
         }
-        this.props.geneData
+
+        var definitionsData = {};
+        if (this.props.definitionsData) {
+            for (var k in this.props.model["definitions"]) {
+                if (k in this.props.definitionsData) {
+                    definitionsData[k] = this.props.definitionsData[k];
+                } else {
+                    definitionsData = null;
+                    break;
+                }
+            }
+        }
+
+
         return (
             <div id="modelViewWidget" className="model-info-box">
                 <div id="modelDeletionConfirmDialog"></div>
@@ -299,10 +380,12 @@ class ModelView extends React.Component {
                              id={"contextView"}
                              corpusId={this.props.corpusId}
                              readonly={this.props.readonly}
+                             seedGenes={seedGenes}
                              onSeedGenesUpdate={this.props.onSeedGenesUpdate}
+                             onDefinitionsUpdate={this.props.onDefinitionsUpdate}
+                             extraDefinitionProtoforms={this.props.extraDefinitionProtoforms}
                              onLoadAllGenes={this.props.onLoadAllGenes}
-                             definitions={this.props.model["definitions"]}
-                             seedGenes={seedGenes}/>
+                             definitions={definitionsData} />
                 <DynamicsView expanded={true}
                               id={"dynamicsView"}
                               onRatesUpdate={this.props.onRatesUpdate}
@@ -443,9 +526,10 @@ class ModifiableGeneListView extends React.Component {
             }/>;
         var changeButton = (
             <button type="button"
+                    id="modifySeedGenes"
                     onClick={this.onModifySeedGenes}
-                    className="btn model-update-button btn-default panel-button editable-box right-button instantiation">
-                <span className="glyphicon glyphicon-pencil"></span> Modify
+                    className="btn btn-sm model-update-button btn-default panel-button editable-box right-button instantiation">
+                <span className="glyphicon glyphicon-pencil"></span>
             </button>
         );
         var dialog;
@@ -476,98 +560,299 @@ class ModifiableGeneListView extends React.Component {
             );
         }
         return [
+            <h4 className="editable-box">Seed protoforms</h4>,
+            changeButton,
             filteredList,
-            dialog,
-            changeButton
+            dialog
         ]
     }
 }
 
 class ModifiableVariantsListView extends React.Component {
-    render() {
-
-    }
-}
-
-class ContextView extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            definitionsData: null
-        }
+            editingMode: false,
+            activeDialog: false,
+            variantChoices: {}
+        };
 
-        this.componentDidMount = this.componentDidMount.bind(this);
+        this.onModifyDefinitions = this.onModifyDefinitions.bind(this);
+        this.onCancelModifications = this.onCancelModifications.bind(this);
+        this.onRemoveDialog = this.onRemoveDialog.bind(this);
+        this.onShowDialog = this.onShowDialog.bind(this);
+        this.onSubmitSelection = this.onSubmitSelection.bind(this);
+        this.onVariantItemClick = this.onVariantItemClick.bind(this);
+        this.onRemoveDefinition = this.onRemoveDefinition.bind(this);
     }
 
-    componentDidMount() {
-        var url = "/corpus/" + this.props.corpusId + "/get-variants-data";
-        postData(
-            this.props.definitions,
-            url,
+    onModifyDefinitions() {
+        // enter editing mode
+        var state = Object.assign({}, this.state);
+        state.editingMode = true;
+
+        for (var k in this.props.definitions) {
+            if (!(k in state.variantChoices)) {
+                state.variantChoices[k] = {
+                    "variants": this.props.definitions[k],
+                    "selectedVariants": Object.keys(this.props.definitions[k])
+                }
+            }
+        }
+
+        this.setState(state);
+    }
+
+    onCancelModifications() {
+        var state = Object.assign({}, this.state);
+        state.editingMode = false;
+        state.variantChoices = [];
+        this.setState(state);
+    }
+
+    onShowDialog() {
+        var state = Object.assign({}, this.state);
+        state.activeDialog = true;
+        this.setState(state);
+    }
+
+    onRemoveDialog() {
+        var state = Object.assign({}, this.state);
+        state.activeDialog = false;
+        this.setState(state);
+    }
+
+
+    onSubmitSelection() {
+        // call parent's handler
+
+        if (this.props.onUpdateDefinitions) {
+            this.props.onUpdateDefinitions(this.state.variantChoices);
+        }
+
+        // exit editing mode
+        var state = Object.assign({}, this.state);
+        state.editingMode = false;
+        state.variantChoices = [];
+        this.setState(state);
+    }
+
+    onVariantItemClick(uniprotid, hgnc, synonyms) {
+        var state = Object.assign({}, this.state);
+
+        state.activeDialog = false;
+
+        // add to selected variants if already in definitions
+        if (!(uniprotid in state.variantChoices)) {
+            state.variantChoices[uniprotid] = {
+                "variants": {},
+                "selectedVariants": []
+            };
+        }
+
+        this.setState(state);
+
+        // Fetch all variants of the specified protoform
+        var url = "/corpus/" + this.props.corpusId + "/variants/uniprot/" + uniprotid;
+        $.ajax({
+            url: url,
+            type: 'get',
+            dataType: "json"
+        }).done(
             (data) => {
                 var state = Object.assign({}, this.state);
-                state.definitionsData = data;
+                state["variantChoices"][uniprotid]["variants"] = data["products"];
                 this.setState(state);
             }
-        );
+        ).fail(function (e) {
+            console.log("Failed to load variants");
+        });
+    }
+
+    onVariantCheck(uniprotid, variant) {
+        var state = Object.assign({}, this.state);
+        if (!state.variantChoices[uniprotid]["selectedVariants"].includes(variant)) {
+            state.variantChoices[uniprotid]["selectedVariants"].push(variant);
+        } else {
+            removeItem(state.variantChoices[uniprotid]["selectedVariants"], variant);
+        }
+        this.setState(state);
+    }
+
+    onRemoveDefinition(uniprotid) {
+        var state = Object.assign({}, this.state);
+        delete state.variantChoices[uniprotid];
+        this.setState(state);
     }
 
     render() {
-
-        var seedGenes = [
-            <div className="row">
-                <div className={"col-sm-12"}>
-                    <h4 className="editable-box">Seed protoforms</h4>
-                    <ModifiableGeneListView
-                        onSelectionUpdate={this.props.onSeedGenesUpdate}
-                        onLoadAllGenes={this.props.onLoadAllGenes}
-                        corpusId={this.props.corpusId}
-                        items={this.props.seedGenes}/>
-                </div>
-            </div>
-        ];
-
-        var definitonItems;
-        if (this.state.definitionsData) {
-            console.log(this.state.definitionsData);
-            definitonItems = Object.entries(this.state.definitionsData).map(
-                ([key, value]) => (
-                    <VariantSelectionItem 
-                       corpusId={this.props.corpusId}
-                       selectionId={key}
-                       selectionHGNC={null}
-                       selectionSynonyms={null}
-                       selectionText={null}
-                       subitems={value} 
-                       onSubitemChange={null}
-                       onRemove={null}
-                       noSubitemsMessage={" Wild Type (no variants found, default selection)"}/>
-                )
-            );
+        var definitions = {},
+            preselectedItems = {};
+        if (this.state.editingMode) {
+            // add items from the state
+            for (var k in this.state.variantChoices) {
+                definitions[k] = this.state.variantChoices[k]["variants"];
+                // preselectedItems[k] = {};
+                // for (var v in definitions[k]) {
+                //     if (this.state.variantChoices[k]["selectedVariants"].includes(v)) {
+                //         preselectedItems[k][v] = definitions[k][v];
+                //     }
+                // }
+            }
+            // for (var k in this.props.definitions) {
+            //     if (!(k in definitions) && !(k in this.state.removedDefinitions)) {
+            //         definitions[k] = this.props.definitions[k];
+            //     }
+            // }
         } else {
-            definitonItems = (
+            definitions = this.props.definitions;
+            preselectedItems = this.props.definitions;
+        }
+
+        var definitionList, buttons, dialog;
+        if (definitions) {
+            if (Object.keys(definitions).length > 0) {
+                var definitonItems = Object.keys(definitions).map(
+                    (key) => (
+                        <VariantSelectionItem 
+                           preselectedItems={preselectedItems[key]}
+                           defaultDisabled={true}
+                           editable={this.state.editingMode}
+                           instantiated={true}
+                           corpusId={this.props.corpusId}
+                           selectionId={key}
+                           selectionHGNC={(key in this.props.protoformsData) ? this.props.protoformsData[key][0] : null}
+                           selectionSynonyms={(key in this.props.protoformsData) ? this.props.protoformsData[key][1] : null}
+                           selectionText={null}
+                           subitems={definitions[key]} 
+                           onSubitemChange={(up, allSelected, variant) => this.onVariantCheck(key, variant)}
+                           onRemove={() => this.onRemoveDefinition(key)}
+                           noSubitemsMessage={" Wild Type (no variants found, default selection)"}/>
+                    )
+                );
+                definitionList = (
+                    <ul className="nav nuggets-nav list-group-striped list-unstyled definitions">
+                        {definitonItems}
+                    </ul>
+                );
+
+            } else {
+                definitionList = (
+                    <div className="small-faded">
+                        No variants selected (wild-type variants are selected for all protoforms)
+                    </div>
+                );
+            }
+        } else {
+            definitionList = (
                 <div id="loadingBlock" className="loading-elements center-block">
                     <div id="loaderModel"></div>
                 </div>
             );
         }
-        var definitions = [
+
+        if (this.state.activeDialog) {
+            var dialogContent = null;
+            dialog = (
+                <VariantSelectionDialog
+                    id="modifyDefinitionsDialog"
+                    instantiated={true}
+                    title="Select protoform to specify variants"
+                    onRemove={this.onRemoveDialog}
+                    onFetchItems={this.props.onLoadAllGenes}
+                    onItemClick={this.onVariantItemClick}
+                    filterItems={Object.keys(this.state.variantChoices)}/>
+            );
+        }
+
+
+        if (this.state.editingMode) {
+            buttons = [
+                <button type="button"
+                        id="modifyDefinitions"
+                        onClick={this.onSubmitSelection}
+                        className="btn btn-sm model-update-button btn-primary panel-button editable-box right-button instantiation">
+                    Save
+                </button>,
+                <button type="button"
+                        id="modifyDefinitions"
+                        onClick={this.onCancelModifications}
+                        className="btn btn-sm model-update-button btn-default panel-button editable-box right-button instantiation">
+                    Cancel
+                </button>,
+                <button type="button"
+                        id="modifyDefinitions"
+                        onClick={this.onShowDialog}
+                        className="btn btn-sm model-update-button btn-default panel-button editable-box right-button instantiation">
+                    <span className="glyphicon glyphicon-plus"></span> Specify variant
+                </button>
+            ];
+        } else {
+            buttons = (
+                <button type="button"
+                        id="modifyDefinitions"
+                        onClick={this.onModifyDefinitions}
+                        className="btn btn-sm model-update-button btn-default panel-button editable-box right-button instantiation">
+                    <span className="glyphicon glyphicon-pencil"></span>
+                </button>);
+        }
+        return (
             <div className="row">
                 <div className={"col-sm-12"}>
                     <h4 className="editable-box">Definitions</h4>
-                    {definitonItems}
+                    {buttons}
+                    {dialog}
+                    {definitionList}
                 </div>
             </div>
-        ];
+        );
+    }
+}
 
-        return ([
-            <Collapsable title={"Context"}
+
+
+class ContextView extends React.Component {
+
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        // Collect HGNC and synonyms from seed genes data
+        var protoformsData = Object.assign({}, this.props.extraDefinitionProtoforms);
+        for (var i = this.props.seedGenes.length - 1; i >= 0; i--) {
+            protoformsData[this.props.seedGenes[i][0]] = [
+                this.props.seedGenes[i][1], this.props.seedGenes[i][2]
+            ];
+        }
+
+        var content = (
+            <div className="row">
+                <div className="col-md-6">
+                    <ModifiableGeneListView
+                                onSelectionUpdate={this.props.onSeedGenesUpdate}
+                                onLoadAllGenes={this.props.onLoadAllGenes}
+                                corpusId={this.props.corpusId}
+                                items={this.props.seedGenes}/>
+                </div>
+                <div className="col-md-6">
+                    <ModifiableVariantsListView
+                                onUpdateDefinitions={this.props.onDefinitionsUpdate}
+                                onLoadAllGenes={this.props.onLoadAllGenes}
+                                corpusId={this.props.corpusId}
+                                definitions={this.props.definitions}
+                                extraDefinitionProtoforms={this.props.extraDefinitionProtoforms}
+                                protoformsData={protoformsData}/>
+                </div>
+            </div>
+        );
+
+        return (<Collapsable title={"Context"}
                          id={this.props.id}
-                         content={[seedGenes, definitions]}
-                         expanded={this.props.expanded}/>
-        ]);
+                         content={content}
+                         expanded={this.props.expanded}/>);
     }
 }
 
