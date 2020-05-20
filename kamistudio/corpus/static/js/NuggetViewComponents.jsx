@@ -137,16 +137,17 @@ class NuggetTable extends React.Component {
         super(props);
     }
 
+    componentDidMount() {
+        if (this.props.onMounting) {
+            this.props.onMounting()
+        }
+    }
+
     render() {
         var size = Object.keys(this.props.geneAdjacency).length * 20;
 
         return ([
-            <div id="tableSvg">
-{/*                <svg id="nuggetTable" 
-                     preserveAspectRatio="xMinYMin meet"
-                     viewBox="0 0 500 500"
-                     style={{"width": "100%", "height": "100%"}}></svg>*/}
-            </div>,
+            <div id="tableSvg"></div>,
             <div id="tableNuggetList" style={{"width": "100%", "height": "100%"}}></div>
         ])
     }

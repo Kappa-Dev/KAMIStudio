@@ -5,7 +5,7 @@ function GeneList(props) {
 
 			return (
 				<li className="not-selected gene-item" >
-					<a className="gene-link" onClick={() => props.onItemClick(item[0], item[1], item[2])}>
+					<a className="gene-link" onClick={() => props.onItemClick ? props.onItemClick(item[0], item[1], item[2]) : ""}>
 	  					{item[0]}
 	  					<div className="synonyms">{synomyms ? synomyms.join(", ") : ""}</div>
   					</a>
@@ -226,6 +226,7 @@ class VariantSelectionItem extends React.Component {
 	}
 
 	onShowVariantClick(variantId) {
+		console.log("here");
 		var state = Object.assign({}, this.state);
 		state.activeShowVariantDialog = true;
 		state.activeVariant = variantId;

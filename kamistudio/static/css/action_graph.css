@@ -109,3 +109,7 @@
 #agSidebarWrapper.collapsed .info-tooltip {
     position: relative;
 }
+
+#agView.instantiated #collapseButton {
+    color: #a11117;
+}

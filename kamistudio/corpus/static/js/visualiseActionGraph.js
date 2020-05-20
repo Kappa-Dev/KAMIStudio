@@ -72,10 +72,10 @@ function showGeneVariants(modelId, geneId, uniprotid, instantiated, readonly) {
 }
 
 
-function getActionGraph(model_id, workerUrl, instantiated=false,
+function getActionGraph(modelId, workerUrl, instantiated=false,
 						readonly=false, callback=null) {
 	$.ajax({
-	    url: model_id + "/raw-action-graph",
+	    url: modelId + "/raw-action-graph",
 	    type: 'get',
 	    dataType: "json",
 		xhr: function () {
@@ -457,12 +457,12 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	    	button = [
 	    		<div style={{"text-align": "center"}}>
     				<a 
-	    				onClick={showGeneVariants(model_id, d.id, d.attrs["uniprotid"].data[0], instantiated, readonly)}
+	    				onClick={showGeneVariants(modelId, d.id, d.attrs["uniprotid"].data[0], instantiated, readonly)}
 	    				className="btn btn-default btn-md panel-button add-interaction-button">
 			       			<span class="glyphicon glyphicon-eye-open"></span> Show variants
 			       	</a>
     				<a 
-	    				href={model_id + "/add-variant/" + d.id}
+	    				href={modelId + "/add-variant/" + d.id}
 	    				className="btn btn-default btn-md panel-button add-interaction-button">
 			       			<span class="glyphicon glyphicon-plus"></span> Add variant
 			       	</a>
@@ -474,7 +474,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	    	button =
     			<div style={{"text-align": "center"}}>
     				<a 
-	    				onClick={showActionNuggets(model_id, d.id, instantiated, readonly)}
+	    				onClick={showActionNuggets(modelId, d.id, instantiated, readonly)}
 	    				className="btn btn-default btn-md panel-button add-interaction-button">
 			       			<span class="glyphicon glyphicon-eye-open"></span> Show nuggets
 			       	</a>

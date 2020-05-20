@@ -133,6 +133,9 @@ function mergeNodes(graph, nodes) {
 	}
 }
 
+function cloneNode(graph, node, nClones) {
+
+}
 
 function find(nodeById, nodeId) {
   var node = nodeById.get(nodeId);
@@ -265,4 +268,28 @@ function removeGraphComponent(svg, graph, metaTyping, componentId, callbackFunct
 	if (callbackFunction) {
   		callbackFunction();
   	}
+}
+
+
+function applyRuleTo(original_graph, rule, instance) {
+	resultGraph = JSON.parse(JSON.toString(original_graph));
+	var pInstance = JSON.parse(JSON.toString(instance));
+
+	// Clone nodes
+	for (var lhsNode in rule["cloned_nodes"]) {
+		var pNodes = rule["cloned_nodes"][lhsNode];
+		var newNodeNames = cloneNode(resultGraph, instance[lhsNode], pNodes.length);
+		delete pInstance[lhsNode];
+		for (var i = newNodeNames.length - 1; i >= 0; i--) {
+			pInstance[pNodes[i]] = newNodeNames[i];
+		}
+	}
+
+	// Remove nodes
+
+	// Remove node attrs
+
+	// Remove edges
+
+	// Add nodes
 }

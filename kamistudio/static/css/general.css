@@ -74,6 +74,10 @@ p.loading-error-message {
 	background-color: #8db1d1;
 }
 
+.dot-protoform {
+    background-color: #8db1d1;
+}
+
 .dot-gene-instance {
 	background-color: #ed757a;
 }
@@ -530,7 +534,7 @@ li.subitem a:hover,
 li.subitem a:active,
 li.subitem a:focus,
 li.subitem.selected-subitem a {
-	background-color: #c5d1dd;
+	background-color: #c7d4e2;
 }
 
 /* NEW STYLESS */
@@ -589,4 +593,19 @@ li.subitem.selected-subitem a {
 .nuggets-nav li .info-table a:active,
 .nuggets-nav li .info-table a:focus {
     background-color: unset;
+}
+
+#definitionListView ul {
+    margin-left: 0pt;
+}
+
+#definitionListView a {
+    color: #337ab7;
+}
+
+
+#definitionListView li.subitem a:hover,
+#definitionListView li.subitem a:active,
+#definitionListView li.subitem a:focus{
+    background-color: #c7d4e2 !important;
 }

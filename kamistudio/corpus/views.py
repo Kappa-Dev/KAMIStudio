@@ -448,7 +448,6 @@ def edit_meta_data(corpus_id):
             return render_template("403.html")
         else:
             json_data = request.form
-            print(json_data)
 
             corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
             for k in json_data.keys():
@@ -536,7 +535,6 @@ def add_variant(corpus_id, gene_node_id):
         else:
             try:
                 json_data = request.get_json()
-                print(json_data)
                 variant_name = json_data["variant_name"]
                 desc = json_data["desc"]
                 wt = json_data["wt"]
@@ -556,7 +554,6 @@ def add_variant(corpus_id, gene_node_id):
 
                 # TODO: think about removal of states
                 for [c_id, c, c_type] in raw_removed_components:
-                    print(c_id, c, c_type)
                     # attrs = {k: v["data"] for k, v in c.items()}
                     if c_type == "region":
                         # start, end = corpus.get_fragment_location(c_id)
@@ -878,7 +875,6 @@ def get_corpus_gene_adjacency(corpus_id):
     """Generate a nugget table."""
     corpus = get_corpus(corpus_id)
     data = get_gene_adjacency(corpus)
-    print(data)
     return jsonify(data), 200
 
 
@@ -1266,12 +1262,14 @@ def instantiate_ag(corpus_id, model_id):
     corpus = get_corpus(corpus_id)
     model = get_model(corpus, model_id)
     ag_rule, ag_instance = model.action_graph_instantiation_rule()
-    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
-    response = get_action_graph(corpus, corpus_json, True)
-    # response["cloned_nodes"] = ag_rule.cloned_nodes()
-    # response["removed_edges"] = ag_rule.removed_edges()
-    # response["added_node_attrs"] = ag_rule.added_node_attrs()
-    # response["removed_nodes"] = ag_rule.removed_nodes()
-    print("\n\nhrere", response)
-    response = {"success": True}
+    response = {}
+    response["cloned_nodes"] = {}
+    for lhs_node, p_nodes in ag_rule.cloned_nodes().items():
+        response["cloned_nodes"][lhs_node] = list(p_nodes)
+    response["removed_edges"] = list(ag_rule.removed_edges())
+
+    response["added_node_attrs"] = {}
+    for n, attrs in ag_rule.added_node_attrs().items():
+        response["added_node_attrs"][n] = attrs_to_json(attrs)
+    response["removed_nodes"] = list(ag_rule.removed_nodes())
     return jsonify(response), 200

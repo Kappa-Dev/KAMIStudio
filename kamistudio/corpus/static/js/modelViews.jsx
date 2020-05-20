@@ -48,7 +48,6 @@ class ModelList extends React.Component {
             geneData: null,
             definitionsData: {}
         };
-
         this.onItemClick = this.onItemClick.bind(this);
         this.setSelectedModel = this.setSelectedModel.bind(this);
         this.fetchGeneData = this.fetchGeneData.bind(this);
@@ -58,6 +57,11 @@ class ModelList extends React.Component {
         this.onRatesUpdate = this.onRatesUpdate.bind(this);
         this.updateModel = this.updateModel.bind(this);
         this.onDefinitionsUpdate = this.onDefinitionsUpdate.bind(this);
+
+        if (this.props.preselected) {
+            this.setSelectedItemById(this.props.preselected);
+        }
+
     }
 
     updateModel(modelId, updateDict) {
@@ -925,6 +929,7 @@ class InstantiatedView extends React.Component {
 
         this.state = {
             activatedTabs: false,
+            instantiatedAg: null,
             agInstantiationRule: null,
             agInstantiationInstance: null,
             nuggetsActive: false,
@@ -943,10 +948,12 @@ class InstantiatedView extends React.Component {
         getData(
             "/corpus/" + this.props.corpusId + "/model/" + this.props.modelId + "/instantiate-ag",
             (data) => {
-                console.log(data);
                 var state = Object.assign({}, this.state);
-                state.agInstantiationRule = data["rule"];
-                state.agInstantiationInstance = data["instance"];
+                var rule = data["rule"],
+                    instantance = data["instance"];
+                state.instantiatedAg = applyRuleTo(
+                    this.props.actionGraph["actionGraph"],
+                    rule, instance);
                 this.setState(state);
             })
     }
@@ -955,8 +962,60 @@ class InstantiatedView extends React.Component {
         var tabs;
         if (this.state.activatedTabs) {
             var agContent;
-            if (this.state.instantiationRule) {
+            if (this.state.instantiatedAg) {
+                var boxes = [
+                    <ElementInfoBox id="graphElement" 
+                                         items={[]}
+                                         fixedtooltip={true}/>,
+                     <MetaDataBox id="metaData"
+                                                items={[]}
+                                                fixedtooltip={true}/>,
+                     <SemanticsBox id="semantics"
+                                             items={[]}
+                                             fixedtooltip={true}/>,
+                ];
+                agContent = [
+                    <div id="agSidebarWrapper" class="collapsed">
+                        <div id="agSidebar">
+                            <div id="graphInfoBoxes">
+                                {boxes}
+                            </div>
+                        </div>
+                    </div>,
+                    <div id="agContentWrapper">
+                        <div id="agContent">
+                            <div class="action-graph-view">
+                                <button class="btn btn-link btn-lg"
+                                                onClick={this.toggleSideBar}
+                                                id="collapseButton"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
+                                <button id="showLabelsButton" onClick="showAGLabels();"
+                                                type="button"
+                                                class="btn btn-default btn-md panel-button"
+                                                style={{"float": "right"}}>Show labels</button>
+                                <button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
+                            </div>
 
+                            <div id="progressBlock">
+                                <div id="progressMessage" class="small-faded">Computing instantiated action graph...</div>
+                                <div id="loadingBlock" class="loading-elements center-block">
+                                    <div id="loaderModel"></div>
+                                </div>
+                            </div>
+
+                            <svg id="modelActionGraphSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500"
+                                     style={{
+                                            "width": "100%",
+                                            "height": "400pt",
+                                            "display": (this.state.instantiatedAg) ? "inline-block" : "none"
+                                    }}></svg>
+                            <div class="row">
+                                <div class="col-sm-6" style={{"marginBottom": "20px"}}>
+                                    <p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ];
             } else {
                 agContent = (
                     <div id="progressBlock"
@@ -972,7 +1031,7 @@ class InstantiatedView extends React.Component {
             tabs = (
                 <div class="tab-content">
                     <div class={"tab-pane" + this.state.agActive ? " active" : ""} id="model_action_graph" role="tabpanel">
-                        <div id="modelAgView">
+                        <div id="agView" class="instantiated">
                             {agContent}
                         </div>
                     </div>
