@@ -72,8 +72,9 @@ class ModelList extends React.Component {
         for (var k in updatedData) {
             dataQuery["meta_data." + k] = updatedData[k];
             state.selected["meta_data"][k] = updatedData[k];
-
         }
+        state.selected["last_modified"] = formatDate(new Date());
+        dataQuery["last_modified"] = state.selected["last_modified"];
         this.updateModel(
             this.state.selected["id"], dataQuery);
         this.setState(state);
@@ -84,6 +85,8 @@ class ModelList extends React.Component {
         for (var k in updatedData) {
             state.selected[k] = updatedData[k];
         }
+        state.selected["last_modified"] = formatDate(new Date());
+        updatedData["last_modified"] = state.selected["last_modified"];
         this.updateModel(
             this.state.selected["id"], updatedData);
         this.setState(state);
@@ -91,9 +94,13 @@ class ModelList extends React.Component {
 
     onSeedGenesUpdate(newSeedGenes) {
         var state = Object.assign({}, this.state);
-        state.selected["seed_genes"] = newSeedGenes;
+        state.selected["context"]["seed_protoforms"] = newSeedGenes;
+        state.selected["last_modified"] = formatDate(new Date());
         this.updateModel(
-            state.selected["id"], {"seed_genes": newSeedGenes});
+            state.selected["id"], {
+                "context.seed_protoforms": newSeedGenes,
+                "last_modified": state.selected["last_modified"]
+            });
         this.setState(state);
     }
 
@@ -102,11 +109,14 @@ class ModelList extends React.Component {
         for (var key in newDefinitions) {
             data[key] = newDefinitions[key]["selectedVariants"];
         }
-        console.log(data);
         var state = Object.assign({}, this.state);
-        state.selected["definitions"] = data;
+        state.selected["context"]["definitions"] = data;
+        state.selected["last_modified"] = formatDate(new Date());
         this.updateModel(
-            state.selected["id"], {"definitions": data});
+            state.selected["id"], {
+                "context.definitions": data,
+                "last_modified": state.selected["last_modified"]
+            });
         this.setState(state);
     }
 
@@ -123,12 +133,12 @@ class ModelList extends React.Component {
     }
 
     fetchDefinitionData(item) {
-        for (var k in item["definitions"]) {
+        for (var k in item["context"]["definitions"]) {
             if (!Object.keys(this.state.definitionsData).includes(k)) {
                 // Load new definitions data
                 var url = "/corpus/" + this.props.corpusId + "/get-variants-data";
                 postData(
-                    item["definitions"],
+                    item["context"]["definitions"],
                     url,
                     (data) => {
                         var state = Object.assign({}, this.state);
@@ -145,8 +155,8 @@ class ModelList extends React.Component {
             var url = "/corpus/" + this.props.corpusId + "/get-gene-data";
             postData(
                 {
-                    "uniprots": item["seed_genes"].concat(
-                        Object.keys(item["definitions"]))
+                    "uniprots": item["context"]["seed_protoforms"].concat(
+                        Object.keys(item["context"]["definitions"]))
                 },
                 url,
                 (data) => {
@@ -251,10 +261,10 @@ class ModelList extends React.Component {
             //                           desc={this.state.selected["meta_data"]["desc"]}/>;
             var extraProtoforms = {};
             if (this.state.geneData) {
-                for (var k in this.state.selected["definitions"]) {
+                for (var k in this.state.selected["context"]["definitions"]) {
                     var notFound = true;
-                    for (var i = this.state.selected["seed_genes"].length - 1; i >= 0; i--) {
-                        if (this.state.selected["seed_genes"][i][0] == k) {
+                    for (var i = this.state.selected["context"]["seed_protoforms"].length - 1; i >= 0; i--) {
+                        if (this.state.selected["context"]["seed_protoforms"][i][0] == k) {
                             notFound = false;
                             break;
                         }
@@ -332,17 +342,17 @@ class ModelView extends React.Component {
     render() {
         var seedGenes = [];
         if (this.props.geneData) {
-            for (var i = this.props.model["seed_genes"].length - 1; i >= 0; i--) {
+            for (var i = this.props.model["context"]["seed_protoforms"].length - 1; i >= 0; i--) {
                 seedGenes.push(
-                    [this.props.model["seed_genes"][i]].concat(
-                        this.props.geneData[this.props.model["seed_genes"][i]])
+                    [this.props.model["context"]["seed_protoforms"][i]].concat(
+                        this.props.geneData[this.props.model["context"]["seed_protoforms"][i]])
                 );
             }
         }
 
         var definitionsData = {};
         if (this.props.definitionsData) {
-            for (var k in this.props.model["definitions"]) {
+            for (var k in this.props.model["context"]["definitions"]) {
                 if (k in this.props.definitionsData) {
                     definitionsData[k] = this.props.definitionsData[k];
                 } else {
@@ -392,7 +402,10 @@ class ModelView extends React.Component {
                               bndRate={this.props.model["default_bnd_rate"]}
                               brkRate={this.props.model["default_brk_rate"]}
                               modRate={this.props.model["default_mod_rate"]}/>
-                <InstantiatedView expanded={true} id={"instantiatedView"}/>
+                <InstantiatedView expanded={true}
+                                  id={"instantiatedView"}
+                                  corpusId={this.props.corpusId}
+                                  modelId={this.props.model["id"]} />
             </div>
         )
     }
@@ -575,6 +588,7 @@ class ModifiableVariantsListView extends React.Component {
 
         this.state = {
             editingMode: false,
+            edited: false,
             activeDialog: false,
             variantChoices: {}
         };
@@ -635,7 +649,8 @@ class ModifiableVariantsListView extends React.Component {
         // exit editing mode
         var state = Object.assign({}, this.state);
         state.editingMode = false;
-        state.variantChoices = [];
+        state.edited = true;
+        // state.variantChoices = [];
         this.setState(state);
     }
 
@@ -691,21 +706,18 @@ class ModifiableVariantsListView extends React.Component {
         var definitions = {},
             preselectedItems = {};
         if (this.state.editingMode) {
-            // add items from the state
             for (var k in this.state.variantChoices) {
                 definitions[k] = this.state.variantChoices[k]["variants"];
-                // preselectedItems[k] = {};
-                // for (var v in definitions[k]) {
-                //     if (this.state.variantChoices[k]["selectedVariants"].includes(v)) {
-                //         preselectedItems[k][v] = definitions[k][v];
-                //     }
-                // }
             }
-            // for (var k in this.props.definitions) {
-            //     if (!(k in definitions) && !(k in this.state.removedDefinitions)) {
-            //         definitions[k] = this.props.definitions[k];
-            //     }
-            // }
+        } else if (this.state.edited) {
+            for (var k in this.state.variantChoices) {
+                definitions[k] = {};
+                for (var i = this.state.variantChoices[k]["selectedVariants"].length - 1; i >= 0; i--) {
+                    var variant = this.state.variantChoices[k]["selectedVariants"][i];
+                    definitions[k][variant] =
+                        this.state.variantChoices[k]["variants"][variant];
+                }
+            }
         } else {
             definitions = this.props.definitions;
             preselectedItems = this.props.definitions;
@@ -908,7 +920,70 @@ class DynamicsView extends React.Component {
 }
 
 class InstantiatedView extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            activatedTabs: false,
+            agInstantiationRule: null,
+            agInstantiationInstance: null,
+            nuggetsActive: false,
+            agActive: false
+        }
+
+        this.instantiateAG = this.instantiateAG.bind(this);
+    }
+
+    instantiateAG() {
+        var state = Object.assign({}, this.state);
+        state.activatedTabs = true;
+        state.agActive = true;
+        this.setState(state);
+
+        getData(
+            "/corpus/" + this.props.corpusId + "/model/" + this.props.modelId + "/instantiate-ag",
+            (data) => {
+                console.log(data);
+                var state = Object.assign({}, this.state);
+                state.agInstantiationRule = data["rule"];
+                state.agInstantiationInstance = data["instance"];
+                this.setState(state);
+            })
+    }
+
     render() {
+        var tabs;
+        if (this.state.activatedTabs) {
+            var agContent;
+            if (this.state.instantiationRule) {
+
+            } else {
+                agContent = (
+                    <div id="progressBlock"
+                       style={{"paddingTop": "0pt", "marginTop": "20pt"}}>
+                        <div id="progressMessage">Loading...</div>
+                        <div id="loadingBlock" className="loading-elements center-block"
+                              style={{"marginBottom": "20pt"}}>
+                            <div id="loaderModel"></div>
+                        </div>
+                    </div>
+                );
+            }
+            tabs = (
+                <div class="tab-content">
+                    <div class={"tab-pane" + this.state.agActive ? " active" : ""} id="model_action_graph" role="tabpanel">
+                        <div id="modelAgView">
+                            {agContent}
+                        </div>
+                    </div>
+                    <div class={"tab-pane" + this.state.nuggetsActive ? " active" : ""} id="model_action_graph" role="tabpanel">
+                        <div id="modelNuggetsView">
+                          
+                        </div>
+                    </div>
+                </div>
+            );
+        }
         
         var content = [
             <div class="small-faded" style={{"marginBottom": "10pt"}}>
@@ -920,7 +995,7 @@ class InstantiatedView extends React.Component {
               <li>
                 <a id="switchToModelAGTab"
                    class="nav-link inner instantiation-link"
-                   onClick="instantiateAG(this);"
+                   onClick={this.instantiateAG}
                    role="tab">
                     <span className="glyphicon glyphicon-play"></span> Instantiate action graph
                 </a>
@@ -928,10 +1003,11 @@ class InstantiatedView extends React.Component {
               <li>
                 <a id="switchToModelNuggetsTab"
                    class="nav-link inner instantiation-link"
-                   onClick="loadModelNuggetsTab(this);"
+                   onClick={this.loadNuggets}
                    role="tab">Instantiated nuggets</a>
               </li>
-            </ul>
+            </ul>,
+            tabs
         ];
 
         return ([

@@ -213,3 +213,16 @@ function removeItem(array, item) {
 function onlyUnique(value, index, self) { 
     return self.indexOf(value) === index;
 }
+
+
+function formatDate(date) {
+	var hours = date.getHours();
+	var minutes = date.getMinutes();
+	var seconds = date.getSeconds();
+	minutes = minutes < 10 ? '0' + minutes : minutes;
+	seconds = seconds < 10 ? '0' + seconds : seconds;
+	var strTime = hours + ':' + minutes + ":" + seconds;
+	var month = date.getMonth() + 1;
+	month = month < 10 ? '0' + month : month;
+	return date.getDate() + "-" + month + "-" + date.getFullYear() + "  " + strTime;
+}

@@ -8,7 +8,6 @@ function activateGlobalLink(element) {
 }
 
 function loadKnowledgeTab(element, corpusId, webWorkerUrl, readonly=false) {
-	console.log("here");
 	switchToKnowledge(element);
 	showActionGraph(corpusId, webWorkerUrl, readonly);
 	$("#switchToKnowledgeTab").attr("onClick", "switchToKnowledge(this);");

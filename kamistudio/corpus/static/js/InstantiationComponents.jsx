@@ -18,7 +18,14 @@ function GeneList(props) {
 }
 
 function getSynonyms(item) {
-	return item[2] ? item[2].concat([item[1]]) : [item[1]];
+	var list = [];
+	if (item[2]) {
+		list = list.concat(item[2]);
+	};
+	if (item[1]) {
+		list.push(item[1]);
+	} 
+	return list;
 }
 
 
@@ -309,8 +316,9 @@ class VariantSelectionItem extends React.Component {
 		var message = Object.keys(this.props.subitems).length > 0 ? "" : noVarsMessage,
 			protoformSynonyms = getSynonyms(
 				[null, this.props.selectionHGNC, this.props.selectionSynonyms]),
+			
 			protoformRepr = this.props.selectionId + (
-					protoformSynonyms ? (" (" + protoformSynonyms.join(", ") + ")") : ""
+					protoformSynonyms.length > 0 ? (" (" + protoformSynonyms.join(", ") + ")") : ""
 				);
 
 		var dialog = null;
@@ -442,10 +450,10 @@ class InstantiationForm extends React.Component {
 	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
 
 	        var data = Object.assign({}, this.state);
-	        data.seedGenes = [];
-	        for (var i = this.state.seedGenes.length - 1; i >= 0; i--) {
-	        	data.seedGenes.push(this.state.seedGenes[i][0]);
-	        }
+	        // data.seedGenes = [];
+	        // for (var i = this.state.seedGenes.length - 1; i >= 0; i--) {
+	        // 	data.seedGenes.push(this.state.seedGenes[i][0]);
+	        // }
 
 	        const url = "/corpus/" + this.props.modelId + "/new-model";
 	        $.ajax({

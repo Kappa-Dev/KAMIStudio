@@ -10,15 +10,23 @@ function activateLink(element) {
 function removeAGTransition() {
 	$("#agSidebarWrapper").addClass('notransition');
 	$("#agContentWrapper").addClass('notransition');
-	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
-	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	if ($("#agSidebarWrapper")[0]) {
+		$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	} 
+	if ($("#agContentWrapper")[0]) {
+		$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
 }
 
 function addAGTransition() {
-	$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	if ($("#agSidebarWrapper")[0]) {
+		$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
 	$("#agSidebarWrapper").removeClass('notransition'); // Re-enable transitions
 
-	$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	if ($("#agContentWrapper")[0]) {
+		$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
 	$("#agContentWrapper").removeClass('notransition'); // Re-enable transitions
 }
 

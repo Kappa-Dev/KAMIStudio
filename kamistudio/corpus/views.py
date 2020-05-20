@@ -10,7 +10,7 @@ from flask import (render_template, request, session, redirect,
 from flask import current_app as app, jsonify
 
 from regraph import graph_to_d3_json
-from regraph.utils import attrs_to_json
+from regraph.utils import attrs_to_json, attrs_from_json
 from regraph import Neo4jHierarchy
 
 from kami.data_structures.annotations import CorpusAnnotation
@@ -28,7 +28,9 @@ from kamistudio.corpus.utils import (get_corpus, update_last_modified,
                                      update_protein_definition,
                                      update_revision_history,
                                      get_action_graph, merge_ag_nodes,
-                                     get_nugget, add_new_model)
+                                     get_nugget, add_new_model,
+                                     update_last_modified_model,
+                                     get_model)
 
 
 corpus_blueprint = Blueprint(
@@ -392,7 +394,13 @@ def update_action_graph_node_attrs(corpus_id):
     if corpus is not None:
         if node_id in corpus.action_graph.nodes():
             try:
-                corpus.action_graph.set_node_attrs_from_json(node_id, node_attrs)
+                for k, v in node_attrs.items():
+                    new_v = []
+                    for vv in v["data"]:
+                        new_v.append(vv.strip())
+                    node_attrs[k]["data"] = new_v
+                attrs = attrs_from_json(node_attrs)
+                corpus.action_graph.set_node_attrs(node_id, attrs)
                 response = json.dumps(
                     {'success': True}), 200, {'ContentType': 'application/json'}
                 update_last_modified(corpus_id)
@@ -1196,9 +1204,10 @@ def update_model_data(corpus_id, model_id):
     json_data = request.get_json()
     if "updated" in json_data:
         app.mongo.db.kami_models.update_one(
-            {"id": model_id},
+            {"id": model_id, "corpus_id": corpus_id},
             {"$set": json_data["updated"]})
-    return jsonify({"success": True}), 200
+        return jsonify({"success": True}), 200
+    return jsonify({"success": False}), 200
 
 
 @corpus_blueprint.route("<corpus_id>/import-model", methods=['GET', 'POST'])
@@ -1248,3 +1257,21 @@ def delete_model(corpus_id, model_id):
         return jsonify({"success": True}), 200
     except:
         return render_template("model_not_found.html", model_id=model_id)
+
+
+@corpus_blueprint.route("<corpus_id>/model/<model_id>/instantiate-ag")
+@check_dbs
+def instantiate_ag(corpus_id, model_id):
+    """Return instantiated action graph."""
+    corpus = get_corpus(corpus_id)
+    model = get_model(corpus, model_id)
+    ag_rule, ag_instance = model.action_graph_instantiation_rule()
+    corpus_json = app.mongo.db.kami_corpora.find_one({"id": corpus_id})
+    response = get_action_graph(corpus, corpus_json, True)
+    # response["cloned_nodes"] = ag_rule.cloned_nodes()
+    # response["removed_edges"] = ag_rule.removed_edges()
+    # response["added_node_attrs"] = ag_rule.added_node_attrs()
+    # response["removed_nodes"] = ag_rule.removed_nodes()
+    print("\n\nhrere", response)
+    response = {"success": True}
+    return jsonify(response), 200

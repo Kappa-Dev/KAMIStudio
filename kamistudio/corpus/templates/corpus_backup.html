@@ -1,0 +1,318 @@
+{% extends "new_base.html" %}
+
+{% block custom_styles %}
+<link href="{{url_for('static', filename='css/nuggets.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/tabs.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/navbar.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/action_graph.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/models.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/home.css')}}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+
+{% block title %}KAMIStudio: corpus '{{ kb.annotation.name }}'{% endblock %}
+
+
+{% block panel %}
+
+<div class="row">
+    <h2 class="mb-6 kb-action-brand">{{ kb.annotation.name }}</h2>
+    <h3 class="mb-6 kb-species">(species: {% if not kb.annotation.organism %}NA{% else %}{{ kb.annotation.organism }}{% endif %})</h3>
+    <div class="dropdown corpus-options">
+      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        Options
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
+        <li>
+          <a href="{{ url_for('corpus.add_interaction', corpus_id=kb_id) }}" type="button"><span class="glyphicon glyphicon-plus"></span> Add interaction</a>
+        </li>
+        <li>
+          <a {% if not readonly %}href="{{ url_for('corpus.import_json_interactions', corpus_id=kb_id) }}"{%endif%} {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-import"></span> Import interactions</a>
+        </li>
+        <hr style="margin-top: 0pt; margin-bottom: 0pt;" />
+        <li>
+          <a href="{{ url_for('corpus.download_corpus', corpus_id=kb_id) }}"><span class="glyphicon glyphicon-download-alt"></span> Export</a>
+        </li>
+        <li>
+          <a {% if not readonly %}href="{{ url_for('corpus.edit_meta_data', corpus_id=kb_id) }}"{%endif%} {% if readonly %} disabled{% endif %}><span class="glyphicon glyphicon-pencil"></span> Edit</a>
+        </li>
+        <li>
+          <a {% if readonly %} disabled{% endif %} {% if not readonly %}onClick="showConfirmDeletion('{{ url_for('corpus.delete_corpus', corpus_id=kb_id) }}', '{{ url_for('home.index') }}');"{% endif %} style="color:#8d0e14"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+        </li>
+      </ul>
+    </div>
+    <div id="deletionConfirmDialog"></div>
+    <h5 class="mb-6 kb-description">{% if kb.annotation.desc %}{{ kb.annotation.desc }}{% endif %}</h5>
+</div>
+
+{% endblock %}
+
+{% block workspace %}
+  <div class="container-fluid tabs">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item {%if not model_id %}active{%endif%}">
+        <a id="switchToKnowledgeTab" class="nav-link global {%if not model_id %}active {% endif %}"  onclick="{% if model_id%}
+          loadKnowledgeTab(
+            document.getElementById('switchToKnowledgeTab'),
+            '{{ kb_id }}',
+            '{{ url_for('static', filename='js/graph_visualisation/forceLayoutWorker.js')}}',
+            {% if readonly %}true{% else %}false{% endif %});
+            {% else %}
+              switchToKnowledge(this);
+            {% endif %}" role="tab"><h4>Knowledge</h4></a>
+      </li>
+      <li class="nav-item  {%if model_id %}active{%endif%}">
+        <a id="switchToModelsTab" class="nav-link global  {%if model_id %}active{%endif%}" 
+           onclick="loadModelsTab(this, '{{ kb_id }}', null, {% if readonly %}true{% else %}false{% endif %});" role="tab"><h4>Models</h4></a>
+      </li>
+      <li class="nav-item">
+        <a id="switchToHistory" class="nav-link global" onclick="loadHistoryTab(this, '{{ kb_id }}', {% if readonly %}true{% else %}false{% endif %});" role="tab"><h4>Revision history</h4></a>
+      </li>
+      <li class="nav-item">
+        <a id="switchToMetaData" class="nav-link global" onclick="switchToMetaData(this, '{{ kb_id }}');" role="tab"><h4>Meta-data</h4></a>
+      </li>
+    </ul>
+    
+    <!-- CONTENT OF THE MAIN TABS -->
+
+    <div class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-8">
+        <div class="tab-content" id="globalTabs">
+          <!------------------ KNOWLEDGE TAB ---------->
+          <div class="tab-pane global{% if not model_id %} active{% endif %}" id="knowledgeTab" role="tabpanel">
+
+
+            <ul class="nav nav-pills">
+              <li {% if not model_od %}class="active"{% endif %}>
+                <a id="switchToAGTab" class="nav-link inner active {% if instantiated %}instantiation-link {% endif %}"  onclick="switchToAG(this);" role="tab">Action graph ({% if kb.empty() %}empty{% else %}{{ kb.action_graph.nodes()|length }} nodes {% endif %})</a>
+              </li>
+              <li>
+                <a id="switchToNuggetsTab" class="nav-link inner {% if instantiated %}instantiation-link {% endif %}" onclick="loadNuggetsTab(this, '{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{% else %}false{% endif %});" role="tab">Nuggets ({% if kb.empty() %}0{% else %}{{ kb.nuggets()|length }}{% endif %} nuggets)</a>
+              </li>
+              <li>
+                <a id="switchToDefinitionsTab" class="nav-link inner" role="tab" onclick="loadDefinitionsTab(this, '{{ kb_id }}', {% if readonly %}true{%else%}false{%endif%});">Protein definitions ({% if kb.empty() %}0{% else %}{{ n_definitons }}{% endif %})</a>
+              </li>
+            </ul>
+
+            <!----------- Tab panes -------------->
+            <div class="tab-content">
+
+              <!------- Action graph pane ------>
+
+              <div class="tab-pane {%if not model_id %}active{%endif%}" id="action_graph" role="tabpanel">
+                <div id="agView">
+                  {% if kb.empty() %}
+                    Action graph is empty
+                  {% else %}
+                    <div id="agSidebarWrapper" class="collapsed">
+                      <div id="agSidebar">
+                        <div id="graphInfoBoxes"></div>
+                      </div>
+                    </div>
+                    <div id="agContentWrapper">
+                      <div id="agContent">
+                        <div class="action-graph-view">
+                          <button class="btn btn-link btn-lg" id="collapseButton"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
+                          <button id="showLabelsButton" onClick="showAGLabels();" type="button" class="btn btn-default btn-md panel-button" style="float: right;">Show labels</button>
+                          <button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
+                        </div>
+
+                        <div id="progressBlock">
+                          <div id="progressMessage" class="small-faded">Retrieving action graph from the database... It may take a moment.</div>
+                          <div id="loadingBlock" class="loading-elements center-block">
+                            <div id="loader"></div>
+                          </div>
+                        </div>
+
+                        <svg id="actionGraphSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500" style="width: 100%; height: 400pt;display: none;"></svg>
+                        <div class="row">
+                          <div class="col-sm-6" style="margin-bottom: 20px;">
+                            <p id="ctrlClickMessage" style="margin-left: 10px; display: none;">CTRL+click to select multiple elements</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!------- End of action graph pane ------>
+
+              <!------- Nuggets pane ------>
+
+              <div class="tab-pane" id="nuggets" role="tabpanel">
+
+                {% if kb.nuggets()|length == 0  %}
+                    {% block no_nuggets_message %}{% endblock %}
+                {% else %}
+                  <div class="row">
+                    <!-- Nugget list column -->
+                    <div class="col-sm-6">
+                        <div class="row">
+                          <div class="col-sm-6">
+                            <h3>Nuggets</h3>
+                          </div>
+                          <div class="col-sm-6">
+                            <div class="nuggets-view">
+                              <a type="button"
+                                 id="selectNuggetListView"
+                                 class="btn btn-default btn-md panel-button nugget-list-view active" 
+                                 onclick="showNuggetList('{{ kb_id }}', '{{nuggets}}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});"
+                                 style="margin-left: 10px;">
+                                 <span class="glyphicon glyphicon-list"></span>
+                              </a>
+                              <a type="button"
+                                 id="selectNuggetTableView"
+                                 class="btn btn-default btn-md panel-button nugget-table-view"
+                                 onclick="showNuggetTable('{{ kb_id }}', {% if instantiated %}true{% else %}false{% endif %}, {% if readonly %}true{%else%}false{%endif%});">
+                                 <span class="glyphicon glyphicon-equalizer"></span>
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                        <div id="nuggetView">
+                          <div id="progressBlock">
+                            <div id="progressMessage" class="small-faded">Loading nuggets...</div>
+                              <div id="loadingBlock" class="loading-elements center-block" style="margin-top: 20pt;">
+                                  <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>
+                              </div> 
+                          </div>
+                        </div>
+                        <div id="nuggetDialogView" style="height: 100%;"></div>
+                    </div>
+                    <!-- End of nugget list column -->
+                    <!-- Nugget preview column -->
+                    <div class="col-sm-6">
+                      <div class="row">
+                      <!--   <div class="col-sm-12">
+                          <h3 style="margin-top: 20px;">Nugget view</h3>
+                        </div> -->
+                        
+                      </div>
+                      <div id="nuggetViewWidget"></div>
+                    </div>
+                    <!-- End of nugget preview column -->
+                  </div>
+                {% endif %}
+              </div>
+              <!------- End of nuggets pane ------>
+
+              <!------- Start definitions pane ------>
+              <div class="tab-pane" id="definitions" role="tabpanel">
+                {% if n_definitons == 0  %}
+                    Corpus does not contain any variant definitions
+                {% else %}
+                    <!-- Definitions list column -->
+                    <div class="col-sm-6">
+                        <div class="row">
+                          <div class="col-sm-12">
+                            <h3>Definitions</h3>
+                          </div>
+                        </div>
+                        <div id="definitionView"></div>
+                    </div>
+                    <!-- End of nugget list column -->
+                    <!-- Definition preview column -->
+                    <div class="col-sm-6">
+                      <div class="row">
+
+                      </div>
+                      <div id="definitionViewWidget">
+                       <div id="progressBlock">
+                          <div id="progressMessage">Retrieving definitions...</div>
+                          <div id="loadingBlock" class="loading-elements center-block">
+                            <div id="loader"></div>
+                          </div>
+                        </div> 
+                      </div>
+                    </div>
+                    <!-- End of definition preview column -->
+                  </div>
+                {% endif %}
+              </div>
+
+              <!------- End of definitions pane ------>
+            </div>
+
+          <!------------------ MODELS TAB ---------->
+          <div class="tab-pane global{% if model_id %} active{% endif %}" id="modelsTab" role="tabpanel">
+            <div class="row">
+              <div class="col-md-4">
+                <h2 class="collection-brand" style="margin-top: 0pt">Models</h2>
+              </div>
+              <div class="col-md-8">
+                <div class="collection-buttons">
+                  {% if not readonly %}
+                    <a href="{{ url_for('corpus.import_model', corpus_id=kb._id) }}" class="btn btn-primary btn-md panel-button-right instantiation">Import model</a>
+                    <a href="{{ url_for('corpus.new_model', corpus_id=kb._id) }}" class="btn btn-primary btn-md panel-button-right instantiation">New model</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div> 
+            <div id="modelsView">
+              <div id="progressBlock">
+                <div id="progressMessage" class="small-faded">Loading models...</div>
+                <div id="loadingBlock" class="loading-elements center-block">
+                  <div id="loaderModel"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!------------------ HISTORY TAB ---------->
+          <div class="tab-pane global" id="historyTab" role="tabpanel">
+          </div>
+
+          <!------------------ META-DATA TAB ---------->
+          <div class="tab-pane global" id="metaDataTab" role="tabpanel">
+          </div>
+       </div>
+      </div>
+      <div class="col-md-2"></div>
+    </div>
+
+  </div>
+
+{% endblock %}
+
+{% if not kb.empty() %}
+  
+{% block custom_scripts %}
+  <script src="{{ url_for('corpus.static', filename='js/modelViews.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/components/KBDataBoxes.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/components/GraphElementBoxes.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/tabSwitching.js') }}" type="text/javascript">
+  </script>
+  <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('static', filename='js/components/FilteredLists.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseGraph.js') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/DefinitionViewComponents.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/definitionViews.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/NuggetViewComponents.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/visualiseNugget.js') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/visualiseActionGraph.js') }}" type="text/babel"></script>
+  <script src="{{ url_for('corpus.static', filename='js/knowledgeTabSwitching.js') }}" type="text/javascript"></script>
+  <script src="{{ url_for('corpus.static', filename='js/InstantiationComponents.jsx') }}" type="text/babel"></script> 
+  <script src="{{ url_for('corpus.static', filename='js/instantiationUtils.jsx') }}" type="text/babel"></script>
+  <script type="text/babel">
+    {% if model_id %}
+      loadModelsTab(
+          document.getElementById("switchToModelsTab"),
+          '{{ kb_id }}',
+          '{{ model_id }}',
+          {% if readonly %}true{% else %}false{% endif %});
+    {% else %}
+      loadKnowledgeTab(
+          document.getElementById("switchToKnowledgeTab"),
+          '{{ kb_id }}',
+          '{{ url_for('static', filename='js/graph_visualisation/forceLayoutWorker.js')}}',
+          {% if readonly %}true{% else %}false{% endif %});
+    {% endif %}
+  </script>
+{% endblock %}
+{% endif %}

@@ -10,6 +10,7 @@ from regraph.audit import VersionedHierarchy
 from regraph.utils import attrs_to_json
 
 from kami.data_structures.corpora import KamiCorpus
+from kami.data_structures.models import NewKamiModel
 from kami.data_structures.interactions import Interaction
 from kami.data_structures.annotations import CorpusAnnotation
 
@@ -71,6 +72,17 @@ def update_last_modified(corpus_id):
         {"_id": corpus_json["_id"]},
         {"$set": corpus_json},
         upsert=False)
+
+
+def update_last_modified_model(corpus_id, model_id):
+    """Update the last modified field."""
+    last_modified = datetime.datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S")
+
+    app.mongo.db.kami_models.update_one(
+        {"id": model_id, "corpus_id": corpus_id},
+        {"$set": {"last_modified": last_modified}})
+    return last_modified
 
 
 def add_new_corpus(corpus_id, creation_time, last_modified,
@@ -267,45 +279,44 @@ def imported_model(filename, annotation):
     return redirect(url_for('model.model_view', model_id=model_id))
 
 
-def get_model(model_id):
+def get_model(corpus, model_id):
     """Retreive corpus from the db."""
     try:
-        model_json = app.mongo.db.kami_models.find_one({"id": model_id})
+        model_json = app.mongo.db.kami_models.find_one(
+            {"id": model_id, "corpus_id": corpus._id})
     except:
         model_json = None
-    if model_json and app.neo4j_driver:
-        corpus_id = None
-        if "corpus_id" in model_json["origin"].keys():
-            corpus_id = model_json["origin"]["corpus_id"]
-        seed_genes = None
-        if "seed_genes" in model_json["origin"].keys():
-            seed_genes = model_json["origin"]["seed_genes"]
-        definitions = None
-        if "definitions" in model_json["origin"].keys():
-            definitions = model_json["origin"]["definitions"]
-        default_bnd_rate = None
-        default_brk_rate = None
-        default_mod_rate = None
-        if "default_bnd_rate" in model_json.keys():
-            default_bnd_rate = model_json["default_bnd_rate"]
-        if "default_brk_rate" in model_json.keys():
-            default_brk_rate = model_json["default_brk_rate"]
-        if "default_mod_rate" in model_json.keys():
-            default_mod_rate = model_json["default_mod_rate"]
-        return KamiModel(
-            model_id,
-            annotation=CorpusAnnotation.from_json(model_json["meta_data"]),
-            creation_time=model_json["creation_time"],
-            last_modified=model_json["last_modified"],
-            corpus_id=corpus_id,
-            seed_genes=seed_genes,
-            definitions=definitions,
-            backend="neo4j",
-            driver=app.neo4j_driver,
-            default_bnd_rate=default_bnd_rate,
-            default_brk_rate=default_brk_rate,
-            default_mod_rate=default_mod_rate
-        )
+    if model_json:
+        # Clean-up mongo id
+        model_id = model_json["id"]
+        del model_json["_id"]
+        del model_json["id"]
+        del model_json["corpus_id"]
+
+        definitions = []
+        for k, v in model_json["context"]["definitions"].items():
+            definition = app.mongo.db.kami_new_definitions.find_one({
+                "corpus_id": corpus._id,
+                "protoform": k
+            })
+            del definition["_id"]
+            del definition["corpus_id"]
+            products_to_exclude = []
+            for product in definition["products"]:
+                if product not in v:
+                    products_to_exclude.append(v)
+            for p in products_to_exclude:
+                del definition["products"][p]
+            definitions.append(definition)
+        context = {
+            "definitions": definitions,
+            "seed_protoforms": model_json["context"]["seed_protoforms"]
+        }
+        del model_json["context"]
+        # Fetch definitions
+        model = NewKamiModel.from_json(model_id, corpus, model_json)
+        model._generate_instantiation_rules_from_refs(context)
+        return model
 
 
 def add_new_model(model_id, creation_time, last_modified, annotation,
@@ -319,8 +330,10 @@ def add_new_model(model_id, creation_time, last_modified, annotation,
         "last_modified": last_modified,
         "meta_data": annotation,
         "corpus_id": corpus_id,
-        "seed_genes": seed_genes,
-        "definitions": definitions,
+        "context": {
+            "seed_protoforms": seed_genes,
+            "definitions": definitions,
+        },
         "default_bnd_rate": default_bnd_rate,
         "default_brk_rate": default_brk_rate,
         "default_mod_rate": default_mod_rate,
