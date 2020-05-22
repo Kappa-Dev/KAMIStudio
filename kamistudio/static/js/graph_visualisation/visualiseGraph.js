@@ -270,6 +270,7 @@ function computeNodeColors(graph, metaTyping, scheme) {
 function findNodesWithNoPosition(graph) {
 	var noPositionNodes = [];
 	for (var i=0; i < graph.nodes.length; i++) {
+        console.log(graph.nodes[i]);
 		if ((!graph.nodes[i].fx) || (!graph.nodes[i].fy)) {
 			noPositionNodes.push(graph.nodes[i].id);
 		}
@@ -377,10 +378,11 @@ function visualiseGraph(graph, svgId,
 	var CURRENT_DRAG_COMPONENTS = [];
 	var CTRL_SELECTED_COMPONENTS = [];
 
+    var svg = d3.select("#" + svgId);
 
 	// select svg canvas
-	var svg = d3.select("#" + svgId),
-		viewBox = svg.attr("viewBox").split(" "),
+	
+	var	viewBox = svg.attr("viewBox").split(" "),
     	width = +viewBox[2],
       	height = +viewBox[3],
 		active = d3.select(null);
@@ -434,7 +436,7 @@ function visualiseGraph(graph, svgId,
 
 	// layout calculation part
 	var noPositionNodes = findNodesWithNoPosition(graph)
-
+    console.log("No positions: ", noPositionNodes);
 
 	if (noPositionNodes.length != 0) {
 		if ((threshold !== null) &&

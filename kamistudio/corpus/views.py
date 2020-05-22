@@ -1262,14 +1262,22 @@ def instantiate_ag(corpus_id, model_id):
     corpus = get_corpus(corpus_id)
     model = get_model(corpus, model_id)
     ag_rule, ag_instance = model.action_graph_instantiation_rule()
-    response = {}
-    response["cloned_nodes"] = {}
+    rule = {}
+    rule["cloned_nodes"] = {}
     for lhs_node, p_nodes in ag_rule.cloned_nodes().items():
-        response["cloned_nodes"][lhs_node] = list(p_nodes)
-    response["removed_edges"] = list(ag_rule.removed_edges())
+        rule["cloned_nodes"][lhs_node] = list(p_nodes)
+    rule["removed_edges"] = list(ag_rule.removed_edges())
 
-    response["added_node_attrs"] = {}
+    rule["added_node_attrs"] = {}
     for n, attrs in ag_rule.added_node_attrs().items():
-        response["added_node_attrs"][n] = attrs_to_json(attrs)
-    response["removed_nodes"] = list(ag_rule.removed_nodes())
+        rule["added_node_attrs"][n] = attrs_to_json(attrs)
+    rule["removed_nodes"] = list(ag_rule.removed_nodes())
+    rule["removed_node_attrs"] = {}
+    for n, attrs in ag_rule.removed_node_attrs().items():
+        rule["removed_node_attrs"][n] = attrs_to_json(attrs)
+    rule["instance"] = ag_instance
+    response = {
+        "rule": rule,
+        "instance": ag_instance
+    }
     return jsonify(response), 200

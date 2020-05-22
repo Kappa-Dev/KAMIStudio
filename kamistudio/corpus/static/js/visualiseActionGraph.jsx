@@ -1,6 +1,6 @@
-function displayHiddenSvg(readonly) {
+function displayHiddenSvg(svgId, readonly) {
 	return function() {
-		document.getElementById("actionGraphSvg").style.display = "initial";
+		document.getElementById(svgId).style.display = "initial";
 		document.getElementById("ctrlClickMessage").style.display = "initial";
 		if (!readonly) {
 			document.getElementById("saveLayoutButton").disabled = false;
@@ -105,8 +105,15 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
     	nodePosUpdateUrl = modelId + "/update-ag-node-positioning",
     	nodeSizes = computeNodeSizes(graph, metaTyping, AG_META_SIZES);
 
+    var svgId;
+    if (instantiated) {
+    	svgId = "modelActionGraphSvg";
+    } else {
+    	svgId = "actionGraphSvg";
+    }
+
     for (var i = graph.nodes.length - 1; i >= 0; i--) {
-    	if (graph.nodes[i].id in semantics) {
+    	if ((graph.nodes[i].id in semantics) && semantics[graph.nodes[i].id]) {
     		var pretty = [];
     		for (var j = semantics[graph.nodes[i].id].length - 1; j >= 0; j--) {
     			if (semantics[graph.nodes[i].id][j] in PRETY_SEMANTIC_NAMES) {
@@ -131,7 +138,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	initNodePosition(graph, nodePos, Object.keys(nodePos));
 	if ((Object.keys(nodePos).length == 0) && (Object.keys(cc).length > 0)) {
-		initCCPositions(graph, cc, "actionGraphSvg");
+		initCCPositions(graph, cc, svgId);
 	}
 	initLinkStrengthDistance(graph, metaTyping);
 	initCircleRadius(graph, metaTyping, AG_META_SIZES);
@@ -144,7 +151,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	var progressConf = {
 		"remove_progress": removeProgressBlock,
-		"init_svg": displayHiddenSvg(readonly),
+		"init_svg": displayHiddenSvg(svgId, readonly),
 		"init_layout_progress": () => initilizeLayoutProgressBar(instantiated),
 		"init_update_progress": initializePositionUpdateProgressBar,
 		"ag_loading_progress": updateAGLoadingProgress
@@ -164,8 +171,9 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 		"unselectClick": handleUnselectNodeClick
 	}
 
+	var svg = d3.select("#" + svgId);
 	visualiseGraph(graph,
-				   "actionGraphSvg", 
+				   svgId, 
 					nodeColors, 
 					nodeSizes,
 					null,
@@ -295,7 +303,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 			// if (failCallback) failCallback();
 		});
 
-		var dataUpdate = mergeNodes(graph, selectedComponents);
+		var dataUpdate = mergeNodesAndUpdateSvg(graph, selectedComponents);
 		var svg = d3.select("#actionGraphSvg");
 		svg.selectAll("*").remove()
 
@@ -331,7 +339,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	function handleMultipleNodeClick(d, i, el, selectedComponents) {
 		// deselect all the selected elements
-	    var svg = d3.select("#actionGraphSvg");
+	    var svg = d3.select("#" + svgId);
 
 	    var highlight;
 		if (instantiated) {
@@ -342,7 +350,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	      .attr("marker-end", "url(#" + svgId + "arrow)");
 	    // svg.selectAll("circle")
 	    //   .attr("stroke-width", 0);
 	    // console.log(d3.select(el));
@@ -396,7 +404,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	function handleUnselectNodeClick(d, i, el) {
 		// deselect all the selected elements
-	    var svg = d3.select("#actionGraphSvg");
+	    var svg = d3.select("#" + svgId);
 
 	    var highlight;
 		if (instantiated) {
@@ -407,7 +415,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	      .attr("marker-end", "url(#" + svgId + "arrow)");
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
 
@@ -430,7 +438,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	function handleNodeClick(d, i, el) {
 		// deselect all the selected elements
-	    var svg = d3.select("#actionGraphSvg");
+	    var svg = d3.select("#" + svgId);
 
 	    var highlight;
 		if (instantiated) {
@@ -443,7 +451,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	      .attr("marker-end", "url(#" + svgId + "arrow)");
 	    svg.selectAll("circle")
 	      .attr("stroke-width", 0);
 	    // select current element
@@ -520,7 +528,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 
 	function handleEdgeClick(d, i, el) {
 		// deselect all the selected elements
-		var svg = d3.select("#actionGraphSvg");
+		var svg = d3.select("#" + svgId);
 
 		var highlight;
 		if (instantiated) {
@@ -535,12 +543,12 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	      .attr("stroke-width", 0);
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
-	      .attr("marker-end", "url(#actionGraphSvgarrow)");
+	      .attr("marker-end", "url(#" + svgId + "arrow)");
 	    d3.select(el)
 	      // .attr("stroke-width", 2)
 	      .select(".arrow")
 	      .style("stroke", d3.rgb(highlight))
-	      .attr("marker-end", "url(#actionGraphSvgarrow-selected)");
+	      .attr("marker-end", "url(#" + svgId + "arrow-selected)");
 
 	    var semantics = null;
 	    if (!instantiated) {
@@ -589,22 +597,6 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 			return [d_id];
 		}
 	}
-}
-
-
-function hideAGLabels() {
-	var button = document.getElementById("showLabelsButton");
-	button.innerHTML = "Show labels";
-	button.onclick = showAGLabels;
-	hideLabels("actionGraphSvg");
-}
-
-function showAGLabels() {
-	var button = document.getElementById("showLabelsButton");
-
-	button.innerHTML = "Hide labels";
-	button.onclick = hideAGLabels;
-	displayLabels("actionGraphSvg");
 }
 
 

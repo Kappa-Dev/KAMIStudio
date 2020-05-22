@@ -291,7 +291,9 @@ class ModelList extends React.Component {
                            onLoadAllGenes={this.loadAllGenes}
                            corpusId={this.props.corpusId}
                            onMetaDataUpdate={this.onMetaDataUpdate}
-                           onRatesUpdate={this.onRatesUpdate}/>
+                           onRatesUpdate={this.onRatesUpdate}
+                           actionGraph={this.props.actionGraph} 
+                           webWorkerUrl={this.props.webWorkerUrl}/>
             );
         }
 
@@ -409,10 +411,13 @@ class ModelView extends React.Component {
                 <InstantiatedView expanded={true}
                                   id={"instantiatedView"}
                                   corpusId={this.props.corpusId}
-                                  modelId={this.props.model["id"]} />
+                                  modelId={this.props.model["id"]}
+                                  webWorkerUrl={this.props.webWorkerUrl}                                  
+                                  actionGraph={this.props.actionGraph} />
             </div>
         )
     }
+
 }
 
 
@@ -945,17 +950,44 @@ class InstantiatedView extends React.Component {
         state.agActive = true;
         this.setState(state);
 
-        getData(
-            "/corpus/" + this.props.corpusId + "/model/" + this.props.modelId + "/instantiate-ag",
-            (data) => {
-                var state = Object.assign({}, this.state);
-                var rule = data["rule"],
-                    instantance = data["instance"];
-                state.instantiatedAg = applyRuleTo(
-                    this.props.actionGraph["actionGraph"],
-                    rule, instance);
-                this.setState(state);
-            })
+        if (!this.state.instantiatedAg) {
+            getData(
+                "/corpus/" + this.props.corpusId + "/model/" + this.props.modelId + "/instantiate-ag",
+                (data) => {
+                    var state = Object.assign({}, this.state);
+                    var rule = data["rule"],
+                        instance = data["instance"];
+                    state.instantiatedAg = JSON.parse(JSON.stringify(
+                        this.props.actionGraph));
+                    var rhsInstance = applyRuleTo(
+                        state.instantiatedAg["actionGraph"], rule, instance, true,
+                        {
+                            "onRemoveNode": (nodeId) => {
+                                delete state.instantiatedAg["metaTyping"][nodeId];
+                                delete state.instantiatedAg["semantics"][nodeId];
+                            },
+                            "onCloneNode": (original, clones) => {
+                                var originalType = state.instantiatedAg["metaTyping"][original]; 
+                                delete state.instantiatedAg["metaTyping"][original];
+
+                                for (var i = clones.length - 1; i >= 0; i--) {
+                                    state.instantiatedAg["metaTyping"][clones[i]] = originalType;
+                                    state.instantiatedAg["semantics"][clones[i]] = originalSemantics;
+                                }
+
+                                if (original in state.instantiatedAg["semantics"]) {
+                                    var originalSemantics = state.instantiatedAg["semantics"][original];
+                                    delete state.instantiatedAg["semantics"][original];
+                                    
+                                    for (var i = clones.length - 1; i >= 0; i--) {
+                                        state.instantiatedAg["semantics"][clones[i]] = originalSemantics;
+                                    }
+                                }
+                            }
+                        });
+                    this.setState(state);
+                })
+        }
     }
 
     render() {
@@ -963,59 +995,14 @@ class InstantiatedView extends React.Component {
         if (this.state.activatedTabs) {
             var agContent;
             if (this.state.instantiatedAg) {
-                var boxes = [
-                    <ElementInfoBox id="graphElement" 
-                                         items={[]}
-                                         fixedtooltip={true}/>,
-                     <MetaDataBox id="metaData"
-                                                items={[]}
-                                                fixedtooltip={true}/>,
-                     <SemanticsBox id="semantics"
-                                             items={[]}
-                                             fixedtooltip={true}/>,
-                ];
-                agContent = [
-                    <div id="agSidebarWrapper" class="collapsed">
-                        <div id="agSidebar">
-                            <div id="graphInfoBoxes">
-                                {boxes}
-                            </div>
-                        </div>
-                    </div>,
-                    <div id="agContentWrapper">
-                        <div id="agContent">
-                            <div class="action-graph-view">
-                                <button class="btn btn-link btn-lg"
-                                                onClick={this.toggleSideBar}
-                                                id="collapseButton"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
-                                <button id="showLabelsButton" onClick="showAGLabels();"
-                                                type="button"
-                                                class="btn btn-default btn-md panel-button"
-                                                style={{"float": "right"}}>Show labels</button>
-                                <button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
-                            </div>
-
-                            <div id="progressBlock">
-                                <div id="progressMessage" class="small-faded">Computing instantiated action graph...</div>
-                                <div id="loadingBlock" class="loading-elements center-block">
-                                    <div id="loaderModel"></div>
-                                </div>
-                            </div>
-
-                            <svg id="modelActionGraphSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500"
-                                     style={{
-                                            "width": "100%",
-                                            "height": "400pt",
-                                            "display": (this.state.instantiatedAg) ? "inline-block" : "none"
-                                    }}></svg>
-                            <div class="row">
-                                <div class="col-sm-6" style={{"marginBottom": "20px"}}>
-                                    <p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ];
+                agContent = (
+                    <ActionGraphWidget corpusId={this.props.corpusId}
+                                       instantiated={true}
+                                       webWorkerUrl={this.props.webWorkerUrl} 
+                                       actionGraph={this.state.instantiatedAg}
+                                       readonly={this.props.readonly}
+                                       svgId={"modelActionGraphSvg"}/>
+                );
             } else {
                 agContent = (
                     <div id="progressBlock"

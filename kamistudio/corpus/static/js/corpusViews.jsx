@@ -21,6 +21,104 @@ function addAGTransition() {
 		$("#agContentWrapper").removeClass('notransition'); // Re-enable transitions
 }
 
+class ActionGraphWidget extends React.Component {
+		constructor(props) {
+				super(props);
+
+				this.state = {
+					agLabels: false
+				}
+
+				this.componentDidMount = this.componentDidMount.bind(this);
+
+				this.onShowLabels = this.onShowLabels.bind(this);
+		}
+
+		onShowLabels() {
+			var state = Object.assign({}, this.state);
+			if (!state.agLabels) {
+					state.agLabels = true;
+					displayLabels("actionGraphSvg");
+			} else {
+					state.agLabels = false;
+					hideLabels("actionGraphSvg");
+			}
+			this.setState(state);
+		}
+
+		expandSideBar() {
+				var sidebar = $('#agSidebarWrapper');
+
+				if (!sidebar.hasClass('selected')) {
+						sidebar.addClass('selected');
+						sidebar.removeClass('collapsed');
+						$('#agContentWrapper').addClass('collapsed');
+				}
+		}
+
+		toggleSideBar() {
+			 $('#agSidebarWrapper').toggleClass('collapsed');
+			 $('#agContentWrapper').toggleClass('collapsed');
+		}
+
+		componentDidMount() {
+			visualizeAG(
+				this.props.actionGraph, this.props.corpusId,
+				this.props.webWorkerUrl, this.props.instantiated, this.props.readonly);
+		}
+
+		render() {
+			var boxes = [
+					<ElementInfoBox id="graphElement" 
+										 items={[]}
+										 fixedtooltip={true}/>,
+					 <MetaDataBox id="metaData"
+												items={[]}
+												fixedtooltip={true}/>,
+					 <SemanticsBox id="semantics"
+											 items={[]}
+											 fixedtooltip={true}/>,
+			];
+
+			return [
+						<div id="agSidebarWrapper" class="collapsed">
+							<div id="agSidebar">
+								<div id="graphInfoBoxes">
+										{boxes}
+								</div>
+							</div>
+						</div>,
+						<div id="agContentWrapper">
+							<div id="agContent">
+								<div class="action-graph-view">
+									<button class="btn btn-link btn-lg"
+													onClick={this.toggleSideBar}
+													id="collapseButton"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
+									<button id="showLabelsButton"
+													onClick={this.onShowLabels}
+													type="button"
+													class="btn btn-default btn-md panel-button"
+													style={{"float": "right"}}>{this.state.agLabels ? "Hide labels" : "Show labels"}</button>
+									<button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
+								</div>
+
+								<svg id={this.props.svgId} preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500"
+										 style={{
+												"width": "100%",
+												"height": "400pt",
+												"display": (this.props.actionGraph) ? "inline-block" : "none"
+										}}></svg>
+								<div class="row">
+									<div class="col-sm-6" style={{"marginBottom": "20px"}}>
+										<p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
+									</div>
+								</div>
+							</div>
+						</div>
+				];
+		}
+}
+
 class CorpusView extends React.Component {
 
 		constructor(props) {
@@ -43,23 +141,7 @@ class CorpusView extends React.Component {
 				this.switchToDefinitionsTab = this.switchToDefinitionsTab.bind(this);
 
 				this.showNuggetList = this.showNuggetList.bind(this);
-				this.showNuggetTable = this.showNuggetTable.bind(this);
-				
-		}
-
-		expandSideBar() {
-				var sidebar = $('#agSidebarWrapper');
-
-				if (!sidebar.hasClass('selected')) {
-						sidebar.addClass('selected');
-						sidebar.removeClass('collapsed');
-						$('#agContentWrapper').addClass('collapsed');
-				}
-		}
-
-		toggleSideBar() {
-			 $('#agSidebarWrapper').toggleClass('collapsed');
-			 $('#agContentWrapper').toggleClass('collapsed');
+				this.showNuggetTable = this.showNuggetTable.bind(this);				
 		}
 
 		switchToKnowledgeTab() {
@@ -172,10 +254,6 @@ class CorpusView extends React.Component {
 										var state = Object.assign({}, this.state);
 										state.actionGraph = data;
 										this.setState(state);
-
-										visualizeAG(
-												data, this.props.corpusId,
-												this.props.webWorkerUrl, false, this.props.readonly);
 								}
 						);
 					}
@@ -226,66 +304,28 @@ class CorpusView extends React.Component {
 							</li>
 						</ul>
 				);
-				var boxes;
-				if (this.state.actionGraph) {
-						boxes = [
-								<ElementInfoBox id="graphElement" 
-													 items={[]}
-													 fixedtooltip={true}/>,
-								 <MetaDataBox id="metaData"
-															items={[]}
-															fixedtooltip={true}/>,
-								 <SemanticsBox id="semantics"
-														 items={[]}
-														 fixedtooltip={true}/>,
-						];
-				}
+				
 				var agView;
 				if (this.props.emptyCorpus) {
 						agView = "Action graph is empty";
 				} else {
-						agView = [
-								<div id="agSidebarWrapper" class="collapsed">
-									<div id="agSidebar">
-										<div id="graphInfoBoxes">
-												{boxes}
+						if (this.state.actionGraph) {
+							agView = <ActionGraphWidget corpusId={this.props.corpusId}
+																					instantiated={false}
+																					webWorkerUrl={this.props.webWorkerUrl} 
+																					actionGraph={this.state.actionGraph}
+																					readonly={this.props.readonly}
+                                       		svgId={"actionGraphSvg"}/>
+						} else {
+							agView = (
+									<div id="progressBlock">
+										<div id="progressMessage" class="small-faded">Retrieving action graph from the database... It may take a moment.</div>
+										<div id="loadingBlock" class="loading-elements center-block">
+											<div id="loader"></div>
 										</div>
 									</div>
-								</div>,
-								<div id="agContentWrapper">
-									<div id="agContent">
-										<div class="action-graph-view">
-											<button class="btn btn-link btn-lg"
-															onClick={this.toggleSideBar}
-															id="collapseButton"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
-											<button id="showLabelsButton" onClick="showAGLabels();"
-															type="button"
-															class="btn btn-default btn-md panel-button"
-															style={{"float": "right"}}>Show labels</button>
-											<button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
-										</div>
-
-										<div id="progressBlock">
-											<div id="progressMessage" class="small-faded">Retrieving action graph from the database... It may take a moment.</div>
-											<div id="loadingBlock" class="loading-elements center-block">
-												<div id="loader"></div>
-											</div>
-										</div>
-
-										<svg id="actionGraphSvg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500"
-												 style={{
-														"width": "100%",
-														"height": "400pt",
-														"display": (this.state.actionGraph) ? "inline-block" : "none"
-												}}></svg>
-										<div class="row">
-											<div class="col-sm-6" style={{"marginBottom": "20px"}}>
-												<p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
-											</div>
-										</div>
-									</div>
-								</div>
-						];
+							);
+						}
 				}
 
 				var nuggetsView;
@@ -462,6 +502,7 @@ class CorpusView extends React.Component {
 																				actionGraph={this.state.actionGraph}
 																				corpusId={this.props.corpusId}
 																				readonly={this.props.readonly}
+																				webWorkerUrl={this.props.webWorkerUrl}
 																				preselected={this.props.modelId} />
 				}
 				var globalTabsContent = (
