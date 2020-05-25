@@ -2,20 +2,20 @@
  * Utils for nugget viewing
  */
 
-function turnOnLoader(instantiated) {
-    /* Turn on the loader of the nuggets view */
-    ReactDOM.render(
-        <div id="progressBlock"
-             style={{"padding-top": "0pt", "margin-top": "20pt"}}>
-            <div id="progressMessage">Loading...</div>
-            <div id="loadingBlock" className="loading-elements center-block"
-                  style={{"margin-bottom": "20pt"}}>
-                <div id={instantiated ? "loaderModel" : "loader"}></div>
-            </div>
-        </div>,
-        document.getElementById("nuggetView")
-    );
-}
+// function turnOnLoader(instantiated) {
+//     /* Turn on the loader of the nuggets view */
+//     ReactDOM.render(
+//         <div className="progress-block"
+//              style={{"padding-top": "0pt", "margin-top": "20pt"}}>
+//             <div id="progressMessage">Loading...</div>
+//             <div id="loadingBlock" className="loading-elements center-block"
+//                   style={{"margin-bottom": "20pt"}}>
+//                 <div id={instantiated ? "loaderModel" : "loader"}></div>
+//             </div>
+//         </div>,
+//         document.getElementById("nuggetView")
+//     );
+// }
 
 function hideNuggetDeleteConfirmationDialog() {
     /* Hide delete nugget confirmation dialog */
@@ -650,34 +650,34 @@ function renderNuggetTable(modelId, instantiated, readonly) {
 }
 
 
-function showNuggetList(modelId, instantiated, readonly) {
-    /* Handler of show nugget list button click */
+// function showNuggetList(modelId, instantiated, readonly) {
+//     /* Handler of show nugget list button click */
 
-    $("#selectNuggetListView").addClass("active");
-    $("#selectNuggetTableView").removeClass("active");
+//     $("#selectNuggetListView").addClass("active");
+//     $("#selectNuggetTableView").removeClass("active");
 
-    turnOnLoader(instantiated);
+//     turnOnLoader(instantiated);
 
-    // fetch nugget list
-    getData(
-        modelId + "/nuggets",
-        renderNuggetList(modelId, instantiated, readonly));
-}
+//     // fetch nugget list
+//     getData(
+//         modelId + "/nuggets",
+//         renderNuggetList(modelId, instantiated, readonly));
+// }
 
 
-function showNuggetTable(modelId, instantiated, readonly) {
-    /* Handler of show nugget table button click */
+// function showNuggetTable(modelId, instantiated, readonly) {
+//     /* Handler of show nugget table button click */
 
-    $("#selectNuggetTableView").addClass("active");
-    $("#selectNuggetListView").removeClass("active");
+//     $("#selectNuggetTableView").addClass("active");
+//     $("#selectNuggetListView").removeClass("active");
 
-    turnOnLoader(instantiated);
+//     turnOnLoader(instantiated);
 
-    // getch gene adjacency data
-    getData(
-        modelId + "/get-gene-adjacency",
-        renderNuggetTable(modelId, instantiated, readonly));
-}
+//     // getch gene adjacency data
+//     getData(
+//         modelId + "/get-gene-adjacency",
+//         renderNuggetTable(modelId, instantiated, readonly));
+// }
 
 
 function showSelectedNuggetsModal(nuggets, modelId, instantiated, readonly) {

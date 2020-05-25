@@ -2,7 +2,7 @@
 function insertLoader(instantiated, father) {
     /* Turn on the loader of the nuggets view */
     ReactDOM.render(
-        <div id="progressBlock"
+        <div className="progress-block"
              style={{"paddingTop": "0pt", "marginTop": "20pt"}}>
             <div id="progressMessage">Loading...</div>
             <div id="loadingBlock" className="loading-elements center-block"
@@ -42,12 +42,6 @@ class ModelList extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-            selected: null,
-            loadedFullGeneData: false,
-            geneData: null,
-            definitionsData: {}
-        };
         this.onItemClick = this.onItemClick.bind(this);
         this.setSelectedModel = this.setSelectedModel.bind(this);
         this.fetchGeneData = this.fetchGeneData.bind(this);
@@ -57,11 +51,24 @@ class ModelList extends React.Component {
         this.onRatesUpdate = this.onRatesUpdate.bind(this);
         this.updateModel = this.updateModel.bind(this);
         this.onDefinitionsUpdate = this.onDefinitionsUpdate.bind(this);
+        this.getItemById = this.getItemById.bind(this);
 
+        var preselected = null;
         if (this.props.preselected) {
-            this.setSelectedItemById(this.props.preselected);
+            preselected = this.getItemById(this.props.preselected);
         }
 
+        this.state = {
+            selected: preselected,
+            loadedFullGeneData: false,
+            geneData: null,
+            definitionsData: {}
+        };
+
+        if (this.props.preselected) {
+            this.fetchGeneData(this.state.selected);
+            this.fetchDefinitionData(this.state.selected);
+        }
     }
 
     updateModel(modelId, updateDict) {
@@ -211,13 +218,19 @@ class ModelList extends React.Component {
         }
     }
 
-    setSelectedItemById(itemId) {
+    getItemById(itemId) {
+        var item;
         for (var i = this.props.items.length - 1; i >= 0; i--) {
             if (this.props.items[i]["id"] == itemId) {
-                this.setSelectedModel(this.props.items[i]);
+                item = this.props.items[i];
                 break;
             }
         }
+        return item;
+    }
+
+    setSelectedItemById(itemId) {
+        this.setSelectedModel(this.getItemById(itemId));
     }
 
     render() {
@@ -293,7 +306,8 @@ class ModelList extends React.Component {
                            onMetaDataUpdate={this.onMetaDataUpdate}
                            onRatesUpdate={this.onRatesUpdate}
                            actionGraph={this.props.actionGraph} 
-                           webWorkerUrl={this.props.webWorkerUrl}/>
+                           webWorkerUrl={this.props.webWorkerUrl}
+                           onFetchActionGraph={this.props.onFetchActionGraph} />
             );
         }
 
@@ -413,7 +427,8 @@ class ModelView extends React.Component {
                                   corpusId={this.props.corpusId}
                                   modelId={this.props.model["id"]}
                                   webWorkerUrl={this.props.webWorkerUrl}                                  
-                                  actionGraph={this.props.actionGraph} />
+                                  actionGraph={this.props.actionGraph}
+                                  onFetchActionGraph={this.props.onFetchActionGraph} />
             </div>
         )
     }
@@ -538,14 +553,24 @@ class ModifiableGeneListView extends React.Component {
     }
 
     render() {
-        var filteredList = <FilteredList
-            instantiated={true}
-            items={this.props.items}
-            listComponent={GeneList}
-            itemFilter={
-                (item, value) => item.join(", ").toLowerCase().search(
-                        value.toLowerCase()) !== -1
-            }/>;
+        var filteredList;
+        if (this.props.items.length > 0) {
+            filteredList = <FilteredList
+                instantiated={true}
+                items={this.props.items}
+                listComponent={GeneList}
+                itemFilter={
+                    (item, value) => item.join(", ").toLowerCase().search(
+                            value.toLowerCase()) !== -1
+                }/>;
+        } else {
+            filteredList = (
+                <div id="loadingBlock" className="loading-elements center-block">
+                    <div id="loaderModel"></div>
+                </div>
+            );
+        }
+
         var changeButton = (
             <button type="button"
                     id="modifySeedGenes"
@@ -942,14 +967,15 @@ class InstantiatedView extends React.Component {
         }
 
         this.instantiateAG = this.instantiateAG.bind(this);
+        this.fetchInstantiationRule = this.fetchInstantiationRule.bind(this);
+        this.onShowNuggets = this.onShowNuggets.bind(this);
     }
 
-    instantiateAG() {
-        var state = Object.assign({}, this.state);
-        state.activatedTabs = true;
-        state.agActive = true;
-        this.setState(state);
+    onShowNuggets() {
 
+    }
+
+    fetchInstantiationRule() {
         if (!this.state.instantiatedAg) {
             getData(
                 "/corpus/" + this.props.corpusId + "/model/" + this.props.modelId + "/instantiate-ag",
@@ -959,8 +985,10 @@ class InstantiatedView extends React.Component {
                         instance = data["instance"];
                     state.instantiatedAg = JSON.parse(JSON.stringify(
                         this.props.actionGraph));
+                    var ag = JSON.parse(JSON.stringify(
+                        this.props.actionGraph["actionGraph"]));
                     var rhsInstance = applyRuleTo(
-                        state.instantiatedAg["actionGraph"], rule, instance, true,
+                        ag, rule, instance, true,
                         {
                             "onRemoveNode": (nodeId) => {
                                 delete state.instantiatedAg["metaTyping"][nodeId];
@@ -985,8 +1013,23 @@ class InstantiatedView extends React.Component {
                                 }
                             }
                         });
+                    mapLinksToIds(ag);
+                    state.instantiatedAg["actionGraph"] = ag;
                     this.setState(state);
                 })
+        }
+    }
+
+    instantiateAG() {
+        var state = Object.assign({}, this.state);
+        state.activatedTabs = true;
+        state.agActive = true;
+        this.setState(state);
+
+        if (!this.props.actionGraph) {
+            this.props.onFetchActionGraph(() => this.fetchInstantiationRule());
+        } else {
+            this.fetchInstantiationRule();
         }
     }
 
@@ -1000,13 +1043,14 @@ class InstantiatedView extends React.Component {
                                        instantiated={true}
                                        webWorkerUrl={this.props.webWorkerUrl} 
                                        actionGraph={this.state.instantiatedAg}
-                                       readonly={this.props.readonly}
-                                       svgId={"modelActionGraphSvg"}/>
+                                       readonly={true}
+                                       saveGeneratedNodePos={false}
+                                       svgId={"modelActionGraphSvg"}
+                                       onShowNuggets={this.onShowNuggets} />
                 );
             } else {
                 agContent = (
-                    <div id="progressBlock"
-                       style={{"paddingTop": "0pt", "marginTop": "20pt"}}>
+                    <div className="progress-block">
                         <div id="progressMessage">Loading...</div>
                         <div id="loadingBlock" className="loading-elements center-block"
                               style={{"marginBottom": "20pt"}}>

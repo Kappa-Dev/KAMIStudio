@@ -96,7 +96,10 @@ function getActionGraph(modelId, workerUrl, instantiated=false,
 
 
 function visualizeAG(data, modelId, workerUrl, instantiated=false,
-					 readonly=false) {
+					 readonly=false, saveGeneratedNodePos=true,
+					 handlerCallbacks=null,
+					 onShowVariants=null,
+					 onShowNuggets=null) {
   	var graph = data["actionGraph"],
     	semantics = data["semantics"],
     	metaTyping = data["metaTyping"],
@@ -104,6 +107,10 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
     	cc = data["connectedComponents"],
     	nodePosUpdateUrl = modelId + "/update-ag-node-positioning",
     	nodeSizes = computeNodeSizes(graph, metaTyping, AG_META_SIZES);
+
+    if (!handlerCallbacks) {
+    	handlerCallbacks = {};
+    }
 
     var svgId;
     if (instantiated) {
@@ -186,7 +193,9 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
                  	handleDragStarted,
                 	50,
                 	true,
-                	"saveLayoutButton");
+                	"saveLayoutButton",
+                	false,
+                	saveGeneratedNodePos);
 
 
 	function sendUpdateNodeAttrs(nodeId, attrs, successCallback) {
@@ -447,8 +456,6 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 			highlight = HIGHLIGHT_COLOR;
 		}
 
-		expandSideBar();
-
 	    svg.selectAll(".arrow")
 	      .style("stroke", d3.rgb("#B8B8B8"))
 	      .attr("marker-end", "url(#" + svgId + "arrow)");
@@ -465,7 +472,7 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	    	button = [
 	    		<div style={{"text-align": "center"}}>
     				<a 
-	    				onClick={showGeneVariants(modelId, d.id, d.attrs["uniprotid"].data[0], instantiated, readonly)}
+	    				onClick={() => onShowVariants(d.id, d.attrs["uniprotid"].data[0])}
 	    				className="btn btn-default btn-md panel-button add-interaction-button">
 			       			<span class="glyphicon glyphicon-eye-open"></span> Show variants
 			       	</a>
@@ -479,14 +486,15 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	    }
 
 	    if (metaTyping[d.id] == "mod" || metaTyping[d.id] == "bnd") {
-	    	button =
+	    	button = (
     			<div style={{"text-align": "center"}}>
     				<a 
-	    				onClick={showActionNuggets(modelId, d.id, instantiated, readonly)}
+	    				onClick={() => onShowNuggets(d.id)}
 	    				className="btn btn-default btn-md panel-button add-interaction-button">
 			       			<span class="glyphicon glyphicon-eye-open"></span> Show nuggets
 			       	</a>
-			    </div>;
+			    </div>
+			);
 	    }
 
 	    var semantics = null;
@@ -521,8 +529,12 @@ function visualizeAG(data, modelId, workerUrl, instantiated=false,
 	       				   onDataUpdate={updateNodeAttrs(d, i)}/>,
 	       	semantics,
 	       	button],
-	      document.getElementById('graphInfoBoxes')
+	      document.getElementById(svgId + 'GraphInfoBoxes')
 	    );
+
+	    if ("nodeClick" in handlerCallbacks) {
+	    	handlerCallbacks["nodeClick"]();
+	    }
 	}
 
 

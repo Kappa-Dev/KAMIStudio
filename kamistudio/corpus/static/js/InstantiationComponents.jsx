@@ -615,7 +615,7 @@ class InstantiationForm extends React.Component {
 								</a>
 								<div className="row form-row">
 									<div className="col-md-6">
-										<div id="progressBlock" style={{"padding-top": "10px", "display": "none"}}>
+										<div className="progress-block" style={{"padding-top": "10px", "display": "none"}}>
 	          								<div id="progressMessage">Creating a new model...</div>
 											<div id="loadingBlock"  className="loading-elements center-block">
 												<div id="loader"></div>

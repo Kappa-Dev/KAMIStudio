@@ -50,7 +50,7 @@
               <button id="saveLayoutButton" type="button" class="btn btn-default btn-md panel-button nugget-list-view" style="float: right;" disabled><span class="glyphicon glyphicon-floppy-disk"></span> Save current layout</button>
             </div>
 
-            <div id="progressBlock">
+            <div className="progress-block">
               <div id="progressMessage">Retrieving action graph from the database... It may take a moment.</div>
               <div id="loadingBlock" class="loading-elements center-block">
                 <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>
@@ -112,7 +112,7 @@
                   </div>
                 </div>
                 <div id="nuggetView">
-                  <div id="progressBlock">
+                  <div className="progress-block">
                     <div id="progressMessage">Loading nuggets...</div>
                       <div id="loadingBlock" class="loading-elements center-block" style="margin-top: 20pt;">
                           <div id="{% if instantiated %}loaderModel{% else %}loader{% endif %}"></div>

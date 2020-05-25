@@ -8,7 +8,7 @@
 }
 
 
-#agSidebarWrapper {
+.sidebar-wrapper {
     width: 30%;
     height: 100%;
     position: fixed;
@@ -18,15 +18,15 @@
 }
 
 
-#agSidebarWrapper.collapsed {
+.sidebar-wrapper.collapsed {
    width: 0%;
 }
 
-#agSidebarWrapper.collapsed .info-tooltip {
+.sidebar-wrapper.collapsed .info-tooltip {
     position: relative;
 }
 
-#agContentWrapper {
+.sidebar-content-wrapper {
     width: 100%;
     height: 100%;
     position: fixed;
@@ -36,34 +36,28 @@
 }
 
 
-#agContentWrapper.collapsed {
+.sidebar-content-wrapper.collapsed {
     width: 70%;
-    left: 30%;}
-
-#graphInfoBoxes {
-    height: 100%;
-    width: 100%;  
-    z-index: 1;
-    overflow-x: hidden;
-    /*position: fixed;
-    top: 0;
-    left: 0;*/
+    left: 30%;
 }
 
-#agContent {
+.ag-content {
     width: 100%;
    /* position: fixed;
     top: 0;
     left: 0;*/
 }
 
-#agSidebar {
+.ag-sidebar {
     padding: 10pt;
     padding-top: 0pt;
 }
 
-#graphInfoBoxes {
-    /*background: #dae3ec;*/
+.graph-info-boxes {
+    height: 100%;
+    width: 100%;  
+    z-index: 1;
+    overflow-x: hidden;
     margin: 5pt;
 }
 
@@ -73,8 +67,13 @@
     padding-bottom: 0pt;
 }
 
-#graphInfoBoxes  h4 {
+.graph-info-boxes h4 {
     color: #337ab7;
+}
+
+.graph-info-boxes.instantiated h4,
+.graph-info-boxes.instantiated span.glyphicon-question-sign {
+    color: #a11117;
 }
 
 .notransition {
@@ -102,11 +101,11 @@
 
 
 
-#agSidebarWrapper .info-tooltip {
+.sidebar-wrapper .info-tooltip {
     position: fixed;
 }
 
-#agSidebarWrapper.collapsed .info-tooltip {
+.sidebar-wrapper.collapsed .info-tooltip {
     position: relative;
 }
 

@@ -1,7 +1,12 @@
-#progressBlock {
+.progress-block {
     width: 100%;
+    margin-top: 15pt;
     padding-top: 100px;
     text-align: center;
+}
+
+.progress-block #progressMessage {
+    margin-top: 15pt;
 }
 
 #progressBarBlock {
@@ -36,6 +41,7 @@
 
 #loader {
     text-align: center;
+    margin-top: 15pt;
     margin-right: auto;
     margin-left: auto;
     border: 10px solid #f3f3f3; /* Light grey */

@@ -14,14 +14,14 @@ class ElementInfoBox extends React.Component {
 				var type;
 				var suffix = "";
 				if (this.props.instantiated) {
-					if (this.props.metaType === "gene") {
+					if (this.props.metaType === "protoform") {
 						type = "protein";
 						suffix += "-instance";
 					} else {
 						type = this.props.metaType;
 					}
 				} else {
-					if (this.props.metaType === "gene") {
+					if (this.props.metaType === "protoform") {
 						type = "protoform";
 					} else {
 						type = this.props.metaType;
@@ -40,27 +40,27 @@ class ElementInfoBox extends React.Component {
 					sourceSuffix = "",
 					targetSuffix = "";
 				if (this.props.instantiated) {
-					if (this.props.sourceMetaType === "gene") {
+					if (this.props.sourceMetaType === "protoform") {
 						sourceType = "protein";
 						sourceSuffix += "-instance";
 					} else {
 						sourceType = this.props.sourceMetaType;
 					}
 					var targetType;
-					if (this.props.targetMetaType === "gene") {
+					if (this.props.targetMetaType === "protoform") {
 						targetType = "protein";
 						targetSuffix += "-instance";
 					} else {
 						targetType = this.props.targetMetaType;
 					}
 				} else {
-					if (this.props.sourceMetaType === "gene") {
+					if (this.props.sourceMetaType === "protoform") {
 						sourceType = "protoform";
 					} else {
 						sourceType = this.props.sourceMetaType;
 					}
 					var targetType;
-					if (this.props.targetMetaType === "gene") {
+					if (this.props.targetMetaType === "protoform") {
 						targetType = "protoform";
 					} else {
 						targetType = this.props.targetMetaType;

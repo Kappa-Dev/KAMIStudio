@@ -54,18 +54,26 @@ class DefinitionList extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-        	selected: null,
-        	subitemClick: null
-        };
         this.onItemClick = this.onItemClick.bind(this);
         this.setSubitemClick = this.setSubitemClick.bind(this);
+
+        this.state = {
+            activeNoVariantsDialog: false,
+            selected: null,
+            subitemClick: null
+        };
     }
 
     setSubitemClick(f) {
     	let state = Object.assign({}, this.state);
     	state["subitemClick"] = f;
     	this.setState(state);
+    }
+
+    selectItem(id) {
+        var state = Object.assign({}, this.state);
+        state.selected = id;
+        this.setState(state);
     }
 
     onItemClick(id, protoformGene, products, close=true) {
@@ -77,7 +85,7 @@ class DefinitionList extends React.Component {
     	} else {
     		var onSubitemClick = this.props.onItemClick(
 	    		id, protoformGene, products, this.setSubitemClick);
-	    	this.setState({
+            this.setState({
 	    		selected: id
 	    	});
 	    	
@@ -85,16 +93,21 @@ class DefinitionList extends React.Component {
     }
 
     render() {
+
 	    var content = Object.keys(this.props.items).map(
 	        (key, i) => <div id={"definitionListItem" + key}>
 	                        <DefinitionListItem
 	                            id={key}
 	                            label={this.props.items[key].label}
-	                            active={this.state.selected === key}
+	                            active={((this.state.selected === key) || (this.props.preselected === key))}
 	                            protoformGene={key}
 	                            products={this.props.items[key].variants}
 	                            onClick={this.onItemClick}
-	                            onItemClick={this.state.subitemClick} />
+	                            onItemClick={
+                                    this.props.preselected ? this.props.onItemClick(
+                                        key, key, this.props.items[key].variants,
+                                        (viewProductFunction) => viewProductFunction) : this.state.subitemClick
+                                } />
 	                    </div>);
 	    return ([
 	        <div id="definitionListView">

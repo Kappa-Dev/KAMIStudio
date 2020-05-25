@@ -16,7 +16,7 @@
 {% block panel %}
 
 <div class="row">
-    <h2 class="mb-6 kb-action-brand">{{ kb.annotation.name }}</h2>
+    <h2 class="mb-6 kb-action-brand"><a href="{{ url_for('corpus.corpus_view', corpus_id=kb._id) }}">{{ kb.annotation.name }}</a></h2>
     <h3 class="mb-6 kb-species">(species: {% if not kb.annotation.organism %}NA{% else %}{{ kb.annotation.organism }}{% endif %})</h3>
     <div class="dropdown corpus-options">
       <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -50,7 +50,7 @@
 
 {% block workspace %}
   <div id="corpusViewWidget">
-    <div id="progressBlock">
+    <div class="progress-block">
       <div id="progressMessage" class="small-faded">Loading...</div>
       <div id="loadingBlock" class="loading-elements center-block">
         <div id="loader"></div>
@@ -67,8 +67,6 @@
   <script src="{{ url_for('static', filename='js/components/Dialogs.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/KBDataBoxes.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/components/GraphElementBoxes.jsx') }}" type="text/babel"></script>
-  <script src="{{ url_for('static', filename='js/tabSwitching.js') }}" type="text/javascript">
-  </script>
   <script src="{{ url_for('static', filename='js/graphUtils.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('static', filename='js/components/FilteredLists.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('static', filename='js/graph_visualisation/visualiseGraph.js') }}" type="text/babel"></script>
@@ -78,7 +76,6 @@
   <script src="{{ url_for('corpus.static', filename='js/nuggetViews.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('corpus.static', filename='js/visualiseNugget.js') }}" type="text/babel"></script>
   <script src="{{ url_for('corpus.static', filename='js/visualiseActionGraph.jsx') }}" type="text/babel"></script>
-  <script src="{{ url_for('corpus.static', filename='js/knowledgeTabSwitching.js') }}" type="text/javascript"></script>
   <script src="{{ url_for('corpus.static', filename='js/InstantiationComponents.jsx') }}" type="text/babel"></script> 
   <script src="{{ url_for('corpus.static', filename='js/instantiationUtils.jsx') }}" type="text/babel"></script>
   <script src="{{ url_for('corpus.static', filename='js/corpusViews.jsx') }}" type="text/babel"></script>
@@ -91,7 +88,9 @@
                   webWorkerUrl="{{ url_for('static', filename='js/graph_visualisation/forceLayoutWorker.js')}}"
                   agNodesCount={% if kb.empty() %}{null}{% else %}"{{ kb.action_graph.nodes()|length }}"{% endif %}
                   nuggetsCount={% if kb.empty() %}{null}{% else %}"{{ kb.nuggets()|length }}"{% endif %}
-                  definitionsCount={% if kb.empty() %}{null}{% else %}"{{ n_definitons }}"{% endif %}/>,
+                  definitionsCount={% if kb.empty() %}{null}{% else %}"{{ n_definitons }}"{% endif %}
+                  newModelUrl="{{ url_for('corpus.new_model', corpus_id=kb._id) }}"
+                  importModelUrl="{{ url_for('corpus.import_model', corpus_id=kb._id) }}"/>,
       document.getElementById("corpusViewWidget"));
   </script>
 {% endblock %}

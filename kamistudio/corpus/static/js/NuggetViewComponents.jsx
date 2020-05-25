@@ -515,7 +515,7 @@ class NuggetPreview extends React.Component {
                   </svg>;
         } else if (this.props.nuggetId) {
             loader = 
-                <div id="progressBlock"
+                <div className="progress-block"
                      style={{"padding-top": "0pt", "margin-top": "20pt"}}>
                     <div id="progressMessage">Loading the nugget graph...</div>
                     <div id="loadingBlock" class="loading-elements center-block"
@@ -668,7 +668,7 @@ class NuggetEditingBox extends React.Component {
                 </a>
             </div>,  
             <div className="row">
-                <div id="progressBlock" style={{"padding-top": "10px", "display": "none"}}>
+                <div className="progress-block" style={{"padding-top": "10px", "display": "none"}}>
                   <div id="progressMessage">Adding nugget to the corpus...</div>
                   <div id="loadingBlock" class="loading-elements center-block">
                     <div id="loader"></div>

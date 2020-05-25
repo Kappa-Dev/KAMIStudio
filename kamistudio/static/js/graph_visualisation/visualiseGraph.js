@@ -270,8 +270,8 @@ function computeNodeColors(graph, metaTyping, scheme) {
 function findNodesWithNoPosition(graph) {
 	var noPositionNodes = [];
 	for (var i=0; i < graph.nodes.length; i++) {
-        console.log(graph.nodes[i]);
-		if ((!graph.nodes[i].fx) || (!graph.nodes[i].fy)) {
+        // console.log(JSON.stringify(graph.nodes[i]));
+        if ((!graph.nodes[i].fx) || (!graph.nodes[i].fy)) {
 			noPositionNodes.push(graph.nodes[i].id);
 		}
 	}
@@ -329,7 +329,8 @@ function visualiseGraph(graph, svgId,
                      	threshold=null,
                      	zoom=true,
                      	saveLayoutButton=null,
-                     	showLabels=false) {
+                     	showLabels=false,
+                        saveGeneratedNodePos=true) {
 
 	// initialise default simulation params
 	var defaultRadius;
@@ -435,8 +436,7 @@ function visualiseGraph(graph, svgId,
 	}
 
 	// layout calculation part
-	var noPositionNodes = findNodesWithNoPosition(graph)
-    console.log("No positions: ", noPositionNodes);
+	var noPositionNodes = findNodesWithNoPosition(graph);
 
 	if (noPositionNodes.length != 0) {
 		if ((threshold !== null) &&
@@ -532,37 +532,57 @@ function visualiseGraph(graph, svgId,
 		}
 		mapEdgesToObjects(graph);
 
-		updateNodePositions(
-			data.nodes,
-			nodePosUpdateUrl,
-			function () {
-			    var xhr = $.ajaxSettings.xhr();
-			    xhr.onprogress = function(e) {
-			        if ((e.lengthComputable) && ("ag_loading_progress" in progressConf)) {
-			            progressConf["ag_loading_progress"](e.loaded / e.total);
-			        }
-			    };
-			    return xhr;
-			},
-			function() { 
-				if ("remove_progress" in progressConf) progressConf["remove_progress"]();
-				if ("init_svg" in progressConf) progressConf["init_svg"]();
-				draw(data.nodes, data.links, false);
-			},
-			function() {
-				if ("remove_progress" in progressConf) progressConf["remove_progress"]();
-				if ("init_svg" in progressConf) progressConf["init_svg"]();
-				draw(data.nodes, data.links, false);
-			})
+        if (saveGeneratedNodePos) {
+    		updateNodePositions(
+    			data.nodes,
+    			nodePosUpdateUrl,
+    			function () {
+    			    var xhr = $.ajaxSettings.xhr();
+    			    xhr.onprogress = function(e) {
+    			        if ((e.lengthComputable) && ("ag_loading_progress" in progressConf)) {
+    			            progressConf["ag_loading_progress"](e.loaded / e.total);
+    			        }
+    			    };
+    			    return xhr;
+    			},
+    			function() { 
+    				if ("remove_progress" in progressConf) progressConf["remove_progress"]();
+    				if ("init_svg" in progressConf) progressConf["init_svg"]();
+    				draw(data.nodes, data.links, false);
+    			},
+    			function() {
+    				if ("remove_progress" in progressConf) progressConf["remove_progress"]();
+    				if ("init_svg" in progressConf) progressConf["init_svg"]();
+    				draw(data.nodes, data.links, false);
+    			});
+        } else {
+            if ("remove_progress" in progressConf) progressConf["remove_progress"]();
+            if ("init_svg" in progressConf) progressConf["init_svg"]();
+            draw(data.nodes, data.links, false);
+        }
 	}
 
 
 	function translateLinks(linkSelector, nodeSelector) {
         // translate links according to their source/target node pos
-		var arrow = linkSelector.selectAll(".arrow"),
+        var arrow = linkSelector.selectAll(".arrow"),
 			linkBox = linkSelector.selectAll(".linkbox");
-	    linkBox
-	        .attr("x1", function(d) { 
+        linkBox
+	        .attr("x1", function(d) {
+                // if (CURRENT_DRAG_COMPONENTS) {
+                //     if (CURRENT_DRAG_COMPONENTS.includes(d.source.id)) {
+                //         console.log("s: ", nodeSelector.filter(
+                //             function(e) {
+                //                 return e.id == d.source.id;
+                //             }));
+                //     }
+                //     if (CURRENT_DRAG_COMPONENTS.includes(d.target.id)) {
+                //         console.log("t: ", nodeSelector.filter(
+                //             function(e) {
+                //                 return e.id == d.target.id;
+                //             }));
+                //     }
+                // } 
 	        	return d.source.x; 
 	        })
 	        .attr("y1", function(d) {
@@ -597,7 +617,17 @@ function visualiseGraph(graph, svgId,
 			    return (d.target.y - offsetY + offsetY * 0.3);
 			});
 	    arrow
-	        .attr("x1", function(d) { return d.source.x; })
+	        .attr("x1", function(d) {
+                // console.log(nodeSelector.filter(
+                //     function(e) { 
+                //         return e.id === d.source.id;
+                //     }));
+                // console.log(nodeSelector.filter(
+                //     function(e) { 
+                //         return e.id === d.target.id;
+                //     }));
+                return d.source.x; 
+            })
 	        .attr("y1", function(d) { return d.source.y; })
 	        .attr("x2", function(d) { 
 		        	var radius = d.target.radius,
@@ -850,15 +880,20 @@ function visualiseGraph(graph, svgId,
 	    container.selectAll(".components").remove();
     	var components = CURRENT_DRAG_COMPONENTS;
     	var componentSelector = svg.selectAll(".node")
-		  .filter(function(e) { return (components.includes(e.id) && (e.id !== d.id)); })
-		  .each(function(e) {
-    			e.x += d3.event.dx;
-			   	e.y += d3.event.dy;
-		   })
-		  .attr("transform", 
-			function(e) { return "translate(" + e.x + "," + e.y + ")"; }); 
+		  .filter(
+                function(e) {
+                        return (components.includes(e.id) && (e.id !== d.id));
+                }).attr(
+                "transform", 
+                function(e) { return "translate(" + e.x + "," + e.y + ")"; });;
 
-	    // dragging of a node itself
+        componentSelector.each(function(e) {
+			e.x += d3.event.dx;
+		   	e.y += d3.event.dy;
+            // console.log(e.x, e.y);
+	    });
+
+        // dragging of a node itself
 	    translateLinks(
 	    	container.selectAll(".link"),
 	    	container.selectAll(".node"));
@@ -911,7 +946,7 @@ function updateNodePositions(nodes, nodePosUpdateUrl, xhrFunction, successCallba
 		}
 	}
 
-	if (xhrFunction) {
+    if (xhrFunction) {
 		$.ajax({
 			    url: nodePosUpdateUrl,
 			    type: 'post',

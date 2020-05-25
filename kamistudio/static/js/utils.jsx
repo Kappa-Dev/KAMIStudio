@@ -226,3 +226,27 @@ function formatDate(date) {
 	month = month < 10 ? '0' + month : month;
 	return date.getDate() + "-" + month + "-" + date.getFullYear() + "  " + strTime;
 }
+
+
+function removeAGTransition() {
+	$("#agSidebarWrapper").addClass('notransition');
+	$("#agContentWrapper").addClass('notransition');
+	if ($("#agSidebarWrapper")[0]) {
+		$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	} 
+	if ($("#agContentWrapper")[0]) {
+		$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
+}
+
+function addAGTransition() {
+	if ($("#agSidebarWrapper")[0]) {
+		$("#agSidebarWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
+	$("#agSidebarWrapper").removeClass('notransition'); // Re-enable transitions
+
+	if ($("#agContentWrapper")[0]) {
+		$("#agContentWrapper")[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+	}
+	$("#agContentWrapper").removeClass('notransition'); // Re-enable transitions
+}

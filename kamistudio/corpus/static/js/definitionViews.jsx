@@ -385,8 +385,6 @@ function viewDefinition(modelId, readonly, allDefinitions) {
 		    );
 
 		    // viewProduct(products[0][0]);
-			callback(viewProduct);
-
 			d3.select("#protoformSvg").selectAll("*").remove();
 			d3.selectAll(".product-svg").selectAll("*").remove();
 
@@ -397,6 +395,10 @@ function viewDefinition(modelId, readonly, allDefinitions) {
 				JSON.parse(JSON.stringify(data["protoform_graph"])),
 				data["protoform_meta_typing"],
 				readonly);
+
+			if (callback) {
+				return callback(viewProduct);
+			}
 		}
 
 		getRawDefinition(modelId, protoformGene, plotGraphs);

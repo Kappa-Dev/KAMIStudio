@@ -316,7 +316,6 @@ function cloneNode(graph, nodeId, nClones, clearPosition=false) {
 		delete originalNode["fy"];
 	}
 
-
 	// add new nodes
 	for (var i = 1; i < nClones; i++) {
 		currentNodeId = generateNewNodeId(graph, nodeId + i);
@@ -334,14 +333,11 @@ function cloneNode(graph, nodeId, nClones, clearPosition=false) {
 	var visited = [];
 	for (var j = preds.length - 1; j >= 0; j--) {
 		edge = findEdgeByIds(graph, preds[j], nodeId);
+		edge.target = originalNode.id;
 		visited.push([preds[j], nodeId]);
 		for (var i = clones.length - 1; i >= 0; i--) {
 			newEdge = JSON.parse(JSON.stringify(edge));
-			if (newEdge.target.id) {
-				newEdge.target = clones[i];
-			} else {
-				newEdge.target = clones[i].id;
-			}
+			newEdge.target = clones[i].id;
 			graph.links.push(newEdge);
 		}
 	}
@@ -349,13 +345,10 @@ function cloneNode(graph, nodeId, nClones, clearPosition=false) {
 	for (var j = succs.length - 1; j >= 0; j--) {
 		if (!visited.includes([nodeId, succs[j]])) {
 			edge = findEdgeByIds(graph, nodeId, succs[j]);
+			edge.source = originalNode.id;
 			for (var i = clones.length - 1; i >= 0; i--) {
 				newEdge = JSON.parse(JSON.stringify(edge));
-				if (newEdge.source.id) {
-					newEdge.source = clones[i];
-				} else {
-					newEdge.source = clones[i].id;
-				}
+				newEdge.source = clones[i].id;
 				graph.links.push(newEdge);
 			}
 		}
@@ -380,8 +373,6 @@ function removeNode(graph, nodeId) {
 }
 
 function removeEdge(graph, sourceId, targetId) {
-	const target = (el) => el == nodeId;
-
 	var edge = findEdgeByIds(graph, sourceId, targetId);
 	removeItem(graph.links, edge);
 }
@@ -423,6 +414,28 @@ function addElementAttrs(element, attrsToAdd) {
 }
 
 
+function mapLinksToIds(graph) {
+	var itemsToRemove = [],
+		itemsToAdd = [];
+	for (var i = graph.links.length - 1; i >= 0; i--) {
+		var newEdge = JSON.parse(JSON.stringify(graph.links[i]));
+		if (graph.links[i].source.id) {
+			newEdge.source = graph.links[i].source.id;
+		}
+		if (graph.links[i].target.id) {
+			newEdge.target = graph.links[i].target.id;
+		}
+		itemsToRemove.push([newEdge.source, newEdge.target]);
+		itemsToAdd.push(newEdge);
+	}
+	for (var i = itemsToRemove.length - 1; i >= 0; i--) {
+		removeEdge(graph, itemsToRemove[i][0], itemsToRemove[i][1]);
+	}
+	for (var i = itemsToAdd.length - 1; i >= 0; i--) {
+		graph.links.push(itemsToAdd[i]);
+	}
+}
+
 function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=null) {
 	var pInstance = JSON.parse(JSON.stringify(instance));
 
@@ -457,9 +470,9 @@ function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=n
 	// Remove edges
 	for (var i = rule["removed_edges"].length - 1; i >= 0; i--) {
 		var edge = rule["removed_edges"][i];
-		removeEdge(graph, instance[edge[0]], instance[edge[1]]);
+		removeEdge(graph, pInstance[edge[0]], pInstance[edge[1]]);
 		if ("onRemoveEdge" in eventHandlers) {
-			eventHandlers["onRemoveEdge"](instance[edge[0]], instance[edge[1]]);
+			eventHandlers["onRemoveEdge"](pInstance[edge[0]], pInstance[edge[1]]);
 		}
 	}
 
