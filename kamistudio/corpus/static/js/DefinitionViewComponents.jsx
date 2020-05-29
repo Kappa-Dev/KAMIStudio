@@ -103,11 +103,7 @@ class DefinitionList extends React.Component {
 	                            protoformGene={key}
 	                            products={this.props.items[key].variants}
 	                            onClick={this.onItemClick}
-	                            onItemClick={
-                                    this.props.preselected ? this.props.onItemClick(
-                                        key, key, this.props.items[key].variants,
-                                        (viewProductFunction) => viewProductFunction) : this.state.subitemClick
-                                } />
+	                            onItemClick={this.props.onSubitemClick} />
 	                    </div>);
 	    return ([
 	        <div id="definitionListView">
@@ -121,62 +117,130 @@ class DefinitionList extends React.Component {
 }
 
 
-function DefinitionGraphView(props) {
-	var removeButton = null;
+class DefinitionGraphView extends React.Component {
 
-	if (props.removable) {
-        removeButton = 
-	        <div style={{"display": "inline-block", "float": "right"}}>
-		        <button 
-		           type="button" onClick={props.onRemove}
-		           disabled={props.readonly}
-		           className="btn btn-default btn-sm panel-button editable-box right-button">
-		            <span className="glyphicon glyphicon-trash"></span>
-		        </button>
-		    </div>;
-	}
+    constructor(props) {
+        super(props);
 
-	var boxes =
-		<div id={props.svgId + "InfoBoxes"}>
-        	<ElementInfoBox style={{"display": props.svgDisplay}} id={props.elementInfoBoxId} items={[]}/>
-        	<MetaDataBox style={{"display": props.svgDisplay}} id={props.metaDataBoxId} items={[]}/>
-        </div>;
-    if (props.svgDisplay == "none") {
-    	boxes = null;
+        this.componentDidMount = this.componentDidMount.bind(this);
+        this.componentDidUpdate = this.componentDidUpdate.bind(this);
+        this.clearSvg = this.clearSvg.bind(this);
+        this.draw = this.draw.bind(this);
     }
 
-    var content;
-    if (props.loading) {
-        content = (
-            <div id="loadingBlock" className="loading-elements center-block">
-                <div id={props.instantiated ? "loaderModel" : "loader"}></div>
-             </div>
-        );
-    } else {
-        content = [
-            <div class="svg-wrapper">
-                <svg id={props.svgId} style={{"display": props.svgDisplay}} preserveAspectRatio="xMinYMin meet"
-    viewBox="0 0 300 300"></svg>
+    clearSvg() {
+        var svg = d3.select("#" + this.props.svgId);
+        svg.selectAll("*").remove();
+    }
+
+    draw() {
+        if (this.props.graph) {
+            drawDefinitionGraph(
+                this.props.corpusId,
+                this.props.definitionId,
+                this.props.graphId,
+                JSON.parse(JSON.stringify(
+                    this.props.graph)),
+                this.props.metaTyping,
+                this.props.readonly);
+        }
+    }
+
+    componentDidMount() {
+        this.clearSvg();
+        this.draw();
+    }
+
+    componentDidUpdate() {
+        if (this.props.refreshing) {
+            this.clearSvg();
+            this.draw();
+        }
+    }
+
+    render() {
+    	var removeButton = null;
+
+    	if (this.props.removable) {
+            removeButton = 
+    	        <div style={{"display": "inline-block", "float": "right"}}>
+    		        <button 
+    		           type="button" onClick={this.props.onRemove}
+    		           disabled={this.props.readonly}
+    		           className="btn btn-default btn-sm panel-button editable-box right-button">
+    		            <span className="glyphicon glyphicon-trash"></span>
+    		        </button>
+    		    </div>;
+    	}
+
+    	var boxes =
+    		<div id={this.props.svgId + "InfoBoxes"}>
+            	<ElementInfoBox style={{"display": this.props.svgDisplay}} id={this.props.elementInfoBoxId} items={[]}/>
+            	<MetaDataBox style={{"display": this.props.svgDisplay}} id={this.props.metaDataBoxId} items={[]}/>
+            </div>;
+        if (this.props.svgDisplay == "none") {
+        	boxes = null;
+        }
+
+        var content;
+        if (this.props.loading) {
+            content = (
+                <div id="loadingBlock" className="loading-elements center-block">
+                    <div id={this.props.instantiated ? "loaderModel" : "loader"}></div>
+                 </div>
+            );
+        } else {
+            content = [
+                <div class="svg-wrapper">
+                    <svg id={this.props.svgId} style={{"display": this.props.svgDisplay}} preserveAspectRatio="xMinYMin meet"
+        viewBox="0 0 300 300"></svg>
+                </div>,
+                boxes
+            ];
+        }
+
+    	return ([
+            <div>
+        	    <h4 style={{"display": "inline-block"}}>{this.props.title}</h4>
+    		    {removeButton}
             </div>,
-            boxes
-        ];
-    }
-
-	return ([
-        <div>
-    	    <h4 style={{"display": "inline-block"}}>{props.title}</h4>
-		    {removeButton}
-        </div>,
-        content
- 	]);
+            content
+     	]);
+    };
 }
 
 
 class DefinitionPreview extends React.Component {
 
     constructor(props) {
-        super(props);
+        super(props);   
 
+        this.state = {
+            dialog: false
+        };
+        this.showConfirmDeletion = this.showConfirmDeletion.bind(this);
+        this.hideDeleteConfirmationDialog = this.hideDeleteConfirmationDialog.bind(this);
+        this.removeActiveVariant = this.removeActiveVariant.bind(this);
+    }
+
+    showConfirmDeletion() {
+        var state = Object.assign({}, this.state);
+        state.dialog = true;
+        this.setState(state);
+    }
+
+    hideDeleteConfirmationDialog() {
+        var state = Object.assign({}, this.state);
+        state.dialog = false;
+        this.setState(state);
+    }
+
+    removeActiveVariant() {
+        this.hideDeleteConfirmationDialog();
+
+        if (this.props.onRemoveVariant) {
+            this.props.onRemoveVariant(this.props.definitionId, this.props.activeProduct);
+        }
     }
 
     render() {
@@ -188,6 +252,7 @@ class DefinitionPreview extends React.Component {
             product = null,
             productMessage = null,
             content = null,
+            dialog = null,
             removeButton = null;
         if (this.props.loading) {
         	loader = 
@@ -195,54 +260,88 @@ class DefinitionPreview extends React.Component {
 	                <div id="loader"></div>
 	             </div>;
         } else {
-	        if (!this.props.id) {
+	        if (!this.props.definitionId) {
 	            message = <p style={{"margin-top": "20pt"}}>No definition selected</p>;
 	        } else {
 
 	            svgDisplay = "inline-block";
-	           
-	            protoform = 
-	            	<DefinitionGraphView
-	            		title="Protoform"
-	            		svgId="protoformSvg"
-	            		svgDisplay={svgDisplay}
-	            		removable={false}
-	            		readonly={this.props.readonly}
-	            		elementInfoBoxId="protoformGraphElementInfo"
-	            		metaDataBoxId="protoformGraphMetaModelInfo"/>;
+           
+                if (this.props.protoformData) {
+    	            protoform = 
+    	            	<DefinitionGraphView
+    	            		title="Protoform"
+    	            		svgId="protoformSvg"
+    	            		svgDisplay={svgDisplay}
+    	            		removable={false}
+    	            		readonly={this.props.readonly}
+    	            		elementInfoBoxId="protoformGraphElementInfo"
+    	            		metaDataBoxId="protoformGraphMetaModelInfo"
+                            corpusId={this.props.corpusId}
+                            definitionId={this.props.definitionId}
+                            graph={this.props.protoformData["protoform_graph"]}
+                            graphId="protoform"
+                            metaTyping={this.props.protoformData["protoform_meta_typing"]}/>;
+                }
 
-	        	if (this.props.productId) {
-	        		product =
+	        	if (this.props.productData) {
+                    if (this.state.dialog) {
+                        var dContent = (
+                            <div style={{"textAlign": "center"}}>
+                                <h5>
+                                    {"Are you sure you want to remove the variant?"}
+                                </h5>
+
+                                <div style={{"margin-top": "15pt"}}>
+                                    <button 
+                                       type="button" onClick={this.hideDeleteConfirmationDialog}
+                                       className="btn btn-primary btn-sm panel-button editable-box right-button">
+                                        Cancel
+                                    </button>
+                                    <button 
+                                       type="button" onClick={this.removeActiveVariant}
+                                       className="btn btn-default btn-sm panel-button editable-box right-button">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                        dialog = (
+                            <Dialog content={dContent} 
+                                title="Delete a variant"
+                                customStyle={{"margin": "150pt auto", "width": "50%"}}
+                                onRemove={this.hideDeleteConfirmationDialog}/>
+                        );
+                    }
+                    product =
 	        			<DefinitionGraphView
 	        				title="Product"
 		            		svgId="productSvg"
 		            		svgDisplay={svgDisplay}
 		            		removable={true}
 	            			readonly={this.props.readonly}
-		            		onRemove={this.props.onRemove}
+		            		onRemove={this.showConfirmDeletion}
 		            		elementInfoBoxId="productGraphElementInfo"
-		            		metaDataBoxId="productGraphMetaModelInfo"/>;
+		            		metaDataBoxId="productGraphMetaModelInfo"
+                            corpusId={this.props.corpusId}
+                            definitionId={this.props.definitionId}
+                            graph={this.props.productData["graph"]}
+                            graphId="product"
+                            refreshing={true}
+                            metaTyping={this.props.productData["meta_typing"]}/>;
 		        } else {
-		        	productMessage = <p>No product selected</p>;
-		        	product = 
-		        		<DefinitionGraphView
-		            		svgId="productSvg"
-		            		svgDisplay={"none"}
-	            			readonly={this.props.readonly}
-		            		elementInfoBoxId="productGraphElementInfo"
-							metaDataBoxId="productGraphMetaModelInfo"/>;
+		        	product = <p>No product selected</p>;
 		        }
 		        var wt = this.props.wildType ? " (WT)" : "";
-		        content = 
+		        content = (
 		        	<div className="row">
 	                	<div className="col-md-6">
 			                {protoform}
 	                	</div>
 	                	<div className="col-md-6">
 			                {product}
-			                {productMessage}
 			            </div>
-	                </div>;
+	                </div>
+                );
 	        }
 	    }
 
@@ -253,12 +352,130 @@ class DefinitionPreview extends React.Component {
             	{loader}
             	{message}
                 {content}
-                <div id="variantDeleteConfirmationDialog"></div>
+                <div id="variantDeleteConfirmationDialog">
+                    {dialog}
+                </div>
             </div>
         ]);
     }
 }
 
+
+class DefinitionView extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            activeDefinition: null,
+            activeDefinitionData: null,
+            activeVariant: null
+        }
+
+        this.showDefinition = this.showDefinition.bind(this);
+        this.showVariant = this.showVariant.bind(this);
+    }
+
+    showDefinition(definitionId, protoformGene, products) {
+        var state = Object.assign({}, this.state);
+        state.activeDefinition = definitionId;
+        this.setState(state);
+        getRawDefinition(
+            this.props.corpusId, protoformGene,
+            (data) => {
+                var state = Object.assign({}, this.state);
+                state.activeDefinitionData = data;
+                if (this.state.activeVariant) {
+                    var productData = generateProductGraph(
+                        this.state.activeDefinitionData,
+                        this.state.activeVariant);
+                    state.activeVariantData = productData;
+                }
+                this.setState(state);
+            });
+    }
+
+    showVariant(productName) {
+        var state = Object.assign({}, this.state);
+        state.activeVariant = productName;
+
+        if (this.state.activeDefinitionData) {
+            // generate a product graph
+            var productData = generateProductGraph(
+                this.state.activeDefinitionData,
+                state.activeVariant);
+            state.activeVariantData = {}
+            state.activeVariantData["graph"] = productData[0];
+            state.activeVariantData["meta_typing"] = productData[1];
+        }
+
+        this.setState(state);
+    }
+
+    render() {
+        var preview = null,
+            content = (
+            <div className="progress-block">
+                <div id="progressMessage" className="small-faded">Loading definitions...</div>
+                    <div id="loadingBlock" className="loading-elements center-block" style={{"marginTop": "20pt"}}>
+                        <div id="loader"></div>
+                    </div> 
+            </div>
+        );
+
+        if (this.props.definitions) {
+            var backButton = null;
+            content = (
+                <DefinitionList 
+                    items={this.props.definitions}
+                    preselected={this.props.preselectedDefinition}
+                    backButton={backButton}
+                    onItemClick={this.showDefinition}
+                    onSubitemClick={this.showVariant}/>
+            );
+            if (this.state.activeDefinition) {
+                var wildType = false;
+                if (this.state.activeDefinitionData) {
+                    if (this.state.activeVariant == this.state.activeDefinitionData["wild_type"]) {
+                        wildType = true;
+                    }
+                }
+                preview = (
+                    <DefinitionPreview
+                        corpusId={this.props.corpusId}
+                        definitionId={this.state.activeDefinition}
+                        protoformData={this.state.activeDefinitionData}
+                        activeProduct={this.state.activeVariant}
+                        productData={this.state.activeVariantData}
+                        readonly={this.props.readonly}
+                        loading={(this.state.activeDefinitionData) ? false : true}
+                        editable={false}
+                        wildType={wildType}
+                        onRemoveVariant={this.props.onRemoveVariant}
+                        onDataUpdate={updateDefinitionDesc(this.props.corpusId, this.state.activeDefinition)}/>
+                );
+            } else {
+                preview = (
+                    <DefinitionPreview
+                        corpusId={this.props.corpusId}
+                        readonly={this.props.readonly} />
+                );
+            }
+        }
+
+        return [
+            <div className="col-sm-6">
+                <h3>Definitions</h3>
+                <div id="definitionView">{content}</div>
+            </div>,
+            <div className="col-sm-6">
+                <div id="definitionViewWidget">
+                    {preview}
+                </div>
+            </div>
+        ]
+    }
+}
 
 
 class VariantForm extends React.Component {

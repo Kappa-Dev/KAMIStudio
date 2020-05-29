@@ -155,7 +155,28 @@ class CorpusView extends React.Component {
         this.showNuggetTable = this.showNuggetTable.bind(this);    
 
         this.onShowNuggets = this.onShowNuggets.bind(this);
-        this.onShowVariants = this.onShowVariants.bind(this);         
+        this.onShowVariants = this.onShowVariants.bind(this);   
+        this.onRemoveVariant = this.onRemoveVariant.bind(this);      
+    }
+
+    onRemoveVariant(definitionId, productName) {
+        // send a removal request
+        // getData(
+        //     this.props.corpusId + "/remove-variant/" + definitionId +
+        //     "/" + productName);
+
+        var state = Object.assign({}, this.state),
+            indexToRemove;
+
+        for (var i = state.definitions[definitionId]["variants"].length - 1; i >= 0; i--) {
+            if (state.definitions[definitionId]["variants"][i][0] == productName) {
+                indexToRemove = i;
+                break;
+            }
+        }
+        // update preview
+        state.definitions[definitionId]["variants"].splice(indexToRemove, 1);
+        this.setState(state);
     }
 
     onShowNuggets(nodeId) {
@@ -260,7 +281,6 @@ class CorpusView extends React.Component {
         var state = Object.assign({}, state);
         state.activeInnerTab = "definitions";
         if (selectedUniprot) {
-            console.log(selectedUniprot);
             state.preselectedDefinition = selectedUniprot;
         }
         this.setState(state); 
@@ -467,15 +487,6 @@ class CorpusView extends React.Component {
         if (this.props.definitionsCount == 0) {
             definitionsView = "Corpus does not contain any variant definitions";
         } else {
-            var content = (
-                <div className="progress-block">
-                    <div id="progressMessage" className="small-faded">Loading definitions...</div>
-                        <div id="loadingBlock" className="loading-elements center-block" style={{"marginTop": "20pt"}}>
-                            <div id="loader"></div>
-                        </div> 
-                </div>
-            );
-
             if (this.state.definitions) {
                 var data = Object.assign({}, this.state.definitions);
                 var labels;
@@ -489,30 +500,22 @@ class CorpusView extends React.Component {
                         }
                         data[k].label = labels.join(", ");
                 }
-                var backButton = null;
-                content = (
-                    <DefinitionList 
-                            items={this.state.definitions}
-                            preselected={this.state.preselectedDefinition}
-                            backButton={backButton}
-                            onItemClick={viewDefinition(
-                                this.props.corpusId, this.props.readonly,
-                                data)}/>
+                definitionsView = (
+                    <DefinitionView corpusId={this.props.corpusId}
+                                    readonly={this.props.readonly}
+                                    onRemoveVariant={this.onRemoveVariant}
+                                    definitions={data} />
                 );
-                preview = <DefinitionPreview editable={false}/>;
-            }
-            var preview = null;
-            definitionsView = [
-                <div className="col-sm-6">
-                    <h3>Definitions</h3>
-                    <div id="definitionView">{content}</div>
-                </div>,
-                <div className="col-sm-6">
-                    <div id="definitionViewWidget">
-                        {preview}
+            } else {
+                definitionsView = (
+                    <div className="progress-block">
+                        <div id="progressMessage" className="small-faded">Loading definitions...</div>
+                            <div id="loadingBlock" className="loading-elements center-block" style={{"marginTop": "20pt"}}>
+                                <div id="loader"></div>
+                            </div> 
                     </div>
-                </div>
-            ];
+                );
+            }
         }
 
         var knowledgeTabs = (

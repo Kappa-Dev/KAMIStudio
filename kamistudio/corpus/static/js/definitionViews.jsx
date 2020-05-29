@@ -267,6 +267,7 @@ function generateProductGraph(data, productName) {
 
 
 function viewDefinition(modelId, readonly, allDefinitions) {
+
 	return function(definitionId, protoformGene, products, callback) {
 
 		function showDeleteConfirmationDialog(productName) {
