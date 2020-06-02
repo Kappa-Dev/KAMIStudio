@@ -14,6 +14,7 @@ class DefinitionListItem extends React.Component {
     		this.setState({
 	    		selected: null 
 	    	});
+            this.props.onItemClick(id);
     	} else {
 	    	this.setState({
 	    		selected: id 
@@ -82,13 +83,12 @@ class DefinitionList extends React.Component {
 	    		selected: null,
 	    		subitemClick: null
 	    	});
+            this.props.onItemClick(id, protoformGene, products);
     	} else {
-    		var onSubitemClick = this.props.onItemClick(
-	    		id, protoformGene, products, this.setSubitemClick);
             this.setState({
 	    		selected: id
 	    	});
-	    	
+            this.props.onItemClick(id, protoformGene, products);
 	    }
     }
 
@@ -110,7 +110,6 @@ class DefinitionList extends React.Component {
 	            <ul className="nav nuggets-nav list-group-striped list-unstyled components">
 	                {content}
 	            </ul>
-	            <div id="definitionDialog" style={{"height": "100%", "width": "100%"}}></div>
 	        </div>
 	    ]);
 	}
@@ -369,47 +368,83 @@ class DefinitionView extends React.Component {
         this.state = {
             activeDefinition: null,
             activeDefinitionData: null,
-            activeVariant: null
+            activeVariant: null,
+            preselectedNotFound: Object.keys(
+                this.props.definitions).includes(
+                    this.props.preselectedDefinition) ? false : true
         }
 
         this.showDefinition = this.showDefinition.bind(this);
         this.showVariant = this.showVariant.bind(this);
+        this.showPreselectedNotFound = this.showPreselectedNotFound.bind(this);
+        this.onRemoveDialog = this.onRemoveDialog.bind(this);
+
+        if (this.props.preselectedDefinition) {
+            if (Object.keys(this.props.definitions).includes(this.props.preselectedDefinition)) {
+                this.showDefinition(this.props.preselectedDefinition, this.props.preselectedDefinition);
+            }
+        }
     }
 
-    showDefinition(definitionId, protoformGene, products) {
+    showPreselectedNotFound() {
         var state = Object.assign({}, this.state);
-        state.activeDefinition = definitionId;
+        state.preselectedNotFound = true; 
         this.setState(state);
-        getRawDefinition(
-            this.props.corpusId, protoformGene,
-            (data) => {
-                var state = Object.assign({}, this.state);
-                state.activeDefinitionData = data;
-                if (this.state.activeVariant) {
-                    var productData = generateProductGraph(
-                        this.state.activeDefinitionData,
-                        this.state.activeVariant);
-                    state.activeVariantData = productData;
-                }
-                this.setState(state);
-            });
+    }
+
+    onRemoveDialog() {
+        var state = Object.assign({}, this.state);
+        state.preselectedNotFound = false;
+        this.setState(state);
+    }
+
+    showDefinition(definitionId, protoformGene) {
+        var state = Object.assign({}, this.state);
+        if (state.activeDefinition != definitionId) {
+            getRawDefinition(
+                this.props.corpusId, protoformGene,
+                (data) => {
+                    var state = Object.assign({}, this.state);
+                    state.activeDefinition = definitionId;
+                    this.setState(state);
+                    state.activeDefinitionData = data;
+                    if (this.state.activeVariant) {
+                        var productData = generateProductGraph(
+                            this.state.activeDefinitionData,
+                            this.state.activeVariant);
+                        state.activeVariantData = productData;
+                    }
+                    this.setState(state);
+                });
+        }
+        state.activeDefinition = null;
+        state.activeDefinitionData = null;
+        state.activeVariant = null;
+        state.activeVariantData = null;
+        this.setState(state);
     }
 
     showVariant(productName) {
         var state = Object.assign({}, this.state);
-        state.activeVariant = productName;
 
-        if (this.state.activeDefinitionData) {
-            // generate a product graph
-            var productData = generateProductGraph(
-                this.state.activeDefinitionData,
-                state.activeVariant);
-            state.activeVariantData = {}
-            state.activeVariantData["graph"] = productData[0];
-            state.activeVariantData["meta_typing"] = productData[1];
+        if (state.activeVariant == productName) {
+            state.activeVariant = null;
+            state.activeVariantData = null;
+            this.setState(state);
+        } else {
+            state.activeVariant = productName;
+
+            if (this.state.activeDefinitionData) {
+                // generate a product graph
+                var productData = generateProductGraph(
+                    this.state.activeDefinitionData,
+                    state.activeVariant);
+                state.activeVariantData = {}
+                state.activeVariantData["graph"] = productData[0];
+                state.activeVariantData["meta_typing"] = productData[1];
+            }
+            this.setState(state);
         }
-
-        this.setState(state);
     }
 
     render() {
@@ -424,16 +459,28 @@ class DefinitionView extends React.Component {
         );
 
         if (this.props.definitions) {
-            var backButton = null;
-            content = (
+            var backButton = null,
+                dialog = null;
+
+            if (this.state.preselectedNotFound) {
+                dialog = (
+                    <InBlockDialog id="noDefinitionDialog"
+                            title="Definition not found"
+                            onRemove={this.onRemoveDialog}
+                            content={"No definition of the protoform is found"} />
+                );
+            }
+
+            content = [
                 <DefinitionList 
                     items={this.props.definitions}
                     preselected={this.props.preselectedDefinition}
                     backButton={backButton}
                     onItemClick={this.showDefinition}
-                    onSubitemClick={this.showVariant}/>
-            );
-            if (this.state.activeDefinition) {
+                    onSubitemClick={this.showVariant}/>,
+                <div id="definitionDialog" style={{"height": "100%", "width": "100%"}}>{dialog}</div>
+            ];
+            if (this.state.activeDefinition || this.props.preselectedDefinition) {
                 var wildType = false;
                 if (this.state.activeDefinitionData) {
                     if (this.state.activeVariant == this.state.activeDefinitionData["wild_type"]) {
@@ -443,12 +490,14 @@ class DefinitionView extends React.Component {
                 preview = (
                     <DefinitionPreview
                         corpusId={this.props.corpusId}
-                        definitionId={this.state.activeDefinition}
+                        definitionId={this.state.activeDefinition ? this.state.activeDefinition : this.props.preselectedDefinition}
                         protoformData={this.state.activeDefinitionData}
                         activeProduct={this.state.activeVariant}
                         productData={this.state.activeVariantData}
                         readonly={this.props.readonly}
-                        loading={(this.state.activeDefinitionData) ? false : true}
+                        loading={(
+                            this.state.activeDefinitionData || (this.props.preselectedDefinition && !this.props.preselectedNotFound)
+                        ) ? false : true}
                         editable={false}
                         wildType={wildType}
                         onRemoveVariant={this.props.onRemoveVariant}

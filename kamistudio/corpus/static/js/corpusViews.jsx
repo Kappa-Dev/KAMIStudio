@@ -22,109 +22,109 @@ function addAGTransition() {
 }
 
 class ActionGraphWidget extends React.Component {
-        constructor(props) {
-            super(props);
+    constructor(props) {
+        super(props);
 
-            this.state = {
-                agLabels: false
-            }
-
-            this.componentDidMount = this.componentDidMount.bind(this);
-
-            this.toggleSideBar = this.toggleSideBar.bind(this);
-            this.expandSideBar = this.expandSideBar.bind(this);
-            this.onShowLabels = this.onShowLabels.bind(this);
+        this.state = {
+            agLabels: false
         }
 
-        onShowLabels() {
-            var state = Object.assign({}, this.state);
-            if (!state.agLabels) {
-                    state.agLabels = true;
-                    displayLabels(this.props.svgId);
-            } else {
-                    state.agLabels = false;
-                    hideLabels(this.props.svgId);
-            }
-            this.setState(state);
+        this.componentDidMount = this.componentDidMount.bind(this);
+
+        this.toggleSideBar = this.toggleSideBar.bind(this);
+        this.expandSideBar = this.expandSideBar.bind(this);
+        this.onShowLabels = this.onShowLabels.bind(this);
+    }
+
+    onShowLabels() {
+        var state = Object.assign({}, this.state);
+        if (!state.agLabels) {
+                state.agLabels = true;
+                displayLabels(this.props.svgId);
+        } else {
+                state.agLabels = false;
+                hideLabels(this.props.svgId);
         }
+        this.setState(state);
+    }
 
-        expandSideBar() {
-            var sidebar = $('#' + this.props.svgId + "SidebarWrapper");
+    expandSideBar() {
+        var sidebar = $('#' + this.props.svgId + "SidebarWrapper");
 
-            if (!sidebar.hasClass('selected')) {
-                sidebar.addClass('selected');
-                sidebar.removeClass('collapsed');
-                $('#' + this.props.svgId + 'ContentWrapper').addClass('collapsed');
-            }
+        if (!sidebar.hasClass('selected')) {
+            sidebar.addClass('selected');
+            sidebar.removeClass('collapsed');
+            $('#' + this.props.svgId + 'ContentWrapper').addClass('collapsed');
         }
+    }
 
-        toggleSideBar() {
-             $('#' + this.props.svgId + "SidebarWrapper").toggleClass('collapsed');
-             $('#' + this.props.svgId + 'ContentWrapper').toggleClass('collapsed');
-        }
+    toggleSideBar() {
+         $('#' + this.props.svgId + "SidebarWrapper").toggleClass('collapsed');
+         $('#' + this.props.svgId + 'ContentWrapper').toggleClass('collapsed');
+    }
 
-        componentDidMount() {
-            visualizeAG(
-                this.props.actionGraph, this.props.corpusId,
-                this.props.webWorkerUrl, this.props.instantiated, this.props.readonly,
-                this.props.saveGeneratedNodePos, {
-                    "nodeClick": () => this.expandSideBar()
-                },
-                this.props.onShowVariants,
-                this.props.onShowNuggets);
-        }
+    componentDidMount() {
+        visualizeAG(
+            this.props.actionGraph, this.props.corpusId,
+            this.props.webWorkerUrl, this.props.instantiated, this.props.readonly,
+            this.props.saveGeneratedNodePos, {
+                "nodeClick": () => this.expandSideBar()
+            },
+            this.props.onShowVariants,
+            this.props.onShowNuggets);
+    }
 
-        render() {
-            var boxes = [
-                <ElementInfoBox id="graphElement" 
-                                items={[]}
-                                fixedtooltip={true}/>,
-                <MetaDataBox id="metaData"
-                             items={[]}
-                             fixedtooltip={true}/>,
-                <SemanticsBox id="semantics"
-                              items={[]}
-                              fixedtooltip={true}/>,
-            ];
+    render() {
+        var boxes = [
+            <ElementInfoBox id="graphElement" 
+                            items={[]}
+                            fixedtooltip={true}/>,
+            <MetaDataBox id="metaData"
+                         items={[]}
+                         fixedtooltip={true}/>,
+            <SemanticsBox id="semantics"
+                          items={[]}
+                          fixedtooltip={true}/>,
+        ];
 
-            return [
-                <div id={this.props.svgId + "SidebarWrapper"} className="sidebar-wrapper collapsed">
-                    <div id={this.props.svgId + "AgSidebar"} className="ag-sidebar">
-                        <div id={this.props.svgId + "GraphInfoBoxes"}
-                             className={"graph-info-boxes" + (this.props.instantiated ? " instantiated": "")}>
-                                {boxes}
-                        </div>
+        return [
+            <div id={this.props.svgId + "SidebarWrapper"} className="sidebar-wrapper collapsed">
+                <div id={this.props.svgId + "AgSidebar"} className="ag-sidebar">
+                    <div id={this.props.svgId + "GraphInfoBoxes"}
+                         className={"graph-info-boxes" + (this.props.instantiated ? " instantiated": "")}>
+                            {boxes}
                     </div>
-                </div>,
-                <div id={this.props.svgId + "ContentWrapper"} className="sidebar-content-wrapper">
-                    <div id={this.props.svgId + "Content"} className="ag-content">
-                        <div className="action-graph-view">
-                            <button className="btn btn-link btn-lg"
-                                    onClick={this.toggleSideBar}
-                                    id="collapseButton"><span className="glyphicon glyphicon-menu-hamburger"></span></button>
-                            <button id="showLabelsButton"
-                                    onClick={this.onShowLabels}
-                                    type="button"
-                                    className="btn btn-default btn-md panel-button"
-                                    style={{"float": "right"}}>{this.state.agLabels ? "Hide labels" : "Show labels"}</button>
-                            <button id="saveLayoutButton" type="button" className="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span className="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
-                        </div>
+                </div>
+            </div>,
+            <div id={this.props.svgId + "ContentWrapper"} className="sidebar-content-wrapper">
+                <div id={this.props.svgId + "Content"} className="ag-content">
+                    <div className="action-graph-view">
+                        <button className="btn btn-link btn-lg"
+                                onClick={this.toggleSideBar}
+                                id="collapseButton"><span className="glyphicon glyphicon-menu-hamburger"></span></button>
+                        <button id="showLabelsButton"
+                                onClick={this.onShowLabels}
+                                type="button"
+                                className="btn btn-default btn-md panel-button"
+                                style={{"float": "right"}}>{this.state.agLabels ? "Hide labels" : "Show labels"}</button>
+                        <button id="saveLayoutButton" type="button" className="btn btn-default btn-md panel-button nugget-list-view" style={{"float": "right"}} disabled><span className="glyphicon glyphicon-floppy-disk"></span> Save layout</button>
+                    </div>
 
-                        <svg id={this.props.svgId} preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500" 
-                            style={{
-                                "width": "100%",
-                                "height": "400pt",
-                                "display": (this.props.actionGraph) ? "inline-block" : "none"
-                            }}></svg>
-                        <div className="row">
-                            <div className="col-sm-6" style={{"marginBottom": "20px"}}>
-                                <p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
-                            </div>
+                    <svg id={this.props.svgId} preserveAspectRatio="xMinYMin meet" viewBox="0 0 700 500" 
+                        style={{
+                            "width": "100%",
+                            "height": "400pt",
+                            "display": (this.props.actionGraph) ? "inline-block" : "none"
+                        }}></svg>
+                    <div className="row">
+                        <div className="col-sm-6" style={{"marginBottom": "20px"}}>
+                            <p id="ctrlClickMessage" style={{"marginLeft": "10px", "display": "none"}}>CTRL+click to select multiple elements</p>
                         </div>
                     </div>
                 </div>
-            ];
-        }
+            </div>
+        ];
+    }
 }
 
 class CorpusView extends React.Component {
@@ -503,6 +503,7 @@ class CorpusView extends React.Component {
                 definitionsView = (
                     <DefinitionView corpusId={this.props.corpusId}
                                     readonly={this.props.readonly}
+                                    preselectedDefinition={this.state.preselectedDefinition}
                                     onRemoveVariant={this.onRemoveVariant}
                                     definitions={data} />
                 );
@@ -572,6 +573,7 @@ class CorpusView extends React.Component {
             modelsTabContent = <ModelList items={this.state.models}
                                           actionGraph={this.state.actionGraph}
                                           corpusId={this.props.corpusId}
+                                          corpusUrl={this.props.corpusUrl}
                                           readonly={this.props.readonly}
                                           webWorkerUrl={this.props.webWorkerUrl}
                                           preselected={this.props.modelId}

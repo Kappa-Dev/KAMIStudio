@@ -295,6 +295,7 @@ class ModelList extends React.Component {
 
             modelPreview = (
                 <ModelView readonly={this.props.readonly}
+                           corpusUrl={this.props.corpusUrl}
                            geneData={this.state.geneData}
                            definitionsData={this.state.definitionsData}
                            extraDefinitionProtoforms={extraProtoforms}
@@ -334,8 +335,8 @@ class ModelView extends React.Component {
         getData(
             "/corpus/" + this.props.corpusId + "/delete-model/" + this.props.model["id"],
             () => showModelList(this.props.corpusId, null, this.props.readonly));
-        
-    }    
+        window.location.replace(this.props.corpusUrl);
+    }   
 
     onCancelDelete() {
       ReactDOM.render(
@@ -554,7 +555,7 @@ class ModifiableGeneListView extends React.Component {
 
     render() {
         var filteredList;
-        if (this.props.items.length > 0) {
+        if (this.props.items) {
             filteredList = <FilteredList
                 instantiated={true}
                 items={this.props.items}

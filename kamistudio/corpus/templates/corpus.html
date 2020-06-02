@@ -82,6 +82,7 @@
   <script type="text/babel">
     ReactDOM.render(
       <CorpusView corpusId="{{kb._id}}"
+                  corpusUrl="{{url_for('corpus.corpus_view', corpus_id=kb._id)}}"
                   modelId={% if model_id %}"{{model_id}}"{% else %}{null}{% endif %}
                   readonly={% if readonly %}{true}{% else %}{false}{% endif %}
                   emptyCorpus={% if kb.empty() %}{true}{% else %}{false}{% endif %}

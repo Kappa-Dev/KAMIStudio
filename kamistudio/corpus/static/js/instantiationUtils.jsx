@@ -5,7 +5,7 @@
 
 
 function getGenes(modelId) {
-	return function(el, filterItems) {
+	return function(el, filterItems, callback=null) {
 		var url = "/corpus/" + modelId + "/genes";
 		$.ajax({
 		    url: url,
@@ -19,6 +19,9 @@ function getGenes(modelId) {
 					items:   data["genes"].filter(
 						(item) => !filterItems.includes(item[0]))
 				});
+				if (callback) {
+					callback(data["genes"]);
+				}
 			}
 		).fail(function (e) {
 		    console.log("Failed to load genes");

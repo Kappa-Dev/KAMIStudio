@@ -83,7 +83,8 @@ class SelectableGeneList extends React.Component {
 		}
 		this.setState(newState);
 		if (this.props.onSelectionUpdate) {
-			this.props.onSelectionUpdate(newState.selected);
+			this.props.onSelectionUpdate(
+				this.props.items, newState.selected, newState.selectedAll);
 		}
 	}
 
@@ -101,7 +102,8 @@ class SelectableGeneList extends React.Component {
 		}
 		this.setState(newState);
 		if (this.props.onSelectionUpdate) {
-			this.props.onSelectionUpdate(newState.selected);
+			this.props.onSelectionUpdate(
+				this.props.items, newState.selected, true);
 		}
 	}
 
@@ -384,6 +386,7 @@ class InstantiationForm extends React.Component {
 			variantChoices: [],
 			seedGenes: [],
 			activeVariantSelectioDialog: false,
+			submitted: false
 		};
 
 		this.onSelectVariantButtonClick = this.onSelectVariantButtonClick.bind(this);
@@ -393,6 +396,8 @@ class InstantiationForm extends React.Component {
 		this.onSubmit = this.onSubmit.bind(this);
 		this.handleFieldChange = this.handleFieldChange.bind(this);
 		this.onRemoveItem = this.onRemoveItem.bind(this);
+		this.onUpdateSelected = this.onUpdateSelected.bind(this);
+		this.setDefaultSeedGenes = this.setDefaultSeedGenes.bind(this);
 	}
 
 	onSelectVariantButtonClick() {
@@ -428,9 +433,16 @@ class InstantiationForm extends React.Component {
 		this.props.onFetchSubitems(this, state["variantChoices"].length - 1, uniprotid);
 	}
 
-	onUpdateSelected(selectedItems) {
+	onUpdateSelected(allItems, selectedItems, selectedAll) {
 		var state = Object.assign({}, this.state);
-		state.seedGenes = selectedItems;
+		if (selectedAll) {
+			state.seedGenes = [];
+			for (var i = allItems.length - 1; i >= 0; i--) {
+				state.seedGenes.push(allItems[i][0]);
+			}	
+		} else {
+			state.seedGenes = selectedItems;
+		}
 		this.setState(state);
 	}
 
@@ -448,13 +460,13 @@ class InstantiationForm extends React.Component {
 		e.preventDefault();
 		if (!this.props.readonly) {
 	        // get our form data out of state
-	        $("#progressBlock").attr("style", "padding-top: 5px; display: inline-block;");
-
 	        var data = Object.assign({}, this.state);
 	        // data.seedGenes = [];
 	        // for (var i = this.state.seedGenes.length - 1; i >= 0; i--) {
 	        // 	data.seedGenes.push(this.state.seedGenes[i][0]);
 	        // }
+	        data.submitted = true;
+	        this.setState(data);
 
 	        const url = "/corpus/" + this.props.modelId + "/new-model";
 	        $.ajax({
@@ -497,6 +509,16 @@ class InstantiationForm extends React.Component {
 		this.setState(state);
 	}
 
+	setDefaultSeedGenes(genes) {
+		var state = Object.assign({}, this.state);
+		state.seedGenes = [];
+		for (var i = genes.length - 1; i >= 0; i--) {
+			state.seedGenes.push(genes[i][0]);
+		}
+		this.setState(state);
+		console.log("Default:" , genes);
+	}
+
 	render() {
 		var content = this.state.variantChoices.map((item, key) =>
 			<VariantSelectionItem 
@@ -517,8 +539,9 @@ class InstantiationForm extends React.Component {
 				id={this.props.id + "geneSelectionWidget"}
 		 		modelId={this.props.modelId}
 		 		title={this.props.selectionDialogTitle}
-		 		onFetchItems={this.props.onFetchItems}
-		 		onUpdateSelected={(items) => this.onUpdateSelected(items)}
+		 		onFetchItems={(el, filterItems) => this.props.onFetchItems(
+		 			el, filterItems, this.setDefaultSeedGenes)}
+		 		onUpdateSelected={this.onUpdateSelected}
 		 		filterItems={this.state.variantChoices.map((item) => item[0])}/>
 		 );
 
@@ -531,6 +554,20 @@ class InstantiationForm extends React.Component {
 				onFetchItems={this.props.onFetchItems}
 				onItemClick={this.onVariantItemClick}
 				filterItems={this.state.variantChoices.map((item) => item["uniprotid"])}/>;
+		}
+
+		var dialog;
+		if (this.state.submitted) {
+			dialog = (
+				<div className="col-md-6">
+					<div className="progress-block" style={{"padding-top": "10px", "display": "none"}}>
+							<div id="progressMessage">Creating a new model...</div>
+						<div id="loadingBlock"  className="loading-elements center-block">
+							<div id="loader"></div>
+						</div>
+					</div>
+				</div>
+			);
 		}
 
 		return (
@@ -614,14 +651,7 @@ class InstantiationForm extends React.Component {
 								   <span className="glyphicon glyphicon-plus"></span> {this.props.buttonLabel}
 								</a>
 								<div className="row form-row">
-									<div className="col-md-6">
-										<div className="progress-block" style={{"padding-top": "10px", "display": "none"}}>
-	          								<div id="progressMessage">Creating a new model...</div>
-											<div id="loadingBlock"  className="loading-elements center-block">
-												<div id="loader"></div>
-											</div>
-										</div>
-									</div>
+									{dialog}
 									<div className="col-md-6" style={{"text-align": "right"}}>
 										<button type="submit" 
 												className="btn btn-primary btn-lg" 

@@ -197,7 +197,8 @@ function drawDefinitionGraph(modelId, definitionId, graphId, graph, metaTyping,
         clickHandlers,
         handleDragStarted,
         100,
-  		false);
+  		false,
+  		null, false, false);
 }
 
 

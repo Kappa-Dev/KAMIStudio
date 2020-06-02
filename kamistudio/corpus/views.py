@@ -82,6 +82,10 @@ def corpus_view(corpus_id):
         model_id = None
         if "model_id" in request.args:
             model_id = request.args["model_id"]
+            model_json = app.mongo.db.kami_models.find(
+                {"id": model_id})
+            if not model_json:
+                model_id = None
         return render_template("corpus.html",
                                kb_id=corpus_id,
                                kb=corpus,

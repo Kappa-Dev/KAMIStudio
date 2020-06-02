@@ -16,10 +16,12 @@ def reconnect_neo4j_db():
             auth=(current_app.config["NEO4J_USER"], current_app.config["NEO4J_PWD"])
         )
         success = True
-    except AuthError:
+    except AuthError as e:
+        print(e)
         current_app.neo4j_driver = None
         current_app._neo4j_up = True
-    except ServiceUnavailable:
+    except ServiceUnavailable as e:
+        print(e)
         current_app.neo4j_driver = None
         current_app._neo4j_up = False
     return success
