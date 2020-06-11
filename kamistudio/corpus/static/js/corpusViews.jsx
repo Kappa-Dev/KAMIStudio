@@ -138,7 +138,8 @@ class CorpusView extends React.Component {
             actionGraph: null,
             definitions: null,
             nuggets: null,
-            nuggetsViewMode: null
+            nuggetsViewMode: null,
+            preselectedDefinition: null
         }
 
         this.switchToKnowledgeTab = this.switchToKnowledgeTab.bind(this);
@@ -360,7 +361,7 @@ class CorpusView extends React.Component {
                     <a id="switchToDefinitionsTab"
                          className="nav-link inner"
                          role="tab"
-                         onClick={this.switchToDefinitionsTab}>
+                         onClick={() => this.switchToDefinitionsTab()}>
                             {"Protein definitions (" + (this.props.emptyCorpus ? "0" : (this.props.definitionsCount + ")"))}
                     </a>
                 </li>

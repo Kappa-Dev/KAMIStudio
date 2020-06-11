@@ -2,7 +2,7 @@ function GeneList(props) {
 	var listItems = props.items.map(
 		function(item) {
 			var synomyms = item[2] ? item[2].concat([item[1]]) : [item[1]];
-
+			console.log(item);
 			return (
 				<li className="not-selected gene-item" >
 					<a className="gene-link" onClick={() => props.onItemClick ? props.onItemClick(item[0], item[1], item[2]) : ""}>

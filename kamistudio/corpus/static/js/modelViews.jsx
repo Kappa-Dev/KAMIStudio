@@ -365,8 +365,7 @@ class ModelView extends React.Component {
         if (this.props.geneData) {
             for (var i = this.props.model["context"]["seed_protoforms"].length - 1; i >= 0; i--) {
                 seedGenes.push(
-                    [this.props.model["context"]["seed_protoforms"][i]].concat(
-                        this.props.geneData[this.props.model["context"]["seed_protoforms"][i]])
+                    this.props.model["context"]["seed_protoforms"][i]
                 );
             }
         }

@@ -304,7 +304,7 @@ def get_model(corpus, model_id):
             products_to_exclude = []
             for product in definition["products"]:
                 if product not in v:
-                    products_to_exclude.append(v)
+                    products_to_exclude.append(product)
             for p in products_to_exclude:
                 del definition["products"][p]
             definitions.append(definition)

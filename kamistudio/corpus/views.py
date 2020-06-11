@@ -1190,8 +1190,8 @@ def get_gene_data(corpus_id):
     data = {"items": {}}
     corpus = get_corpus(corpus_id)
     for up in json_data["uniprots"]:
-        gene_id = corpus.get_protoform_by_uniprot(up)
-        data["items"][up] = [
+        gene_id = corpus.get_protoform_by_uniprot(up[0])
+        data["items"][up[0]] = [
             corpus.get_hgnc_symbol(gene_id),
             corpus.get_synonyms(gene_id)
         ]
@@ -1280,6 +1280,8 @@ def instantiate_ag(corpus_id, model_id):
     for n, attrs in ag_rule.removed_node_attrs().items():
         rule["removed_node_attrs"][n] = attrs_to_json(attrs)
     rule["instance"] = ag_instance
+    rule["p_lhs"] = ag_rule.p_lhs
+    rule["p_rhs"] = ag_rule.p_rhs
     response = {
         "rule": rule,
         "instance": ag_instance

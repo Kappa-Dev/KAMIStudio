@@ -437,6 +437,7 @@ function mapLinksToIds(graph) {
 }
 
 function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=null) {
+
 	var pInstance = JSON.parse(JSON.stringify(instance));
 
 	if (!eventHandlers) {
@@ -464,6 +465,15 @@ function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=n
 		delete pInstance[lhsNode];
 		if ("onRemoveNode" in eventHandlers) {
 			eventHandlers["onRemoveNode"](instance[lhsNode]);
+		}
+	}
+
+	// rename untouched nodes
+	for (var k in rule["p_lhs"]) {
+		if (!(k in pInstance) && (rule["p_lhs"][k] in pInstance)) {
+			var val = pInstance[rule["p_lhs"][k]];
+			delete pInstance[rule["p_lhs"][k]];
+			pInstance[k] = val;
 		}
 	}
 
@@ -517,6 +527,15 @@ function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=n
 
 	// Add nodes
 
+	// rename untouched nodes
+	for (var k in rule["p_rhs"]) {
+		if (!(rule["p_rhs"][k] in rhsInstance) && (rule[k] in rhsInstance)) {
+			var val = rhsInstance[k];
+			delete rhsInstance[k];
+			pInstance[rule["p_rhs"][k]] = val;
+		}
+	}
+
 	// Add edges
 
 	// Add node/edge attrs
@@ -524,6 +543,7 @@ function applyRuleTo(graph, rule, instance, clearPosition=false, eventHandlers=n
 	for (var el in rule["added_node_attrs"]) {
 		attrs = rule["added_node_attrs"][el];
 		node = findNodeById(graph, rhsInstance[el]);
+
 		addElementAttrs(node, attrs); 
 		if ("onAddNodeAttrs" in eventHandlers) {
 			eventHandlers["onAddNodeAttrs"](rhsInstance[el], attrs);

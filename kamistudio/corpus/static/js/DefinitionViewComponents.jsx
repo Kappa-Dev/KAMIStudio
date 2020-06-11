@@ -462,7 +462,7 @@ class DefinitionView extends React.Component {
             var backButton = null,
                 dialog = null;
 
-            if (this.state.preselectedNotFound) {
+            if (this.props.preselectedDefinition && this.state.preselectedNotFound) {
                 dialog = (
                     <InBlockDialog id="noDefinitionDialog"
                             title="Definition not found"
