@@ -14,7 +14,7 @@ neo4j-driver==1.7.0
 neobolt==1.7.0
 neotime==1.7.1
 networkx==2.3
-numpy==1.15.1
+numpy==1.22.0
 numpydoc==0.8.0
 pymongo==3.7.2
 sympy==1.2
